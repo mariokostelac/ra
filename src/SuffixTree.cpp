@@ -89,7 +89,7 @@ SuffixTree::~SuffixTree() {
 }
 
 void SuffixTree::toSuffixArray(std::vector<int>& suffixArray) {
-
+    depthFirstSearch(0, 0, suffixArray);
 }
 
 void SuffixTree::createSuffixTree(const std::string& str) {
@@ -185,4 +185,24 @@ bool SuffixTree::adjustActivePoint(const std::string& str) {
     activeChar_ += length;
 
     return true;
+}
+
+void SuffixTree::depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray) {
+
+    if (!tree_[node]->isRoot()) {
+        // Leaf node
+        if (tree_[node]->getEdgeEnd() == -1) {
+            suffixArray.push_back(tree_[node]->getEdgeStart() - edgeLen);
+            return;
+        }
+
+        edgeLen += tree_[node]->getEdgeEnd() - tree_[node]->getEdgeStart();
+    }
+
+    const std::vector<int>& children = tree_[node]->getChildren();
+    for (int i = 0; i < ALPHABET_SIZE; ++i) {
+        if (children[i] == -1) continue;
+
+        depthFirstSearch(children[i], edgeLen, suffixArray);
+    }
 }

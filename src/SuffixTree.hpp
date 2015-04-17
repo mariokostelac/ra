@@ -81,7 +81,11 @@ private:
     void createSuffixTree(const std::string& str);
 
     void addSuffixLink(int suffixLinkEnd);
+
     bool adjustActivePoint(const std::string& str);
+
+    // O(|E|)
+    void depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray);
 
     int activeNode_;
     int activeChar_;
