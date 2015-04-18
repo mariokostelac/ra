@@ -1,23 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "SuffixTree.hpp"
+#include "EnhancedSuffixArray.hpp"
 
 int main(int argc, char* argv[]) {
 
-    std::string s = "mississippi~";
-    std::vector<int> sa;
+    std::string s = "acaaacatat";
 
-    SuffixTree* sf = new SuffixTree(s);
+    EnhancedSuffixArray* esa = new EnhancedSuffixArray(s);
 
-    sf->toSuffixArray(sa);
+    esa->print();
 
-    for (int i = 0; i < (int) sa.size(); ++i) {
-        printf("%d ", sa[i]);
-    }
-    printf("\n");
-
-    delete sf;
+    delete esa;
 
     return 0;
 }
