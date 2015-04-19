@@ -9,7 +9,6 @@
 
 #include "CommonHeaders.hpp"
 
-
 class Node {
 public:
 
@@ -65,7 +64,6 @@ private:
     int suffixLink_;
     std::vector<int> children_;
 };
-
 
 class SuffixTree {
 public:

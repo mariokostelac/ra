@@ -27,16 +27,26 @@ static int lcp(int s1, int s2, const std::string& str) {
     return lcp;
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::string& data) {
-    str_ += data + SENTINEL;
+static bool equalSubstr(const std::string& str1, int s1, int e1, const std::string& str2, int s2, int e2) {
+    if (e1 - s1 != e2 - s2) return false;
+
+    for (int i = 0; i <= e1 - s1; ++i) {
+        if (str1[s1 + i] != str2[s2 + i]) return false;
+    }
+
+    return true;
+}
+
+EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
+    str_ += str + SENTINEL;
 
     createSuffixArray();
     createLongestCommonPrefixTable();
     createChildTable();
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<std::string>& data) {
-    for (const auto& it : data) str_ += it + DELIMETER;
+EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<std::string>& strs) {
+    for (const auto& it : strs) str_ += it + DELIMETER;
     str_ += SENTINEL;
 
     createSuffixArray();
@@ -50,6 +60,29 @@ void EnhancedSuffixArray::createSuffixArray() {
     SuffixTree* st = new SuffixTree(str_);
     st->toSuffixArray(suftab_);
     delete st;
+}
+
+int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) {
+    if (pattern.empty()) return 0;
+
+    int i, j;
+    getInterval(&i, &j, pattern);
+
+    if (i == -1 && j == -1) return 0;
+    return j - i + 1;
+}
+
+void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std::string& pattern) {
+    if (pattern.empty()) return;
+
+    int i, j;
+    getInterval(&i, &j, pattern);
+
+    if (i == -1 && j == -1) return;
+
+    for (int k = i; k < j + 1; ++k) {
+        positions.push_back(suftab_[k]);
+    }
 }
 
 void EnhancedSuffixArray::print() {
@@ -83,11 +116,13 @@ void EnhancedSuffixArray::createChildTable() {
             lastIndex = st.top();
             st.pop();
             if ((lcptab_[i] <= lcptab_[st.top()]) && (lcptab_[st.top()] != lcptab_[lastIndex])) {
+                // .down
                 childtab_[st.top()] = lastIndex;
             }
         }
 
         if (lastIndex != -1) {
+            // .up
             childtab_[i - 1] = lastIndex;
             lastIndex = -1;
         }
@@ -103,10 +138,84 @@ void EnhancedSuffixArray::createChildTable() {
         while (lcptab_[i] < lcptab_[st.top()]) st.pop();
 
         if (lcptab_[i] == lcptab_[st.top()]) {
+            // .nextlIndex
             childtab_[st.top()] = i;
             st.pop();
         }
 
         st.push(i);
     }
+}
+
+void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern) {
+
+    int m = pattern.size();
+    int i, j, c = 0;
+    bool found = false;
+
+    getInterval(&i, &j, 0, n_ - 1, pattern[c]);
+
+    while (i != -1 && j != -1 && c < m) {
+        found = true;
+
+        if (i != j) {
+            int l = getLcp(i, j);
+            int min = l < m ? l : m;
+
+            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + min - 1,
+                pattern, c, min - 1);
+
+            c = min;
+            if (c == m) break;
+
+            getInterval(&i, &j, i, j, pattern[c]);
+
+        } else {
+            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + m - 1,
+                pattern, c, m - 1);
+            c = m;
+        }
+
+        if (!found) break;
+    }
+
+    if (found) {
+        *s = i;
+        *e = j;
+        return;
+    }
+
+    *s = -1;
+    *e = -1;
+}
+
+void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) {
+
+    int i1 = (i < childtab_[i] && childtab_[i] <= j) ? childtab_[i] : childtab_[j];
+
+    if (str_[suftab_[i] + lcptab_[i1]] == c) {
+        *s = i; *e = i1 - 1;
+        return;
+    }
+
+    while (childtab_[i1] != -1 && childtab_[i1] != i1 && lcptab_[childtab_[i1]] == lcptab_[i1]) {
+        int i2 = childtab_[i1];
+        if (str_[suftab_[i1] + lcptab_[i2]] == c) {
+            *s = i1; *e = i2 - 1;
+            return;
+        }
+        i1 = i2;
+    }
+
+    if (str_[suftab_[i1] + lcptab_[i1]] == c) {
+        *s = i1; *e = j;
+        return;
+    }
+
+    *s = -1;
+    *e = -1;
+}
+
+int EnhancedSuffixArray::getLcp(int i, int j) {
+    return lcptab_[childtab_[(i < childtab_[i] && childtab_[i] <= j) ? i : j]];
 }

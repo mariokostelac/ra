@@ -45,20 +45,6 @@ static int coder(char c) {
     return CODER[(int) c];
 }
 
-
-Node::Node() :
-    root_(1), edgeStart_(-1), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
-}
-
-Node::Node(int edgeStart) :
-    root_(0), edgeStart_(edgeStart), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
-}
-
-Node::Node(int edgeStart, int edgeEnd) :
-    root_(0), edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
-}
-
-
 static void printTree(int idx, const std::vector<Node*>& tree, int lvl, const std::string& s) {
     if (tree[idx]->isRoot()) printf("*\n");
 
@@ -73,6 +59,18 @@ static void printTree(int idx, const std::vector<Node*>& tree, int lvl, const st
 
         printTree(children[i], tree, lvl, s);
     }
+}
+
+Node::Node() :
+    root_(1), edgeStart_(-1), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
+}
+
+Node::Node(int edgeStart) :
+    root_(0), edgeStart_(edgeStart), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
+}
+
+Node::Node(int edgeStart, int edgeEnd) :
+    root_(0), edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
 }
 
 SuffixTree::SuffixTree(const std::string& str) :
