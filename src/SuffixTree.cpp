@@ -12,6 +12,7 @@
 
 #define ALPHABET_SIZE 28
 
+// Allowed characters: English alphabet + delimeter # + sentinel ~
 static const int CODER[] = {
      -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
      -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
@@ -42,7 +43,7 @@ static const int CODER[] = {
 };
 
 static int coder(char c) {
-    return CODER[(int) c];
+    return CODER[(unsigned char) c];
 }
 
 static void printTree(int idx, const std::vector<Node*>& tree, int lvl, const std::string& s) {
@@ -61,16 +62,8 @@ static void printTree(int idx, const std::vector<Node*>& tree, int lvl, const st
     }
 }
 
-Node::Node() :
-    root_(1), edgeStart_(-1), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
-}
-
-Node::Node(int edgeStart) :
-    root_(0), edgeStart_(edgeStart), edgeEnd_(-1), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
-}
-
 Node::Node(int edgeStart, int edgeEnd) :
-    root_(0), edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
+    root_(edgeStart == -1), edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
 }
 
 SuffixTree::SuffixTree(const std::string& str) :

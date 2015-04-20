@@ -12,9 +12,7 @@
 class Node {
 public:
 
-    Node();
-    Node(int edgeStart);
-    Node(int edgeStart, int edgeEnd);
+    Node(int edgeStart = -1, int edgeEnd = -1);
 
     int isRoot() {
         return root_;
@@ -80,6 +78,7 @@ private:
 
     void addSuffixLink(int suffixLinkEnd);
 
+    // - needed when edge length is lower or equal to activeLength
     bool adjustActivePoint(const std::string& str);
 
     // O(|E|)
