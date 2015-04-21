@@ -71,19 +71,24 @@ public:
 
     void toSuffixArray(std::vector<int>& suffixArray);
 
+    void print();
+
 private:
 
     // Ukkonen algorithm O(n)
-    void createSuffixTree(const std::string& str);
+    void createSuffixTree();
 
     void addSuffixLink(int suffixLinkEnd);
 
     // - needed when edge length is lower or equal to activeLength
-    bool adjustActivePoint(const std::string& str);
+    bool adjustActivePoint();
 
     // O(|E|)
     void depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray);
 
+    void printTree(int i, int lvl);
+
+    std::string str_;
     int activeNode_;
     int activeChar_;
     int activeLength_;

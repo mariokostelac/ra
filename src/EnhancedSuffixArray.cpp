@@ -58,6 +58,7 @@ void EnhancedSuffixArray::createSuffixArray() {
     n_ = str_.size();
 
     SuffixTree* st = new SuffixTree(str_);
+    st->print();
     st->toSuffixArray(suftab_);
     delete st;
 }
