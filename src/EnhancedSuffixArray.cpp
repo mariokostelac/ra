@@ -16,6 +16,7 @@
 #define SENTINEL '~'
 
 static int lcp(int s1, int s2, const std::string& str) {
+
     int n = str.size();
     int lcp = 0;
 
@@ -28,6 +29,7 @@ static int lcp(int s1, int s2, const std::string& str) {
 }
 
 static bool equalSubstr(const std::string& str1, int s1, int e1, const std::string& str2, int s2, int e2) {
+
     if (e1 - s1 != e2 - s2) return false;
 
     for (int i = 0; i <= e1 - s1; ++i) {
@@ -37,16 +39,23 @@ static bool equalSubstr(const std::string& str1, int s1, int e1, const std::stri
     return true;
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
-    str_ += str + SENTINEL;
+EnhancedSuffixArray::EnhancedSuffixArray(const Read* read) {
+
+    str_ += read->getSequence();
+    str_ += SENTINEL;
 
     createSuffixArray();
     createLongestCommonPrefixTable();
     createChildTable();
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<std::string>& strs) {
-    for (const auto& it : strs) str_ += it + DELIMETER;
+EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads) {
+
+    for (const auto& it : reads) {
+        str_ += it->getSequence();
+        str_ += DELIMETER;
+    }
+
     str_ += SENTINEL;
 
     createSuffixArray();
@@ -55,15 +64,17 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<std::string>& strs) {
 }
 
 void EnhancedSuffixArray::createSuffixArray() {
+
     n_ = str_.size();
 
     SuffixTree* st = new SuffixTree(str_);
-    st->print();
+    // st->print();
     st->toSuffixArray(suftab_);
     delete st;
 }
 
 int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) {
+
     if (pattern.empty()) return 0;
 
     int i, j;
@@ -74,6 +85,7 @@ int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) {
 }
 
 void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std::string& pattern) {
+
     if (pattern.empty()) return;
 
     int i, j;
@@ -87,6 +99,7 @@ void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std:
 }
 
 void EnhancedSuffixArray::print() {
+
     printf("  Idx Suftab LcpTab ChildTab Suffix\n");
 
     for (int i = 0; i < n_; ++i) {
@@ -96,6 +109,7 @@ void EnhancedSuffixArray::print() {
 }
 
 void EnhancedSuffixArray::createLongestCommonPrefixTable() {
+
     lcptab_.resize(n_, 0);
 
     for (int i = 1; i < n_; ++i) {
@@ -104,6 +118,7 @@ void EnhancedSuffixArray::createLongestCommonPrefixTable() {
 }
 
 void EnhancedSuffixArray::createChildTable() {
+
     childtab_.resize(n_, -1);
 
     // childTable = .up + .down + .nextlIndex (which can be stored in 4B)

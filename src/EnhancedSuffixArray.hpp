@@ -8,6 +8,7 @@
 #pragma once
 
 #include "CommonHeaders.hpp"
+#include "Read.hpp"
 
 // Enhaced suffix array = suffix array + longest common prefix table + child table
 // (+ other tables which are not needed here)
@@ -15,8 +16,8 @@
 class EnhancedSuffixArray {
 public:
 
-    EnhancedSuffixArray(const std::string& str);
-    EnhancedSuffixArray(const std::vector<std::string>& strs);
+    EnhancedSuffixArray(const Read* read);
+    EnhancedSuffixArray(const std::vector<Read*>& reads);
 
     // O(m)
     int getNumberOfOccurrences(const std::string& pattern);

@@ -2,34 +2,31 @@
 #include <stdlib.h>
 
 #include "EnhancedSuffixArray.hpp"
+#include "Read.hpp"
+#include "IO.hpp"
 
 int main(int argc, char* argv[]) {
 
-    std::string s = "acatatacatat";
-    std::vector<std::string> ss;
-    ss.push_back(s);
-    ss.push_back(s);
-    ss.push_back(s);
-    ss.push_back(s);
-    ss.push_back(s);
+    IO* io = new IO();
+    std::vector<Read*> reads;
 
-    EnhancedSuffixArray* esa = new EnhancedSuffixArray(ss);
+    io->readFastqReads(reads, "test2.fa");
 
-    esa->print();
-    printf("tat#\n");
-    printf("Number of occurrences: %d\n", esa->getNumberOfOccurrences("tat#"));
-
-    std::vector<int> positions;
-    esa->getOccurrences(positions, "tat#");
-
-    printf("Positions: ");
-
-    for (int i = 0; i < (int) positions.size(); ++i) {
-        printf("%d ", positions[i]);
+    for (const auto& it : reads) {
+        it->createReverseComplement();
     }
-    printf("\n");
 
-    delete esa;
+    EnhancedSuffixArray* index1 = new EnhancedSuffixArray(reads);
+
+    // index1->print();
+
+    delete index1;
+
+    for (const auto& it : reads) {
+        delete it;
+    }
+
+    delete io;
 
     return 0;
 }
