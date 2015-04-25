@@ -34,7 +34,7 @@ private:
     void createSuffixArrayST();
 
     // Induced sorting O(n)
-    void createSuffixArrayIS(const std::string& s, int alphabetSize = 256);
+    void createSuffixArrayIS(const unsigned char* s, int n, int csize, int alphabetSize = 256);
 
     // From suftab O(n)
     void createLongestCommonPrefixTable();

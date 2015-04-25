@@ -26,15 +26,18 @@ int main(int argc, char* argv[]) {
 
     if (positions1.size() != positions2.size()) printf("FAILED\n");
     else {
+        bool failed = false;
+
         for (int i = 0; i < (int) positions1.size(); ++i) {
             if (positions1[i] != positions2[i]) {
                 printf("FAILED\n");
+                failed = true;
                 break;
             }
         }
-    }
 
-    printf("PASSED\n");
+        if (!failed) printf("PASSED\n");
+    }
 
     delete esa2;
     delete esa1;

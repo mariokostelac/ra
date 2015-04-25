@@ -18,18 +18,19 @@
 #define SENTINEL_H '~'
 #define SENTINEL_L '!'
 
-static unsigned int getChar(int i, const std::string& s) {
-    return (unsigned int) s[i];
+static unsigned int getChar(int i, const unsigned char* s, int csize) {
+    if (csize == sizeof(int)) return ((int*) s)[i];
+    return ((unsigned char*) s)[i];
 }
 
-static void getBuckets(std::vector<int>& buckets, const std::string& s, int end) {
+static void getBuckets(std::vector<int>& buckets, const unsigned char* s, int n, int csize, int end) {
 
     for (int i = 0; i < (int) buckets.size(); ++i) {
         buckets[i] = 0;
     }
 
-    for (int i = 0; i < (int) s.size(); ++i) {
-        ++buckets[getChar(i, s)];
+    for (int i = 0; i < n; ++i) {
+        ++buckets[getChar(i, s, csize)];
     }
 
     int sum = 0;
@@ -39,25 +40,25 @@ static void getBuckets(std::vector<int>& buckets, const std::string& s, int end)
     }
 }
 
-static void induceL(std::vector<int>& suftab, std::vector<int>& buckets, const std::string& s,
-    std::vector<bool>& t) {
+static void induceL(std::vector<int>& suftab, std::vector<int>& buckets, const unsigned char* s, int n,
+    int csize, std::vector<bool>& t) {
 
-    getBuckets(buckets, s, 0);
+    getBuckets(buckets, s, n, csize, 0);
 
-    for (int i = 0; i < (int) s.size(); ++i) {
+    for (int i = 0; i < n; ++i) {
         int j = suftab[i] - 1;
-        if (j >= 0 && !t[j]) suftab[buckets[getChar(j, s)]++] = j;
+        if (j >= 0 && !t[j]) suftab[buckets[getChar(j, s, csize)]++] = j;
     }
 }
 
-static void induceS(std::vector<int>& suftab, std::vector<int>& buckets, const std::string& s,
-    std::vector<bool>& t) {
+static void induceS(std::vector<int>& suftab, std::vector<int>& buckets, const unsigned char* s, int n,
+    int csize, std::vector<bool>& t) {
 
-    getBuckets(buckets, s, 1);
+    getBuckets(buckets, s, n, csize, 1);
 
-    for (int i = s.size() - 1; i >= 0; --i) {
+    for (int i = n - 1; i >= 0; --i) {
         int j = suftab[i] - 1;
-        if (j >= 0 && t[j]) suftab[--buckets[getChar(j, s)]] = j;
+        if (j >= 0 && t[j]) suftab[--buckets[getChar(j, s, csize)]] = j;
     }
 }
 
@@ -103,7 +104,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm
         ++n_;
         suftab_.resize(n_);
 
-        createSuffixArrayIS(str_);
+        createSuffixArrayIS((unsigned char*) &str_[0], n_, sizeof(unsigned char));
 
     } else {
         createSuffixArrayST();
@@ -134,7 +135,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk
         ++n_;
         suftab_.resize(n_);
 
-        createSuffixArrayIS(str_);
+        createSuffixArrayIS((unsigned char*) &str_[0], n_, sizeof(unsigned char));
     } else {
         createSuffixArrayST();
     }
@@ -189,9 +190,7 @@ void EnhancedSuffixArray::createSuffixArrayST() {
     delete st;
 }
 
-void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabetSize) {
-
-    int n = s.size();
+void EnhancedSuffixArray::createSuffixArrayIS(const unsigned char* s, int n, int csize, int alphabetSize) {
 
     // S-type = true, L-type = false
     std::vector<bool> t(n);
@@ -199,19 +198,19 @@ void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabet
     t[n - 2] = false;
 
     for (int i = n - 3; i >= 0; --i) {
-        t[i] = (s[i] < s[i + 1] || (s[i] == s[i + 1] && t[i + 1])) ? true : false;
+        t[i] = (getChar(i, s, csize) < getChar(i + 1, s, csize) || (getChar(i, s, csize) == getChar(i + 1, s, csize) && t[i + 1])) ? true : false;
     }
 
     std::vector<int> buckets(alphabetSize);
-    getBuckets(buckets, s, 1);
+    getBuckets(buckets, s, n, csize, 1);
 
     for (int i = 0; i < n; ++i) suftab_[i] = -1;
     for (int i = 1; i < n; ++i) {
-        if (isLMS(i, t)) suftab_[--buckets[getChar(i, s)]] = i;
+        if (isLMS(i, t)) suftab_[--buckets[getChar(i, s, csize)]] = i;
     }
 
-    induceL(suftab_, buckets, s, t);
-    induceS(suftab_, buckets, s, t);
+    induceL(suftab_, buckets, s, n, csize, t);
+    induceS(suftab_, buckets, s, n, csize, t);
 
     std::vector<int>().swap(buckets);
 
@@ -229,9 +228,10 @@ void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabet
         bool diff = false;
 
         for (int d = 0; d < n; ++d) {
-            if (prev == -1 || s[pos + d] != s[prev + d] || t[pos + d] != t[prev + d]) {
+            if (prev == -1 || getChar(pos + d, s, csize) != getChar(prev + d, s, csize) || t[pos + d] != t[prev + d]) {
                 diff = true;
                 break;
+
             } else if (d > 0 && (isLMS(pos + d, t) || isLMS(prev + d, t))) {
                 break;
             }
@@ -246,14 +246,14 @@ void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabet
         suftab_[n1 + pos] = name - 1;
     }
 
-    std::string s1(n1, ' ');
-
-    for (int i = n - 1, j = n1 - 1; i >= n1; --i) {
-        if (suftab_[i] >= 0) s1[j--] = suftab_[i];
+    for (int i = n - 1, j = n - 1; i >= n1; --i) {
+        if (suftab_[i] >= 0) suftab_[j--] = suftab_[i];
     }
 
+    int* s1 = &suftab_[n - n1];
+
     if (name < n1) {
-        createSuffixArrayIS(s1, name);
+        createSuffixArrayIS((unsigned char*) s1, n1, sizeof(int), name);
     } else {
         for (int i = 0; i < n1; ++i) suftab_[s1[i]] = i;
     }
@@ -264,7 +264,7 @@ void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabet
         if (isLMS(i, t)) s1[j++] = i;
     }
 
-    getBuckets(buckets, s, 1);
+    getBuckets(buckets, s, n, csize, 1);
 
     for (int i = 0; i < n1; ++i) suftab_[i] = s1[suftab_[i]];
     for (int i = n1; i < n; ++i) suftab_[i] = -1;
@@ -272,11 +272,11 @@ void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabet
     for (int i = n1 - 1; i >= 0; --i) {
         int j = suftab_[i];
         suftab_[i] = -1;
-        suftab_[--buckets[s[j]]] = j;
+        suftab_[--buckets[getChar(j, s, csize)]] = j;
     }
 
-    induceL(suftab_, buckets, s, t);
-    induceS(suftab_, buckets, s, t);
+    induceL(suftab_, buckets, s, n, csize, t);
+    induceS(suftab_, buckets, s, n, csize, t);
 }
 
 void EnhancedSuffixArray::createLongestCommonPrefixTable() {
