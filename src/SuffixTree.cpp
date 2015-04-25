@@ -46,12 +46,40 @@ static int coder(char c) {
     return CODER[(unsigned char) c];
 }
 
+static void addSuffixLink(int* suffixLinkStart, int suffixLinkEnd, const std::vector<Node*>& tree) {
+
+    if (*suffixLinkStart != -1) {
+        tree[*suffixLinkStart]->setSuffixLink(suffixLinkEnd);
+    }
+
+    *suffixLinkStart = suffixLinkEnd;
+}
+
+// needed when edge length is lower or equal to activeLength
+static bool adjustActivePoint(int* activeNode, int* activeChar, int* activeLength, const std::vector<Node*>& tree,
+    const std::string& str) {
+
+    if (*activeLength == 0) return false;
+
+    int next = tree[*activeNode]->getNextNode(coder(str[*activeChar]));
+    if (tree[next]->getEdgeEnd() == -1) return false;
+
+    int length = tree[next]->getEdgeEnd() - tree[next]->getEdgeStart();
+    if (*activeLength < length) return false;
+
+    *activeNode = next;
+    *activeLength -= length;
+    *activeChar += length;
+
+    return true;
+}
+
 Node::Node(int edgeStart, int edgeEnd) :
-    root_(edgeStart == -1), edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
+    edgeStart_(edgeStart), edgeEnd_(edgeEnd), suffixLink_(-1), children_(ALPHABET_SIZE, -1) {
 }
 
 SuffixTree::SuffixTree(const std::string& str) :
-    str_(str), activeNode_(0), activeChar_(-1), activeLength_(0), remainder_(0), suffixLinkStart_(-1) {
+    str_(str), tree_() {
 
     tree_.push_back(new Node());
     createSuffixTree();
@@ -63,54 +91,60 @@ SuffixTree::~SuffixTree() {
     }
 }
 
-void SuffixTree::toSuffixArray(std::vector<int>& suffixArray) {
+void SuffixTree::toSuffixArray(std::vector<int>& suffixArray) const {
     depthFirstSearch(0, 0, suffixArray);
 }
 
-void SuffixTree::print() {
+void SuffixTree::print() const {
     printTree(0, 0);
 }
 
 void SuffixTree::createSuffixTree() {
 
+    int activeNode = 0;
+    int activeChar = -1;
+    int activeLength = 0;
+    int remainder = 0;
+    int suffixLinkStart = -1;
+
     for (int i = 0; i < (int) str_.size(); ++i) {
-        ++remainder_;
-        suffixLinkStart_ = -1;
+        ++remainder;
+        suffixLinkStart = -1;
 
-        while (remainder_ > 0) {
+        while (remainder > 0) {
 
-            if (activeLength_ == 0) activeChar_ = i;
+            if (activeLength == 0) activeChar = i;
 
-            if (tree_[activeNode_]->getNextNode(coder(str_[activeChar_])) == -1) {
+            if (tree_[activeNode]->getNextNode(coder(str_[activeChar])) == -1) {
                 // New leaf node
                 tree_.push_back(new Node(i));
                 int leaf = tree_.size() - 1;
 
-                tree_[activeNode_]->setNextNode(coder(str_[activeChar_]), leaf);
+                tree_[activeNode]->setNextNode(coder(str_[activeChar]), leaf);
 
                 // Rule 2
-                addSuffixLink(activeNode_);
+                addSuffixLink(&suffixLinkStart, activeNode, tree_);
 
             } else {
-                if (adjustActivePoint()) continue;
+                if (adjustActivePoint(&activeNode, &activeChar, &activeLength, tree_, str_)) continue;
 
-                int next = tree_[activeNode_]->getNextNode(coder(str_[activeChar_]));
+                int next = tree_[activeNode]->getNextNode(coder(str_[activeChar]));
 
-                if (str_[tree_[next]->getEdgeStart() + activeLength_] == str_[i]) {
-                    ++activeLength_;
+                if (str_[tree_[next]->getEdgeStart() + activeLength] == str_[i]) {
+                    ++activeLength;
 
                     // Rule 2
-                    addSuffixLink(activeNode_);
+                    addSuffixLink(&suffixLinkStart, activeNode, tree_);
                     break;
                 }
 
                 // Split edge by char c
                 // - new internal node
-                tree_.push_back(new Node(tree_[next]->getEdgeStart(), tree_[next]->getEdgeStart() + activeLength_));
+                tree_.push_back(new Node(tree_[next]->getEdgeStart(), tree_[next]->getEdgeStart() + activeLength));
                 int internal = tree_.size() - 1;
 
                 // - update activeNode (former parent of next)
-                tree_[activeNode_]->setNextNode(coder(str_[activeChar_]), internal);
+                tree_[activeNode]->setNextNode(coder(str_[activeChar]), internal);
 
                 // - update next
                 tree_[next]->setEdgeStart(tree_[internal]->getEdgeEnd());
@@ -124,52 +158,26 @@ void SuffixTree::createSuffixTree() {
                 tree_[internal]->setNextNode(coder(str_[i]), leaf);
 
                 // Rule 2
-                addSuffixLink(internal);
+                addSuffixLink(&suffixLinkStart, internal, tree_);
             }
 
-            --remainder_;
+            --remainder;
 
-            if (tree_[activeNode_]->isRoot() && activeLength_ > 0) {
+            if (activeNode == 0 && activeLength > 0) {
                 // Rule 1
-                --activeLength_;
-                activeChar_ = i - remainder_ + 1;
+                --activeLength;
+                activeChar = i - remainder + 1;
             } else {
                 // Rule 3
-                activeNode_ = tree_[activeNode_]->getSuffixLink() == -1 ? 0 : tree_[activeNode_]->getSuffixLink();
+                activeNode = tree_[activeNode]->getSuffixLink() == -1 ? 0 : tree_[activeNode]->getSuffixLink();
             }
         }
     }
 }
 
-void SuffixTree::addSuffixLink(int suffixLinkEnd) {
+void SuffixTree::depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray) const {
 
-    if (suffixLinkStart_ != -1) {
-        tree_[suffixLinkStart_]->setSuffixLink(suffixLinkEnd);
-    }
-
-    suffixLinkStart_ = suffixLinkEnd;
-}
-
-bool SuffixTree::adjustActivePoint() {
-
-    if (activeLength_ == 0) return false;
-
-    int next = tree_[activeNode_]->getNextNode(coder(str_[activeChar_]));
-    if (tree_[next]->getEdgeEnd() == -1) return false;
-
-    int length = tree_[next]->getEdgeEnd() - tree_[next]->getEdgeStart();
-    if (activeLength_ < length) return false;
-
-    activeNode_ = next;
-    activeLength_ -= length;
-    activeChar_ += length;
-
-    return true;
-}
-
-void SuffixTree::depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray) {
-
-    if (!tree_[node]->isRoot()) {
+    if (node != 0) {
         // Leaf node
         if (tree_[node]->getEdgeEnd() == -1) {
             suffixArray.push_back(tree_[node]->getEdgeStart() - edgeLen);
@@ -187,9 +195,9 @@ void SuffixTree::depthFirstSearch(int node, int edgeLen, std::vector<int>& suffi
     }
 }
 
-void SuffixTree::printTree(int i, int lvl) {
+void SuffixTree::printTree(int i, int lvl) const {
 
-    if (tree_[i]->isRoot()) printf("*\n");
+    if (i == 0) printf("*\n");
 
     ++lvl;
 

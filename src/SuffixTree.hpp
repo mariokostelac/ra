@@ -14,10 +14,6 @@ public:
 
     Node(int edgeStart = -1, int edgeEnd = -1);
 
-    int isRoot() {
-        return root_;
-    }
-
     int getEdgeStart() const {
         return edgeStart_;
     }
@@ -46,7 +42,7 @@ public:
         return children_;
     }
 
-    int getNextNode(int idx) {
+    int getNextNode(int idx) const {
         return children_[idx];
     }
 
@@ -56,7 +52,6 @@ public:
 
 private:
 
-    int root_;
     int edgeStart_;
     int edgeEnd_;
     int suffixLink_;
@@ -69,30 +64,20 @@ public:
     SuffixTree(const std::string& str);
     ~SuffixTree();
 
-    void toSuffixArray(std::vector<int>& suffixArray);
+    void toSuffixArray(std::vector<int>& suffixArray) const;
 
-    void print();
+    void print() const;
 
 private:
 
     // Ukkonen algorithm O(n)
     void createSuffixTree();
 
-    void addSuffixLink(int suffixLinkEnd);
-
-    // - needed when edge length is lower or equal to activeLength
-    bool adjustActivePoint();
-
     // O(|E|)
-    void depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray);
+    void depthFirstSearch(int node, int edgeLen, std::vector<int>& suffixArray) const;
 
-    void printTree(int i, int lvl);
+    void printTree(int i, int lvl) const;
 
     std::string str_;
-    int activeNode_;
-    int activeChar_;
-    int activeLength_;
-    int remainder_;
-    int suffixLinkStart_;
     std::vector<Node*> tree_;
 };
