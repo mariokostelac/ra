@@ -1,0 +1,44 @@
+/*
+* Utils.cpp
+*
+* Created on: Apr 25, 2015
+*     Author: rvaser
+*/
+
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "Utils.hpp"
+
+Timer::Timer() :
+    paused_(0), time_(0), timeval_() {
+}
+
+void Timer::start() {
+
+    if (paused_) return;
+
+    gettimeofday(&timeval_, NULL);
+    paused_ = 0;
+}
+
+void Timer::stop() {
+
+    paused_ = 1;
+
+    timeval stop;
+    gettimeofday(&stop, NULL);
+
+    time_ += ((stop.tv_sec - timeval_.tv_sec) * 1000000L + stop.tv_usec) - timeval_.tv_usec;
+}
+
+void Timer::reset() {
+
+    paused_ = 0;
+    time_ = 0;
+    gettimeofday(&timeval_, NULL);
+}
+
+void Timer::print(const char* message) const {
+    fprintf(stderr, "[%-25s]: %20.5lf s\n", message, time_ / (double) 1000000);
+}
