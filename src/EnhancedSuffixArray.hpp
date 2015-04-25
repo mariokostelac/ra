@@ -16,21 +16,25 @@
 class EnhancedSuffixArray {
 public:
 
-    EnhancedSuffixArray(const Read* read);
-    EnhancedSuffixArray(const std::vector<Read*>& reads);
+    // InducedSorting = 1, SuffixTree = 0
+    EnhancedSuffixArray(const Read* read, int rk = 0, int algorithm = 1);
+    EnhancedSuffixArray(const std::vector<Read*>& reads, int rk = 0, int algorithm = 1);
 
     // O(m)
-    int getNumberOfOccurrences(const std::string& pattern);
+    int getNumberOfOccurrences(const std::string& pattern) const;
 
     // O(m + z)
-    void getOccurrences(std::vector<int>& positions, const std::string& pattern);
+    void getOccurrences(std::vector<int>& positions, const std::string& pattern) const;
 
-    void print();
+    void print() const;
 
 private:
 
     // From suffix tree O(n)
-    void createSuffixArray();
+    void createSuffixArrayST();
+
+    // Induced sorting O(n)
+    void createSuffixArrayIS(const std::string& s, int alphabetSize = 256);
 
     // From suftab O(n)
     void createLongestCommonPrefixTable();
@@ -38,9 +42,9 @@ private:
     // From lcptab O(n)
     void createChildTable();
 
-    void getInterval(int* s, int* e, const std::string& pattern);
-    void getInterval(int* s, int* e, int i, int j, char c);
-    int getLcp(int i, int j);
+    void getInterval(int* s, int* e, const std::string& pattern) const;
+    void getSubInterval(int* s, int* e, int i, int j, char c) const;
+    int getLcp(int i, int j) const;
 
     int n_;
     std::string str_;

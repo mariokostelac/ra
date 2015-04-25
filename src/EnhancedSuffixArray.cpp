@@ -4,16 +4,66 @@
 * Created on: Apr 18, 2015
 *     Author: rvaser
 *
-* Algorithms were rewritten to c++ from the following paper:
-*     Title: Replacing suffix trees with enhanced suffix arrays
-*     Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch
+* Algorithms were rewritten to c++ from following papers:
+*     1. Title: Two efficient algorithms for linear time suffix array construction
+*        Authors: Ge Nong, Sen Zhang, Wai Hong Chan
+*     2. Title: Replacing suffix trees with enhanced suffix arrays
+*        Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch
 */
 
 #include "SuffixTree.hpp"
 #include "EnhancedSuffixArray.hpp"
 
-#define DELIMETER '#'
-#define SENTINEL '~'
+#define DELIMITER '#'
+#define SENTINEL_H '~'
+#define SENTINEL_L '!'
+
+static unsigned int getChar(int i, const std::string& s) {
+    return (unsigned int) s[i];
+}
+
+static void getBuckets(std::vector<int>& buckets, const std::string& s, int end) {
+
+    for (int i = 0; i < (int) buckets.size(); ++i) {
+        buckets[i] = 0;
+    }
+
+    for (int i = 0; i < (int) s.size(); ++i) {
+        ++buckets[getChar(i, s)];
+    }
+
+    int sum = 0;
+    for (int i = 0; i < (int) buckets.size(); ++i) {
+        sum += buckets[i];
+        buckets[i] = (end == 1) ? sum : sum - buckets[i];
+    }
+}
+
+static void induceL(std::vector<int>& suftab, std::vector<int>& buckets, const std::string& s,
+    std::vector<bool>& t) {
+
+    getBuckets(buckets, s, 0);
+
+    for (int i = 0; i < (int) s.size(); ++i) {
+        int j = suftab[i] - 1;
+        if (j >= 0 && !t[j]) suftab[buckets[getChar(j, s)]++] = j;
+    }
+}
+
+static void induceS(std::vector<int>& suftab, std::vector<int>& buckets, const std::string& s,
+    std::vector<bool>& t) {
+
+    getBuckets(buckets, s, 1);
+
+    for (int i = s.size() - 1; i >= 0; --i) {
+        int j = suftab[i] - 1;
+        if (j >= 0 && t[j]) suftab[--buckets[getChar(j, s)]] = j;
+    }
+}
+
+static bool isLMS(int i, std::vector<bool>& t) {
+    return i > 0 && t[i] && !t[i - 1];
+}
 
 static int lcp(int s1, int s2, const std::string& str) {
 
@@ -39,41 +89,64 @@ static bool equalSubstr(const std::string& str1, int s1, int e1, const std::stri
     return true;
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const Read* read) {
+EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm) {
 
-    str_ += read->getSequence();
-    str_ += SENTINEL;
+    Timer timer;
+    timer.start();
 
-    createSuffixArray();
-    createLongestCommonPrefixTable();
-    createChildTable();
-}
-
-EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads) {
-
-    for (const auto& it : reads) {
-        str_ += it->getSequence();
-        str_ += DELIMETER;
-    }
-
-    str_ += SENTINEL;
-
-    createSuffixArray();
-    createLongestCommonPrefixTable();
-    createChildTable();   
-}
-
-void EnhancedSuffixArray::createSuffixArray() {
-
+    str_ += rk == 0 ? read->getSequence() : read->getReverseComplement();
+    str_ += SENTINEL_H;
     n_ = str_.size();
 
-    SuffixTree* st = new SuffixTree(str_);
-    // st->print();
-    st->toSuffixArray(suftab_);
-    delete st;
+    if (algorithm == 1) {
+        str_ += SENTINEL_L;
+        ++n_;
+        suftab_.resize(n_);
+
+        createSuffixArrayIS(str_);
+
+    } else {
+        createSuffixArrayST();
+    }
+
+    createLongestCommonPrefixTable();
+    createChildTable();
+
+    timer.stop();
+    timer.print("ESA|construction");
 }
 
-int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) {
+EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk, int algorithm) {
+
+    Timer timer;
+    timer.start();
+
+    for (const auto& it : reads) {
+        str_ += rk == 0 ? it->getSequence() : it->getReverseComplement();
+        str_ += DELIMITER;
+    }
+
+    str_ += SENTINEL_H;
+    n_ = str_.size();
+
+    if (algorithm == 1) {
+        str_ += SENTINEL_L;
+        ++n_;
+        suftab_.resize(n_);
+
+        createSuffixArrayIS(str_);
+    } else {
+        createSuffixArrayST();
+    }
+
+    createLongestCommonPrefixTable();
+    createChildTable();
+
+    timer.stop();
+    timer.print("ESA|construction");
+}
+
+int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) const {
 
     if (pattern.empty()) return 0;
 
@@ -84,7 +157,7 @@ int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) {
     return j - i + 1;
 }
 
-void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std::string& pattern) {
+void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std::string& pattern) const {
 
     if (pattern.empty()) return;
 
@@ -98,7 +171,7 @@ void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std:
     }
 }
 
-void EnhancedSuffixArray::print() {
+void EnhancedSuffixArray::print() const {
 
     printf("  Idx Suftab LcpTab ChildTab Suffix\n");
 
@@ -106,6 +179,104 @@ void EnhancedSuffixArray::print() {
         printf("%5d %6d %6d %8d %-s\n", i, suftab_[i], lcptab_[i], childtab_[i],
             str_.substr(suftab_[i], n_ - suftab_[i]).c_str());
     }
+}
+
+void EnhancedSuffixArray::createSuffixArrayST() {
+
+    SuffixTree* st = new SuffixTree(str_);
+    // st->print();
+    st->toSuffixArray(suftab_);
+    delete st;
+}
+
+void EnhancedSuffixArray::createSuffixArrayIS(const std::string& s, int alphabetSize) {
+
+    int n = s.size();
+
+    // S-type = true, L-type = false
+    std::vector<bool> t(n);
+    t[n - 1] = true;
+    t[n - 2] = false;
+
+    for (int i = n - 3; i >= 0; --i) {
+        t[i] = (s[i] < s[i + 1] || (s[i] == s[i + 1] && t[i + 1])) ? true : false;
+    }
+
+    std::vector<int> buckets(alphabetSize);
+    getBuckets(buckets, s, 1);
+
+    for (int i = 0; i < n; ++i) suftab_[i] = -1;
+    for (int i = 1; i < n; ++i) {
+        if (isLMS(i, t)) suftab_[--buckets[getChar(i, s)]] = i;
+    }
+
+    induceL(suftab_, buckets, s, t);
+    induceS(suftab_, buckets, s, t);
+
+    std::vector<int>().swap(buckets);
+
+    int n1 = 0;
+    for (int i = 0; i < n; ++i) {
+        if (isLMS(suftab_[i], t)) suftab_[n1++] = suftab_[i];
+    }
+
+    for (int i = n1; i < n; ++i) suftab_[i] = -1;
+
+    int name = 0, prev = -1;
+    for (int i = 0; i < n1; ++i) {
+
+        int pos = suftab_[i];
+        bool diff = false;
+
+        for (int d = 0; d < n; ++d) {
+            if (prev == -1 || s[pos + d] != s[prev + d] || t[pos + d] != t[prev + d]) {
+                diff = true;
+                break;
+            } else if (d > 0 && (isLMS(pos + d, t) || isLMS(prev + d, t))) {
+                break;
+            }
+        }
+
+        if (diff) {
+            ++name;
+            prev = pos;
+        }
+
+        pos = (pos % 2 == 0) ? pos / 2 : (pos - 1) / 2;
+        suftab_[n1 + pos] = name - 1;
+    }
+
+    std::string s1(n1, ' ');
+
+    for (int i = n - 1, j = n1 - 1; i >= n1; --i) {
+        if (suftab_[i] >= 0) s1[j--] = suftab_[i];
+    }
+
+    if (name < n1) {
+        createSuffixArrayIS(s1, name);
+    } else {
+        for (int i = 0; i < n1; ++i) suftab_[s1[i]] = i;
+    }
+
+    buckets.resize(alphabetSize);
+
+    for (int i = 1, j = 0; i < n; ++i) {
+        if (isLMS(i, t)) s1[j++] = i;
+    }
+
+    getBuckets(buckets, s, 1);
+
+    for (int i = 0; i < n1; ++i) suftab_[i] = s1[suftab_[i]];
+    for (int i = n1; i < n; ++i) suftab_[i] = -1;
+
+    for (int i = n1 - 1; i >= 0; --i) {
+        int j = suftab_[i];
+        suftab_[i] = -1;
+        suftab_[--buckets[s[j]]] = j;
+    }
+
+    induceL(suftab_, buckets, s, t);
+    induceS(suftab_, buckets, s, t);
 }
 
 void EnhancedSuffixArray::createLongestCommonPrefixTable() {
@@ -163,13 +334,13 @@ void EnhancedSuffixArray::createChildTable() {
     }
 }
 
-void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern) {
+void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern) const {
 
     int m = pattern.size();
     int i, j, c = 0;
     bool found = false;
 
-    getInterval(&i, &j, 0, n_ - 1, pattern[c]);
+    getSubInterval(&i, &j, 0, n_ - 1, pattern[c]);
 
     while (i != -1 && j != -1 && c < m) {
         found = true;
@@ -184,7 +355,7 @@ void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern
             c = min;
             if (c == m) break;
 
-            getInterval(&i, &j, i, j, pattern[c]);
+            getSubInterval(&i, &j, i, j, pattern[c]);
 
         } else {
             found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + m - 1,
@@ -205,7 +376,7 @@ void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern
     *e = -1;
 }
 
-void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) {
+void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) const {
 
     int i1 = (i < childtab_[i] && childtab_[i] <= j) ? childtab_[i] : childtab_[j];
 
@@ -232,6 +403,6 @@ void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) {
     *e = -1;
 }
 
-int EnhancedSuffixArray::getLcp(int i, int j) {
+int EnhancedSuffixArray::getLcp(int i, int j) const {
     return lcptab_[childtab_[(i < childtab_[i] && childtab_[i] <= j) ? i : j]];
 }

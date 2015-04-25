@@ -10,17 +10,34 @@ int main(int argc, char* argv[]) {
     IO* io = new IO();
     std::vector<Read*> reads;
 
-    io->readFastqReads(reads, "test2.fa");
+    io->readFastaReads(reads, "test.fa");
 
-    for (const auto& it : reads) {
-        it->createReverseComplement();
+    EnhancedSuffixArray* esa1 = new EnhancedSuffixArray(reads, 0, 0);
+    // esa1->print();
+
+    EnhancedSuffixArray* esa2 = new EnhancedSuffixArray(reads, 0, 1);
+    // esa2->print();
+
+    std::vector<int> positions1;
+    esa1->getOccurrences(positions1, "ACA");
+
+    std::vector<int> positions2;
+    esa2->getOccurrences(positions2, "ACA");
+
+    if (positions1.size() != positions2.size()) printf("FAILED\n");
+    else {
+        for (int i = 0; i < (int) positions1.size(); ++i) {
+            if (positions1[i] != positions2[i]) {
+                printf("FAILED\n");
+                break;
+            }
+        }
     }
 
-    EnhancedSuffixArray* index1 = new EnhancedSuffixArray(reads);
+    printf("PASSED\n");
 
-    // index1->print();
-
-    delete index1;
+    delete esa2;
+    delete esa1;
 
     for (const auto& it : reads) {
         delete it;
