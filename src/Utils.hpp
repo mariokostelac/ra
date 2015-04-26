@@ -9,10 +9,10 @@
 
 #include <sys/time.h>
 
-#define ASSERT(expr, fmt, ...)\
+#define ASSERT(expr, location, msg, ...)\
     do {\
         if (!(expr)) {\
-            fprintf(stderr, "[ERROR]: " fmt "\n", ##__VA_ARGS__);\
+            fprintf(stderr, "[ERROR][" location "]: " msg "\n", ##__VA_ARGS__);\
             exit(-1);\
         }\
     } while (0)
@@ -26,7 +26,7 @@ public:
     void stop();
     void reset();
 
-    void print(const char* message) const;
+    void print(const char* location, const char* message) const;
 
 private:
 

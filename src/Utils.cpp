@@ -39,6 +39,6 @@ void Timer::reset() {
     gettimeofday(&timeval_, NULL);
 }
 
-void Timer::print(const char* message) const {
-    fprintf(stderr, "[%-25s]: %20.5lf s\n", message, time_ / (double) 1000000);
+void Timer::print(const char* location, const char* message) const {
+    fprintf(stderr, "[%s][%s]: %.5lf s\n", location, message, time_ / (double) 1000000);
 }
