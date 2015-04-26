@@ -7,16 +7,30 @@
 
 int main(int argc, char* argv[]) {
 
-    IO* io = new IO();
     std::vector<Read*> reads;
 
-    io->readFastaReads(reads, "test.fa");
+    IO::readFastaReads(reads, "test.fa");
 
-    EnhancedSuffixArray* esa1 = new EnhancedSuffixArray(reads, 0, 0);
-    // esa1->print();
+    EnhancedSuffixArray* esa1 = new EnhancedSuffixArray(reads);
+    //esa1->print();
 
-    EnhancedSuffixArray* esa2 = new EnhancedSuffixArray(reads, 0, 1);
-    // esa2->print();
+    char* bytes;
+    int bytesLen;
+
+    esa1->serialize(&bytes, &bytesLen);
+
+    IO::writeToFile(bytes, bytesLen, "huehue");
+
+    delete[] bytes;
+
+    IO::readFromFile(&bytes, &bytesLen, "huehue");
+
+    EnhancedSuffixArray* esa2 = EnhancedSuffixArray::deserialize(bytes);
+
+    delete[] bytes;
+
+    // EnhancedSuffixArray* esa2 = new EnhancedSuffixArray(reads, 0, 1);
+    //esa2->print();
 
     std::vector<int> positions1;
     esa1->getOccurrences(positions1, "ACA");
@@ -45,8 +59,6 @@ int main(int argc, char* argv[]) {
     for (const auto& it : reads) {
         delete it;
     }
-
-    delete io;
 
     return 0;
 }

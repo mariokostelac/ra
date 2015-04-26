@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "CommonHeaders.hpp"
 #include "Read.hpp"
+#include "CommonHeaders.hpp"
 
 // Enhaced suffix array = suffix array + longest common prefix table + child table
 // (+ other tables which are not needed here)
@@ -26,9 +26,14 @@ public:
     // O(m + z)
     void getOccurrences(std::vector<int>& positions, const std::string& pattern) const;
 
+    void serialize(char** bytes, int* bytesLen);
+    static EnhancedSuffixArray* deserialize(const char* bytes);
+
     void print() const;
 
 private:
+
+    EnhancedSuffixArray() {};
 
     // From suffix tree O(n)
     void createSuffixArrayST();

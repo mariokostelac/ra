@@ -18,7 +18,7 @@
 #define SENTINEL_H '~'
 #define SENTINEL_L '!'
 
-static unsigned int getChar(int i, const unsigned char* s, int csize) {
+static int getChar(int i, const unsigned char* s, int csize) {
     if (csize == sizeof(int)) return ((int*) s)[i];
     return ((unsigned char*) s)[i];
 }
@@ -114,7 +114,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm
     createChildTable();
 
     timer.stop();
-    timer.print("ESA|construction");
+    timer.print("ESA", "construction");
 }
 
 EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk, int algorithm) {
@@ -144,7 +144,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk
     createChildTable();
 
     timer.stop();
-    timer.print("ESA|construction");
+    timer.print("ESA", "construction");
 }
 
 int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) const {
@@ -170,6 +170,72 @@ void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std:
     for (int k = i; k < j + 1; ++k) {
         positions.push_back(suftab_[k]);
     }
+}
+
+void EnhancedSuffixArray::serialize(char** bytes, int* bytesLen) {
+
+    int size = sizeof(n_);
+
+    *bytesLen = 0;
+    *bytesLen += size; // n_
+    *bytesLen += n_; // str_
+    *bytesLen += 3 * n_ * size; // suftab_, lcptab_, childtab_
+
+    *bytes = new char[*bytesLen];
+
+    int ptr = 0;
+
+    std::memcpy(*bytes + ptr, &n_, size);
+    ptr += size;
+
+    std::memcpy(*bytes + ptr, &str_[0], n_);
+    ptr += n_;
+
+    std::memcpy(*bytes + ptr, &suftab_[0], n_ * size);
+    ptr += n_ * size;
+
+    std::memcpy(*bytes + ptr, &lcptab_[0], n_ * size);
+    ptr += n_ * size;
+
+    std::memcpy(*bytes + ptr, &childtab_[0], n_ * size);
+    ptr += n_ * size;
+}
+
+EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
+
+    Timer timer;
+    timer.start();
+
+    EnhancedSuffixArray* esa = new EnhancedSuffixArray();
+
+    int size = sizeof(esa->n_);
+
+    int ptr = 0;
+
+    std::memcpy(&esa->n_, bytes + ptr, size);
+    ptr += size;
+
+    esa->str_.resize(esa->n_);
+    esa->suftab_.resize(esa->n_);
+    esa->lcptab_.resize(esa->n_);
+    esa->childtab_.resize(esa->n_);
+
+    std::memcpy(&esa->str_[0], bytes + ptr, esa->n_);
+    ptr += esa->n_;
+
+    std::memcpy(&esa->suftab_[0], bytes + ptr, esa->n_ * sizeof(int));
+    ptr += esa->n_ * size;
+
+    std::memcpy(&esa->lcptab_[0], bytes + ptr, esa->n_ * sizeof(int));
+    ptr += esa->n_ * size;
+
+    std::memcpy(&esa->childtab_[0], bytes + ptr, esa->n_ * sizeof(int));
+    ptr += esa->n_ * size;
+
+    timer.stop();
+    timer.print("ESA", "cached construction");
+
+    return esa;
 }
 
 void EnhancedSuffixArray::print() const {
