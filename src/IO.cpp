@@ -13,7 +13,7 @@
 
 static FILE* fileSafeOpen(const char* path, const char* mode) {
     FILE* f = fopen(path, mode);
-    ASSERT(f != NULL, "cannot open file %s with mode %s", path, mode);
+    ASSERT(f != NULL, "[IO]", "cannot open file %s with mode %s", path, mode);
     return f;
 }
 
@@ -23,6 +23,9 @@ static bool fileExists(const char* path) {
 }
 
 void IO::readFastaReads(std::vector<Read*>& reads, const char* path) {
+
+    Timer timer;
+    timer.start();
 
     FILE* f = fileSafeOpen(path, "r");
 
@@ -71,11 +74,17 @@ void IO::readFastaReads(std::vector<Read*>& reads, const char* path) {
 
     delete[] buffer;
     fclose(f);
+
+    timer.stop();
+    timer.print("IO", "fasta input");
 }
 
 void IO::readFastqReads(std::vector<Read*>& reads, const char* path) {
 
-    ASSERT(fileExists(path), "cannot open file %s with mode r", path);
+    Timer timer;
+    timer.start();
+
+    ASSERT(fileExists(path), "[IO]", "cannot open file %s with mode r", path);
 
     std::ifstream f(path);
     std::string line;
@@ -114,8 +123,33 @@ void IO::readFastqReads(std::vector<Read*>& reads, const char* path) {
     reads.push_back(new Read(name, sequence));
 
     f.close();
+
+    timer.stop();
+    timer.print("IO", "fastq input");
 }
 
 void IO::readAfgReads(std::vector<Read*>& reads, const char* path) {
 
+}
+
+void IO::readFromFile(char** bytes, int* bytesLen, const char* path) {
+
+    FILE* f = fileSafeOpen(path, "rb");
+
+    ASSERT(fread(bytesLen, sizeof(*bytesLen), 1, f) == 1, "[IO]", "reading failed");
+
+    *bytes = new char[*bytesLen];
+    ASSERT(fread(*bytes, sizeof(**bytes), *bytesLen, f) == (unsigned) *bytesLen, "[IO]", "reading failed");
+
+    fclose(f);
+}
+
+void IO::writeToFile(const char* bytes, int bytesLen, const char* path) {
+
+    FILE* f = fileSafeOpen(path, "wb");
+
+    ASSERT(fwrite(&bytesLen, sizeof(bytesLen), 1, f) == 1, "[IO]", "writing failed");
+    ASSERT(fwrite(bytes, sizeof(*bytes), bytesLen, f) == (unsigned) bytesLen, "[IO]", "writing failed");
+
+    fclose(f);
 }
