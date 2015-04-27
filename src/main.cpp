@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<Read*> reads;
 
-    IO::readFastaReads(reads, "test.fa");
+    readFastaReads(reads, "test.fa");
 
     EnhancedSuffixArray* esa1 = new EnhancedSuffixArray(reads);
     //esa1->print();
@@ -19,11 +19,11 @@ int main(int argc, char* argv[]) {
 
     esa1->serialize(&bytes, &bytesLen);
 
-    IO::writeToFile(bytes, bytesLen, "huehue");
+    writeToFile(bytes, bytesLen, "huehue");
 
     delete[] bytes;
 
-    IO::readFromFile(&bytes, &bytesLen, "huehue");
+    readFromFile(&bytes, &bytesLen, "huehue");
 
     EnhancedSuffixArray* esa2 = EnhancedSuffixArray::deserialize(bytes);
 
