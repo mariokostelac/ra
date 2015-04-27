@@ -69,7 +69,7 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
         }
 
         // get left most overlapping kmer
-        int s = std::min(0, i - k + 1);
+        int s = std::max(0, i - k + 1);
 
         if (correctBase(i, s, sequence, k, c, esa)) {
             i = s + k;
@@ -78,8 +78,7 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
         }
 
         // get right most overlapping kmer
-        int e = std::min((int) sequence.size() - 1, i + k - 1);
-        s = e - k + 1;
+        s = std::min((int) sequence.size() - k, i);
 
         if (correctBase(i, s, sequence, k, c, esa)) {
             i = s + k;
