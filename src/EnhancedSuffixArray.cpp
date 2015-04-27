@@ -450,7 +450,8 @@ void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) c
         return;
     }
 
-    while (childtab_[i1] != -1 && childtab_[i1] != i1 && lcptab_[childtab_[i1]] == lcptab_[i1]) {
+    // .nextlIndex if not .down nor .up
+    while (childtab_[i1] != -1 && i1 < n_ && !(lcptab_[childtab_[i1]] > lcptab_[i1] || lcptab_[i1] > lcptab_[i1 + 1])) {
         int i2 = childtab_[i1];
         if (str_[suftab_[i1] + lcptab_[i2]] == c) {
             *s = i1; *e = i2 - 1;
