@@ -33,10 +33,10 @@ int main(int argc, char* argv[]) {
     //esa2->print();
 
     std::vector<int> positions1;
-    esa1->getOccurrences(positions1, "ACA");
+    esa1->getOccurrences(positions1, "ACA", 3);
 
     std::vector<int> positions2;
-    esa2->getOccurrences(positions2, "ACA");
+    esa2->getOccurrences(positions2, "ACA", 3);
 
     if (positions1.size() != positions2.size()) printf("FAILED\n");
     else {

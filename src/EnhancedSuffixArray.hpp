@@ -21,12 +21,12 @@ public:
     EnhancedSuffixArray(const std::vector<Read*>& reads, int rk = 0, int algorithm = 1);
 
     // O(m)
-    int getNumberOfOccurrences(const std::string& pattern) const;
+    int getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    void getOccurrences(std::vector<int>& positions, const std::string& pattern) const;
+    void getOccurrences(std::vector<int>& positions, const char* pattern, int m) const;
 
-    void serialize(char** bytes, int* bytesLen);
+    void serialize(char** bytes, int* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
 
     void print() const;
@@ -47,7 +47,7 @@ private:
     // From lcptab O(n)
     void createChildTable();
 
-    void getInterval(int* s, int* e, const std::string& pattern) const;
+    void getInterval(int* s, int* e, const char* pattern, int m) const;
     void getSubInterval(int* s, int* e, int i, int j, char c) const;
     int getLcp(int i, int j) const;
 

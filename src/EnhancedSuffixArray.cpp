@@ -147,23 +147,23 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk
     timer.print("ESA", "construction");
 }
 
-int EnhancedSuffixArray::getNumberOfOccurrences(const std::string& pattern) const {
+int EnhancedSuffixArray::getNumberOfOccurrences(const char* pattern, int m) const {
 
-    if (pattern.empty()) return 0;
+    if (m <= 0) return 0;
 
     int i, j;
-    getInterval(&i, &j, pattern);
+    getInterval(&i, &j, pattern, m);
 
     if (i == -1 && j == -1) return 0;
     return j - i + 1;
 }
 
-void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std::string& pattern) const {
+void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const char* pattern, int m) const {
 
-    if (pattern.empty()) return;
+    if (m <= 0) return;
 
     int i, j;
-    getInterval(&i, &j, pattern);
+    getInterval(&i, &j, pattern, m);
 
     if (i == -1 && j == -1) return;
 
@@ -172,7 +172,7 @@ void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const std:
     }
 }
 
-void EnhancedSuffixArray::serialize(char** bytes, int* bytesLen) {
+void EnhancedSuffixArray::serialize(char** bytes, int* bytesLen) const {
 
     int size = sizeof(n_);
 
@@ -400,9 +400,8 @@ void EnhancedSuffixArray::createChildTable() {
     }
 }
 
-void EnhancedSuffixArray::getInterval(int* s, int* e, const std::string& pattern) const {
+void EnhancedSuffixArray::getInterval(int* s, int* e, const char* pattern, int m) const {
 
-    int m = pattern.size();
     int i, j, c = 0;
     bool found = false;
 
