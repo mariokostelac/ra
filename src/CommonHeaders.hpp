@@ -14,5 +14,6 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <algorithm>
 
 #include "Utils.hpp"
