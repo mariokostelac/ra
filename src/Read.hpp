@@ -24,6 +24,10 @@ public:
         return sequence_;
     }
 
+    void correctBase(int idx, int c) {
+        sequence_[idx] = c;
+    }
+
     const std::string& getReverseComplement() const {
         return reverseComplement_;
     }

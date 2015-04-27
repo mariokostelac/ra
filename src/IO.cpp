@@ -5,21 +5,14 @@
 *     Author: rvaser
 */
 
-#include <sys/stat.h>
-
 #include "IO.hpp"
 
 #define BUFFER_SIZE 4096
 
 static FILE* fileSafeOpen(const char* path, const char* mode) {
     FILE* f = fopen(path, mode);
-    ASSERT(f != NULL, "[IO]", "cannot open file %s with mode %s", path, mode);
+    ASSERT(f != NULL, "IO", "cannot open file %s with mode %s", path, mode);
     return f;
-}
-
-static bool fileExists(const char* path) {
-    struct stat buf;
-    return stat(path, &buf) != -1;
 }
 
 void readFastaReads(std::vector<Read*>& reads, const char* path) {
@@ -84,7 +77,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
     Timer timer;
     timer.start();
 
-    ASSERT(fileExists(path), "[IO]", "cannot open file %s with mode r", path);
+    ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
 
     std::ifstream f(path);
     std::string line;
@@ -96,6 +89,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
     int i = 0;
 
     while (std::getline(f, line)) {
+        if (line.empty()) continue;
 
         switch (i % 4) {
             case 0:
@@ -132,14 +126,16 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
 
 }
 
-void readFromFile(char** bytes, int* bytesLen, const char* path) {
+void readFromFile(char** bytes, const char* path) {
 
     FILE* f = fileSafeOpen(path, "rb");
 
-    ASSERT(fread(bytesLen, sizeof(*bytesLen), 1, f) == 1, "[IO]", "reading failed");
+    int bytesLen;
 
-    *bytes = new char[*bytesLen];
-    ASSERT(fread(*bytes, sizeof(**bytes), *bytesLen, f) == (unsigned) *bytesLen, "[IO]", "reading failed");
+    ASSERT(fread(&bytesLen, sizeof(bytesLen), 1, f) == 1, "IO", "reading failed");
+
+    *bytes = new char[bytesLen];
+    ASSERT(fread(*bytes, sizeof(**bytes), bytesLen, f) == (unsigned) bytesLen, "IO", "reading failed");
 
     fclose(f);
 }
@@ -148,8 +144,8 @@ void writeToFile(const char* bytes, int bytesLen, const char* path) {
 
     FILE* f = fileSafeOpen(path, "wb");
 
-    ASSERT(fwrite(&bytesLen, sizeof(bytesLen), 1, f) == 1, "[IO]", "writing failed");
-    ASSERT(fwrite(bytes, sizeof(*bytes), bytesLen, f) == (unsigned) bytesLen, "[IO]", "writing failed");
+    ASSERT(fwrite(&bytesLen, sizeof(bytesLen), 1, f) == 1, "IO", "writing failed");
+    ASSERT(fwrite(bytes, sizeof(*bytes), bytesLen, f) == (unsigned) bytesLen, "IO", "writing failed");
 
     fclose(f);
 }

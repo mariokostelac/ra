@@ -14,7 +14,7 @@ static bool isValidChar(char c) {
 
 Read::Read(const std::string& name, const std::string& sequence) {
 
-    ASSERT(name.size() > 0 && sequence.size() > 0, "[Read]", "invalid data");
+    ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
 
     name_ = name;
 
@@ -24,7 +24,7 @@ Read::Read(const std::string& name, const std::string& sequence) {
         }
     }
 
-    ASSERT(sequence_.size() > 0, "[Read]", "invalid data");
+    ASSERT(sequence_.size() > 0, "Read", "invalid data");
 }
 
 void Read::createReverseComplement() {

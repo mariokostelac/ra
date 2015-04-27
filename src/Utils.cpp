@@ -10,6 +10,11 @@
 
 #include "Utils.hpp"
 
+bool fileExists(const char* path) {
+    struct stat buf;
+    return stat(path, &buf) != -1;
+}
+
 Timer::Timer() :
     paused_(0), time_(0), timeval_() {
 }

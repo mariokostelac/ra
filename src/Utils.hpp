@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <sys/stat.h>
 #include <sys/time.h>
 
 #define ASSERT(expr, location, msg, ...)\
@@ -16,6 +17,8 @@
             exit(-1);\
         }\
     } while (0)
+
+bool fileExists(const char* path);
 
 class Timer {
 public:
