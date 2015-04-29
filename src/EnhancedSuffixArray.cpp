@@ -96,7 +96,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm
     timer.start();
 
     str_ += rk == 0 ? read->getSequence() : read->getReverseComplement();
-    str_ += SENTINEL_H;
+    str_ += DELIMITER + SENTINEL_H;
     n_ = str_.size();
 
     if (algorithm == 1) {
@@ -149,7 +149,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk
 
 int EnhancedSuffixArray::getNumberOfOccurrences(const char* pattern, int m) const {
 
-    if (m <= 0) return 0;
+    if (pattern == NULL || m <= 0) return 0;
 
     int i, j;
     getInterval(&i, &j, pattern, m);
@@ -158,17 +158,28 @@ int EnhancedSuffixArray::getNumberOfOccurrences(const char* pattern, int m) cons
     return j - i + 1;
 }
 
-void EnhancedSuffixArray::getOccurrences(std::vector<int>& positions, const char* pattern, int m) const {
+void EnhancedSuffixArray::getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const {
 
-    if (m <= 0) return;
+    if (pattern == NULL || m <= 0) return;
+    if (overlaps.size() > 0) return;
 
-    int i, j;
-    getInterval(&i, &j, pattern, m);
+    int i = 0, j = n_ - 1;
 
-    if (i == -1 && j == -1) return;
+    for (int c = 0; c < m; ++c) {
+        getSubInterval(&i, &j, i, j, pattern[c]);
 
-    for (int k = i; k < j + 1; ++k) {
-        positions.push_back(suftab_[k]);
+        if (i == -1 && j == -1) break;
+
+        overlaps.resize(overlaps.size() + 1);
+
+        int k, l;
+        getSubInterval(&k, &l, i, j, DELIMITER);
+
+        if (k == -1 && l == -1) continue;
+
+        for (int o = k; o < l + 1; ++o) {
+            overlaps[overlaps.size() - 1].push_back(suftab_[o]);
+        }
     }
 }
 

@@ -24,7 +24,7 @@ public:
     int getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    void getOccurrences(std::vector<int>& positions, const char* pattern, int m) const;
+    void getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const;
 
     void serialize(char** bytes, int* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
