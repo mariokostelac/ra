@@ -92,7 +92,6 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
     }
 
     if (correct) {
-        printf("Correcting read\n");
         for (int i = 0; i < (int) positions.size(); ++i) {
             read->correctBase(positions[i], chars[i]);
         }
@@ -101,7 +100,10 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
 
 void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path) {
 
-    std::string cache(path);
+    Timer timer;
+    timer.start();
+
+    std::string cache(path != NULL ? path : "");
     cache += ".ra";
 
     EnhancedSuffixArray* esa = NULL;
@@ -133,4 +135,7 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path) 
     }
 
     delete esa;
+
+    timer.stop();
+    timer.print("Preproc", "error correction");
 }
