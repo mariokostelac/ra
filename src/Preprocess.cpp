@@ -6,7 +6,7 @@
 */
 
 #include "IO.hpp"
-#include "EnhancedSuffixArray.hpp"
+#include "ReadIndex.hpp"
 #include "Preprocess.hpp"
 
 static char switchBase(char c) {
@@ -35,12 +35,12 @@ static char switchBase(char c) {
     return b;
 }
 
-static bool correctBase(int i, int s, std::string& sequence, int k, int c, const EnhancedSuffixArray* esa) {
+static bool correctBase(int i, int s, std::string& sequence, int k, int c, const ReadIndex* rindex) {
 
     for (int j = 0; j < 3; ++j) {
         sequence[i] = switchBase(sequence[i]);
 
-        if (esa->getNumberOfOccurrences(&sequence[s], k) >= c) {
+        if (rindex->getNumberOfOccurrences(&sequence[s], k) >= c) {
             return true;
         }
     }
@@ -48,7 +48,7 @@ static bool correctBase(int i, int s, std::string& sequence, int k, int c, const
     return false;
 }
 
-static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa) {
+static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
 
     std::string sequence(read->getSequence());
 
@@ -58,7 +58,7 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
     bool correct = false;
 
     for (int i = 0; i < (int) sequence.size() - k + 1;) {
-        if (esa->getNumberOfOccurrences(&sequence[i], k) >= c) {
+        if (rindex->getNumberOfOccurrences(&sequence[i], k) >= c) {
             i += k;
             continue;
         }
@@ -71,7 +71,7 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
         // get left most overlapping kmer
         int s = std::max(0, i - k + 1);
 
-        if (correctBase(i, s, sequence, k, c, esa)) {
+        if (correctBase(i, s, sequence, k, c, rindex)) {
             i = s + k;
             correct = true;
             continue;
@@ -80,7 +80,7 @@ static void correctRead(Read* read, int k, int c, const EnhancedSuffixArray* esa
         // get right most overlapping kmer
         s = std::min((int) sequence.size() - k, i);
 
-        if (correctBase(i, s, sequence, k, c, esa)) {
+        if (correctBase(i, s, sequence, k, c, rindex)) {
             i = s + k;
             correct = true;
             continue;
@@ -106,23 +106,23 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path) 
     std::string cache(path != NULL ? path : "");
     cache += ".ra";
 
-    EnhancedSuffixArray* esa = NULL;
+    ReadIndex* rindex = NULL;
 
     if (path != NULL && fileExists(cache.c_str())) {
         char* bytes;
         readFromFile(&bytes, cache.c_str());
 
-        esa = EnhancedSuffixArray::deserialize(bytes);
+        rindex = ReadIndex::deserialize(bytes);
 
         delete[] bytes;
 
     } else {
-        esa = new EnhancedSuffixArray(reads);
+        rindex = new ReadIndex(reads);
 
         if (path != NULL) {
             char* bytes;
-            int bytesLen;
-            esa->serialize(&bytes, &bytesLen);
+            size_t bytesLen;
+            rindex->serialize(&bytes, &bytesLen);
 
             writeToFile(bytes, bytesLen, cache.c_str());
 
@@ -131,10 +131,10 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path) 
     }
 
     for (const auto& it : reads) {
-        correctRead(it, k, c, esa);
+        correctRead(it, k, c, rindex);
     }
 
-    delete esa;
+    delete rindex;
 
     timer.stop();
     timer.print("Preproc", "error correction");

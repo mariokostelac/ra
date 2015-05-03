@@ -11,5 +11,5 @@
 #include "CommonHeaders.hpp"
 
 // error correction of reads based on k-mer frequencies
-// path is used to cache the esa
+// - path is used to cache the ReadIndex
 void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path = NULL);
