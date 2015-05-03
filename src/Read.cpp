@@ -25,9 +25,13 @@ Read::Read(const std::string& name, const std::string& sequence) {
     }
 
     ASSERT(sequence_.size() > 0, "Read", "invalid data");
+
+    length_ = sequence_.size();
 }
 
 void Read::createReverseComplement() {
+
+    reverseComplement_.clear();
 
     for (int i = sequence_.size() - 1; i >= 0; --i) {
 

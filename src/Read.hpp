@@ -24,6 +24,10 @@ public:
         return sequence_;
     }
 
+    size_t getLength() const {
+        return length_;
+    }
+
     void correctBase(int idx, int c) {
         sequence_[idx] = c;
     }
@@ -36,5 +40,6 @@ private:
 
     std::string name_;
     std::string sequence_;
+    size_t length_;
     std::string reverseComplement_;
 };
