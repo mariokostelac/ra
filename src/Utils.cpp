@@ -21,27 +21,26 @@ Timer::Timer() :
 
 void Timer::start() {
 
-    if (paused_) return;
-
     gettimeofday(&timeval_, NULL);
     paused_ = 0;
 }
 
 void Timer::stop() {
 
-    paused_ = 1;
+    if (paused_) return;
 
     timeval stop;
     gettimeofday(&stop, NULL);
 
     time_ += ((stop.tv_sec - timeval_.tv_sec) * 1000000L + stop.tv_usec) - timeval_.tv_usec;
+    paused_ = 1;
 }
 
 void Timer::reset() {
 
-    paused_ = 0;
-    time_ = 0;
     gettimeofday(&timeval_, NULL);
+    time_ = 0;
+    paused_ = 0;
 }
 
 void Timer::print(const char* location, const char* message) const {
