@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "Read.hpp"
 #include "CommonHeaders.hpp"
 
 // Enhaced suffix array = suffix array + longest common prefix table + child table
@@ -16,9 +15,8 @@
 class EnhancedSuffixArray {
 public:
 
-    // InducedSorting = 1, SuffixTree = 0
-    EnhancedSuffixArray(const Read* read, int rk = 0, int algorithm = 1);
-    EnhancedSuffixArray(const std::vector<Read*>& reads, int rk = 0, int algorithm = 1);
+    EnhancedSuffixArray(const std::string& str);
+    EnhancedSuffixArray(const std::vector<const std::string*>& vstr);
 
     // O(m)
     int getNumberOfOccurrences(const char* pattern, int m) const;
@@ -26,10 +24,12 @@ public:
     // O(m + z)
     void getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const;
 
-    void serialize(char** bytes, int* bytesLen) const;
+    void serialize(char** bytes, size_t* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
 
     void print() const;
+
+    size_t getSizeInBytes() const;
 
 private:
 
@@ -39,7 +39,7 @@ private:
     void createSuffixArrayST();
 
     // Induced sorting O(n)
-    void createSuffixArrayIS(const unsigned char* s, int n, int csize, int alphabetSize = 256);
+    void createSuffixArray(const unsigned char* s, int n, int csize, int alphabetSize = 256);
 
     // From suftab O(n)
     void createLongestCommonPrefixTable();

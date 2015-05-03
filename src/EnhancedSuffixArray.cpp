@@ -62,6 +62,7 @@ static void induceS(std::vector<int>& suftab, std::vector<int>& buckets, const u
     }
 }
 
+
 static bool isLMS(int i, std::vector<bool>& t) {
     return i > 0 && t[i] && !t[i - 1];
 }
@@ -90,26 +91,19 @@ static bool equalSubstr(const std::string& str1, int s1, int e1, const std::stri
     return true;
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm) {
+EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
 
     Timer timer;
     timer.start();
 
-    str_ += rk == 0 ? read->getSequence() : read->getReverseComplement();
-    str_ += DELIMITER + SENTINEL_H;
+    str_ += str + DELIMITER;
+    str_ += SENTINEL_H;
+    str_ += SENTINEL_L;
+
     n_ = str_.size();
+    suftab_.resize(n_);
 
-    if (algorithm == 1) {
-        str_ += SENTINEL_L;
-        ++n_;
-        suftab_.resize(n_);
-
-        createSuffixArrayIS((unsigned char*) &str_[0], n_, sizeof(unsigned char));
-
-    } else {
-        createSuffixArrayST();
-    }
-
+    createSuffixArray((unsigned char*) &str_[0], n_, sizeof(unsigned char));
     createLongestCommonPrefixTable();
     createChildTable();
 
@@ -117,29 +111,22 @@ EnhancedSuffixArray::EnhancedSuffixArray(const Read* read, int rk, int algorithm
     timer.print("ESA", "construction");
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<Read*>& reads, int rk, int algorithm) {
+EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<const std::string*>& vstr) {
 
     Timer timer;
     timer.start();
 
-    for (const auto& it : reads) {
-        str_ += rk == 0 ? it->getSequence() : it->getReverseComplement();
-        str_ += DELIMITER;
+    for (const auto& it : vstr) {
+        str_ += *it + DELIMITER;
     }
 
     str_ += SENTINEL_H;
+    str_ += SENTINEL_L;
+
     n_ = str_.size();
+    suftab_.resize(n_);
 
-    if (algorithm == 1) {
-        str_ += SENTINEL_L;
-        ++n_;
-        suftab_.resize(n_);
-
-        createSuffixArrayIS((unsigned char*) &str_[0], n_, sizeof(unsigned char));
-    } else {
-        createSuffixArrayST();
-    }
-
+    createSuffixArray((unsigned char*) &str_[0], n_, sizeof(unsigned char));
     createLongestCommonPrefixTable();
     createChildTable();
 
@@ -183,20 +170,15 @@ void EnhancedSuffixArray::getOverlaps(std::vector<std::vector<int>>& overlaps, c
     }
 }
 
-void EnhancedSuffixArray::serialize(char** bytes, int* bytesLen) const {
+void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
 
-    int size = sizeof(n_);
-
-    *bytesLen = 0;
-    *bytesLen += size; // n_
-    *bytesLen += n_; // str_
-    *bytesLen += 3 * n_ * size; // suftab_, lcptab_, childtab_
-
+    *bytesLen = getSizeInBytes();
     *bytes = new char[*bytesLen];
 
-    int ptr = 0;
+    size_t size = sizeof(int);
+    size_t ptr = 0;
 
-    std::memcpy(*bytes + ptr, &n_, size);
+    std::memcpy(*bytes, &n_, size);
     ptr += size;
 
     std::memcpy(*bytes + ptr, &str_[0], n_);
@@ -209,7 +191,6 @@ void EnhancedSuffixArray::serialize(char** bytes, int* bytesLen) const {
     ptr += n_ * size;
 
     std::memcpy(*bytes + ptr, &childtab_[0], n_ * size);
-    ptr += n_ * size;
 }
 
 EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
@@ -219,11 +200,10 @@ EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
 
     EnhancedSuffixArray* esa = new EnhancedSuffixArray();
 
-    int size = sizeof(esa->n_);
+    size_t size = sizeof(int);
+    size_t ptr = 0;
 
-    int ptr = 0;
-
-    std::memcpy(&esa->n_, bytes + ptr, size);
+    std::memcpy(&esa->n_, bytes, size);
     ptr += size;
 
     esa->str_.resize(esa->n_);
@@ -234,14 +214,13 @@ EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
     std::memcpy(&esa->str_[0], bytes + ptr, esa->n_);
     ptr += esa->n_;
 
-    std::memcpy(&esa->suftab_[0], bytes + ptr, esa->n_ * sizeof(int));
+    std::memcpy(&esa->suftab_[0], bytes + ptr, esa->n_ * size);
     ptr += esa->n_ * size;
 
-    std::memcpy(&esa->lcptab_[0], bytes + ptr, esa->n_ * sizeof(int));
+    std::memcpy(&esa->lcptab_[0], bytes + ptr, esa->n_ * size);
     ptr += esa->n_ * size;
 
-    std::memcpy(&esa->childtab_[0], bytes + ptr, esa->n_ * sizeof(int));
-    ptr += esa->n_ * size;
+    std::memcpy(&esa->childtab_[0], bytes + ptr, esa->n_ * size);
 
     timer.stop();
     timer.print("ESA", "cached construction");
@@ -259,6 +238,18 @@ void EnhancedSuffixArray::print() const {
     }
 }
 
+size_t EnhancedSuffixArray::getSizeInBytes() const {
+
+    size_t bytesLen = 0;
+    size_t size = sizeof(int);
+
+    bytesLen += size; // n_
+    bytesLen += n_; // str_
+    bytesLen += 3 * n_ * size; // suftab_, lcptab_, childtab_
+
+    return bytesLen;
+}
+
 void EnhancedSuffixArray::createSuffixArrayST() {
 
     SuffixTree* st = new SuffixTree(str_);
@@ -267,7 +258,7 @@ void EnhancedSuffixArray::createSuffixArrayST() {
     delete st;
 }
 
-void EnhancedSuffixArray::createSuffixArrayIS(const unsigned char* s, int n, int csize, int alphabetSize) {
+void EnhancedSuffixArray::createSuffixArray(const unsigned char* s, int n, int csize, int alphabetSize) {
 
     // S-type = true, L-type = false
     std::vector<bool> t(n);
@@ -330,7 +321,7 @@ void EnhancedSuffixArray::createSuffixArrayIS(const unsigned char* s, int n, int
     int* s1 = &suftab_[n - n1];
 
     if (name < n1) {
-        createSuffixArrayIS((unsigned char*) s1, n1, sizeof(int), name);
+        createSuffixArray((unsigned char*) s1, n1, sizeof(int), name);
     } else {
         for (int i = 0; i < n1; ++i) suftab_[s1[i]] = i;
     }
@@ -453,6 +444,12 @@ void EnhancedSuffixArray::getInterval(int* s, int* e, const char* pattern, int m
 }
 
 void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) const {
+
+    if (i > j) {
+        *s = -1;
+        *e = -1;
+        return;
+    }
 
     int i1 = (i < childtab_[i] && childtab_[i] <= j) ? childtab_[i] : childtab_[j];
 
