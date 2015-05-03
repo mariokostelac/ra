@@ -130,22 +130,22 @@ void readFromFile(char** bytes, const char* path) {
 
     FILE* f = fileSafeOpen(path, "rb");
 
-    int bytesLen;
+    size_t bytesLen;
 
     ASSERT(fread(&bytesLen, sizeof(bytesLen), 1, f) == 1, "IO", "reading failed");
 
     *bytes = new char[bytesLen];
-    ASSERT(fread(*bytes, sizeof(**bytes), bytesLen, f) == (unsigned) bytesLen, "IO", "reading failed");
+    ASSERT(fread(*bytes, sizeof(**bytes), bytesLen, f) == bytesLen, "IO", "reading failed");
 
     fclose(f);
 }
 
-void writeToFile(const char* bytes, int bytesLen, const char* path) {
+void writeToFile(const char* bytes, size_t bytesLen, const char* path) {
 
     FILE* f = fileSafeOpen(path, "wb");
 
     ASSERT(fwrite(&bytesLen, sizeof(bytesLen), 1, f) == 1, "IO", "writing failed");
-    ASSERT(fwrite(bytes, sizeof(*bytes), bytesLen, f) == (unsigned) bytesLen, "IO", "writing failed");
+    ASSERT(fwrite(bytes, sizeof(*bytes), bytesLen, f) == bytesLen, "IO", "writing failed");
 
     fclose(f);
 }

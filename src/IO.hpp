@@ -18,4 +18,4 @@ void readAfgReads(std::vector<Read*>& reads, const char* path);
 
 void readFromFile(char** bytes, const char* path);
 
-void writeToFile(const char* bytes, int bytesLen, const char* path);
+void writeToFile(const char* bytes, size_t bytesLen, const char* path);
