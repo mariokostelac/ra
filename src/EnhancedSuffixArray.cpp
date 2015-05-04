@@ -245,7 +245,9 @@ size_t EnhancedSuffixArray::getSizeInBytes() const {
 
     bytesLen += size; // n_
     bytesLen += n_; // str_
-    bytesLen += 3 * n_ * size; // suftab_, lcptab_, childtab_
+    bytesLen += (size_t) n_ * size; // suftab_
+    bytesLen += (size_t) n_ * size; // lcptab_
+    bytesLen += (size_t) n_ * size; // childtab_
 
     return bytesLen;
 }
