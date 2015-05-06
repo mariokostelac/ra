@@ -22,7 +22,7 @@ public:
     int getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    // void getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const;
+    void getPrefixSuffixOverlaps(std::vector<int>& overlaps, const char* pattern, int m) const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static ReadIndex* deserialize(char* bytes);
@@ -33,8 +33,9 @@ private:
 
     ReadIndex() {}
 
-    int getIndex(int fragment, int position);
+    int getIndex(int fragment, int position) const;
 
+    int n_;
     std::vector<int> offsets_;
     std::vector<std::vector<int>> dictionary_;
     std::vector<EnhancedSuffixArray*> fragments_;

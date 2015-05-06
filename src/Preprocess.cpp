@@ -134,6 +134,11 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, const char* path) 
         correctRead(it, k, c, rindex);
     }
 
+    for (const auto& it : reads) {
+        std::vector<int> overlaps;
+        rindex->getPrefixSuffixOverlaps(overlaps, it->getSequence().c_str(), it->getLength());
+    }
+
     delete rindex;
 
     timer.stop();

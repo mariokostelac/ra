@@ -7,9 +7,11 @@
 
 #include "ReadIndex.hpp"
 
-#define FRAGMENT_SIZE 2000000000 // ~2GB
+#define FRAGMENT_SIZE 2147483645U // 2GB - 2 for sentinels
 
 ReadIndex::ReadIndex(const Read* read, int rk) {
+
+    n_ = 1;
 
     offsets_.push_back(0);
 
@@ -24,6 +26,8 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
     Timer timer;
     timer.start();
 
+    n_ = reads.size();
+
     offsets_.push_back(0);
     dictionary_.resize(1);
 
@@ -33,7 +37,7 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     for (size_t i = 0; i < reads.size(); ++i) {
 
-        if (length + reads[i]->getLength() > FRAGMENT_SIZE) {
+        if (length + reads[i]->getLength() + 1 > FRAGMENT_SIZE) {
 
             offsets_.push_back(i);
             dictionary_.resize(dictionary_.size() + 1);
@@ -46,7 +50,7 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
         vstr.push_back(&(rk == 0 ? reads[i]->getSequence() : reads[i]->getReverseComplement()));
 
-        length += reads[i]->getLength() + 1;
+        length += reads[i]->getLength() + 1; // DELIMITER
         dictionary_.back().push_back(length);
     }
 
@@ -65,12 +69,46 @@ ReadIndex::~ReadIndex() {
 
 int ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
 
+    if (pattern == NULL || m <= 0) return 0;
+
     int num = 0;
     for (const auto& it : fragments_) {
-        num += it->getNumberOfOccurrences(pattern, m);
+
+        int i, j;
+        it->getInterval(&i, &j, pattern, m);
+
+        num += (i == -1 && j == -1) ? 0 : j - i + 1;
     }
 
     return num;
+}
+
+void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& overlaps, const char* pattern, int m) const {
+
+    if (pattern == NULL || m <= 0) return;
+
+    overlaps.clear();
+    overlaps.resize(n_, 0);
+
+    for (int f = 0; f < (int) fragments_.size(); ++f) {
+
+        int i = 0, j = fragments_[f]->getLength() - 1;
+
+        for (int c = 0; c < m; ++c) {
+            fragments_[f]->getSubInterval(&i, &j, i, j, pattern[c]);
+
+            if (i == -1 && j == -1) break;
+
+            int k, l;
+            fragments_[f]->getSubInterval(&k, &l, i, j, pattern[c]);
+
+            if (k == -1 && l == -1) continue;
+
+            for (int o = k; o < l + 1; ++o) {
+                overlaps[getIndex(f, fragments_[f]->getSuffix(o))] = c + 1;
+            }
+        }
+    }
 }
 
 void ReadIndex::serialize(char** bytes, size_t* bytesLen) const {
@@ -81,9 +119,12 @@ void ReadIndex::serialize(char** bytes, size_t* bytesLen) const {
     size_t size = sizeof(int);
     size_t ptr = 0;
 
+    std::memcpy(*bytes + ptr, &n_, size);
+    ptr += size;
+
     int numFragments = fragments_.size();
 
-    std::memcpy(*bytes, &numFragments, size);
+    std::memcpy(*bytes + ptr, &numFragments, size);
     ptr += size;
 
     std::memcpy(*bytes + ptr, &offsets_[0], numFragments * size);
@@ -126,9 +167,12 @@ ReadIndex* ReadIndex::deserialize(char* bytes) {
     size_t size = sizeof(int);
     size_t ptr = 0;
 
+    std::memcpy(&rindex->n_, bytes + ptr, size);
+    ptr += size;
+
     int numFragments = 0;
 
-    std::memcpy(&numFragments, bytes, size);
+    std::memcpy(&numFragments, bytes + ptr, size);
     ptr += size;
 
     rindex->offsets_.resize(numFragments);
@@ -168,10 +212,11 @@ ReadIndex* ReadIndex::deserialize(char* bytes) {
 }
 
 size_t ReadIndex::getSizeInBytes() const {
-    
+
     size_t bytesLen = 0;
     size_t size = sizeof(int);
 
+    bytesLen += size; // n_
     bytesLen += size; // number of fragments
     bytesLen += offsets_.size() * size;
 
@@ -188,7 +233,7 @@ size_t ReadIndex::getSizeInBytes() const {
     return bytesLen;
 }
 
-int ReadIndex::getIndex(int fragment, int position) {
+int ReadIndex::getIndex(int fragment, int position) const {
 
     auto up = std::upper_bound(dictionary_[fragment].begin(), dictionary_[fragment].end(), position);
     return up - dictionary_[fragment].begin();
