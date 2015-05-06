@@ -13,8 +13,6 @@ class Read {
 public:
 
     Read(const std::string& name, const std::string& sequence);
-    
-    void createReverseComplement();
 
     const std::string& getName() const {
         return name_;
@@ -24,7 +22,7 @@ public:
         return sequence_;
     }
 
-    size_t getLength() const {
+    int getLength() const {
         return length_;
     }
 
@@ -36,10 +34,12 @@ public:
         return reverseComplement_;
     }
 
+    void createReverseComplement();
+
 private:
 
     std::string name_;
     std::string sequence_;
-    size_t length_;
+    int length_;
     std::string reverseComplement_;
 };
