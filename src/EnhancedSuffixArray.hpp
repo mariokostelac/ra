@@ -18,11 +18,20 @@ public:
     EnhancedSuffixArray(const std::string& str);
     EnhancedSuffixArray(const std::vector<const std::string*>& vstr);
 
-    // O(m)
-    int getNumberOfOccurrences(const char* pattern, int m) const;
+    int getLength() const {
+        return n_;
+    }
 
-    // O(m + z)
-    void getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const;
+    int getSuffix(int i) const {
+        ASSERT(i >= 0 && i < n_, "ESA", "index out of range");
+        return suftab_[i];
+    }
+
+    // O(m)
+    void getInterval(int* s, int* e, const char* pattern, int m) const;
+
+    // O(1)
+    void getSubInterval(int* s, int* e, int i, int j, char c) const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
@@ -47,8 +56,6 @@ private:
     // From lcptab O(n)
     void createChildTable();
 
-    void getInterval(int* s, int* e, const char* pattern, int m) const;
-    void getSubInterval(int* s, int* e, int i, int j, char c) const;
     int getLcp(int i, int j) const;
 
     int n_;

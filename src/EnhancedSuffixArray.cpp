@@ -18,6 +18,8 @@
 #define SENTINEL_H '~'
 #define SENTINEL_L '!'
 
+#define MAX_SIZE 2147483647U
+
 static int getChar(int i, const unsigned char* s, int csize) {
     if (csize == sizeof(int)) return ((int*) s)[i];
     return ((unsigned char*) s)[i];
@@ -100,6 +102,8 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
     str_ += SENTINEL_H;
     str_ += SENTINEL_L;
 
+    ASSERT(str_.size() <= MAX_SIZE, "ESA", "invalid input string length");
+
     n_ = str_.size();
     suftab_.resize(n_);
 
@@ -123,6 +127,8 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<const std::string*>& 
     str_ += SENTINEL_H;
     str_ += SENTINEL_L;
 
+    ASSERT(str_.size() <= MAX_SIZE, "ESA", "invalid input string length");
+
     n_ = str_.size();
     suftab_.resize(n_);
 
@@ -134,40 +140,79 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<const std::string*>& 
     timer.print("ESA", "construction");
 }
 
-int EnhancedSuffixArray::getNumberOfOccurrences(const char* pattern, int m) const {
+void EnhancedSuffixArray::getInterval(int* s, int* e, const char* pattern, int m) const {
 
-    if (pattern == NULL || m <= 0) return 0;
+    int i, j, c = 0;
+    bool found = false;
 
-    int i, j;
-    getInterval(&i, &j, pattern, m);
+    getSubInterval(&i, &j, 0, n_ - 1, pattern[c]);
 
-    if (i == -1 && j == -1) return 0;
-    return j - i + 1;
+    while (i != -1 && j != -1 && c < m) {
+        found = true;
+
+        if (i != j) {
+            int l = getLcp(i, j);
+            int min = l < m ? l : m;
+
+            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + min - 1,
+                pattern, c, min - 1);
+
+            c = min;
+            if (c == m) break;
+
+            getSubInterval(&i, &j, i, j, pattern[c]);
+
+        } else {
+            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + m - 1,
+                pattern, c, m - 1);
+            c = m;
+        }
+
+        if (!found) break;
+    }
+
+    if (found) {
+        *s = i;
+        *e = j;
+        return;
+    }
+
+    *s = -1;
+    *e = -1;
 }
 
-void EnhancedSuffixArray::getOverlaps(std::vector<std::vector<int>>& overlaps, const char* pattern, int m) const {
+void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) const {
 
-    if (pattern == NULL || m <= 0) return;
-    if (overlaps.size() > 0) return;
-
-    int i = 0, j = n_ - 1;
-
-    for (int c = 0; c < m; ++c) {
-        getSubInterval(&i, &j, i, j, pattern[c]);
-
-        if (i == -1 && j == -1) break;
-
-        overlaps.resize(overlaps.size() + 1);
-
-        int k, l;
-        getSubInterval(&k, &l, i, j, DELIMITER);
-
-        if (k == -1 && l == -1) continue;
-
-        for (int o = k; o < l + 1; ++o) {
-            overlaps[overlaps.size() - 1].push_back(suftab_[o]);
-        }
+    if (i > j) {
+        *s = -1;
+        *e = -1;
+        return;
     }
+
+    int i1 = (i < childtab_[i] && childtab_[i] <= j) ? childtab_[i] : childtab_[j];
+
+    if (str_[suftab_[i] + lcptab_[i1]] == c) {
+        *s = i; *e = i1 - 1;
+        return;
+    }
+
+    // .nextlIndex if not .down nor .up
+    while (childtab_[i1] != -1 && i1 < n_ && !(lcptab_[childtab_[i1]] > lcptab_[i1] || lcptab_[i1] > lcptab_[i1 + 1])) {
+        int i2 = childtab_[i1];
+        if (str_[suftab_[i1] + lcptab_[i2]] == c) {
+            *s = i1; *e = i2 - 1;
+            return;
+        }
+        i1 = i2;
+    }
+
+    if (str_[suftab_[i1] + lcptab_[i1]] == c) {
+        *s = i1; *e = j;
+        return;
+    }
+
+    *s = -1;
+    *e = -1;
 }
 
 void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
@@ -178,7 +223,7 @@ void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
     size_t size = sizeof(int);
     size_t ptr = 0;
 
-    std::memcpy(*bytes, &n_, size);
+    std::memcpy(*bytes+ ptr, &n_, size);
     ptr += size;
 
     std::memcpy(*bytes + ptr, &str_[0], n_);
@@ -203,7 +248,7 @@ EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
     size_t size = sizeof(int);
     size_t ptr = 0;
 
-    std::memcpy(&esa->n_, bytes, size);
+    std::memcpy(&esa->n_, bytes + ptr, size);
     ptr += size;
 
     esa->str_.resize(esa->n_);
@@ -402,81 +447,6 @@ void EnhancedSuffixArray::createChildTable() {
 
         st.push(i);
     }
-}
-
-void EnhancedSuffixArray::getInterval(int* s, int* e, const char* pattern, int m) const {
-
-    int i, j, c = 0;
-    bool found = false;
-
-    getSubInterval(&i, &j, 0, n_ - 1, pattern[c]);
-
-    while (i != -1 && j != -1 && c < m) {
-        found = true;
-
-        if (i != j) {
-            int l = getLcp(i, j);
-            int min = l < m ? l : m;
-
-            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + min - 1,
-                pattern, c, min - 1);
-
-            c = min;
-            if (c == m) break;
-
-            getSubInterval(&i, &j, i, j, pattern[c]);
-
-        } else {
-            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + m - 1,
-                pattern, c, m - 1);
-            c = m;
-        }
-
-        if (!found) break;
-    }
-
-    if (found) {
-        *s = i;
-        *e = j;
-        return;
-    }
-
-    *s = -1;
-    *e = -1;
-}
-
-void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) const {
-
-    if (i > j) {
-        *s = -1;
-        *e = -1;
-        return;
-    }
-
-    int i1 = (i < childtab_[i] && childtab_[i] <= j) ? childtab_[i] : childtab_[j];
-
-    if (str_[suftab_[i] + lcptab_[i1]] == c) {
-        *s = i; *e = i1 - 1;
-        return;
-    }
-
-    // .nextlIndex if not .down nor .up
-    while (childtab_[i1] != -1 && i1 < n_ && !(lcptab_[childtab_[i1]] > lcptab_[i1] || lcptab_[i1] > lcptab_[i1 + 1])) {
-        int i2 = childtab_[i1];
-        if (str_[suftab_[i1] + lcptab_[i2]] == c) {
-            *s = i1; *e = i2 - 1;
-            return;
-        }
-        i1 = i2;
-    }
-
-    if (str_[suftab_[i1] + lcptab_[i1]] == c) {
-        *s = i1; *e = j;
-        return;
-    }
-
-    *s = -1;
-    *e = -1;
 }
 
 int EnhancedSuffixArray::getLcp(int i, int j) const {
