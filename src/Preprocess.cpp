@@ -102,10 +102,10 @@ static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
     }
 }
 
-static void correctReads(std::vector<Read*>& reads, int start, int end, int k, int c, const ReadIndex* rindex) {
+static void correctReads(std::vector<Read*>* reads, int start, int end, int k, int c, const ReadIndex* rindex) {
 
     for (int i = start; i < end; ++i) {
-        correctRead(reads[i], k, c, rindex);
+        correctRead((*reads)[i], k, c, rindex);
     }
 }
 
@@ -186,7 +186,7 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
     int end = taskLen;
 
     for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(correctReads, reads, start, end, k, c, rindex);
+        threads.emplace_back(correctReads, &reads, start, end, k, c, rindex);
         start = end;
         end = std::min(end + taskLen, (int) reads.size());
     }
