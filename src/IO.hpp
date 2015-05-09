@@ -10,6 +10,25 @@
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
+class Options {
+public:
+
+    Options() {}
+    Options(const char* readsPath, int threadLen);
+    ~Options() {}
+
+    static Options* parseOptions(int argc, char** argv);
+
+    static void help();
+
+    const char* readsPath;
+    int threadLen;
+
+private:
+
+    static const struct option options_[];
+};
+
 void readFastaReads(std::vector<Read*>& reads, const char* path);
 
 void readFastqReads(std::vector<Read*>& reads, const char* path);

@@ -7,15 +7,14 @@
 
 int main(int argc, char* argv[]) {
 
+    Options* options = Options::parseOptions(argc, argv);
+
+    if (options == NULL) return -1;
+
     std::vector<Read*> reads;
+    readFastqReads(reads, options->readsPath);
 
-    int threadLen = std::thread::hardware_concurrency();
-    if (threadLen == 0) threadLen = 1;
-    printf("thredLen = %d\n", threadLen);
-
-    readFastqReads(reads, "test2.fa");
-
-    errorCorrection(reads, 15, 4, threadLen, "test2.fa");
+    errorCorrection(reads, options->threadLen, options->readsPath);
 
     for (const auto& it : reads) {
         delete it;

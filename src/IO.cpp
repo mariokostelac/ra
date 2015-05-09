@@ -15,6 +15,65 @@ static FILE* fileSafeOpen(const char* path, const char* mode) {
     return f;
 }
 
+const struct option Options::options_[] = {
+    {"reads", required_argument, 0, 'i'},
+    {"threads", required_argument, 0, 't'},
+    {"help", no_argument, 0, 'h'},
+    {0, 0, 0, 0}
+};
+
+Options::Options(const char* readsPath, int threadLen) :
+    readsPath(readsPath), threadLen(threadLen) {
+}
+
+Options* Options::parseOptions(int argc, char** argv) {
+
+    char* readsPath = NULL;
+    int threadLen = std::thread::hardware_concurrency();
+
+    while (1) {
+
+        char argument = getopt_long(argc, argv, "i:t:h", options_, NULL);
+
+        if (argument == -1) {
+            break;
+        }
+
+        switch (argument) {
+        case 'i':
+            readsPath = optarg;
+            break;
+        case 't':
+            threadLen = atoi(optarg);
+            break;
+        default:
+            help();
+            return NULL;
+        }
+    }
+
+    ASSERT(readsPath, "IO", "missing option -i (reads file)");
+    ASSERT(threadLen >= 0, "IO", "invalid thread number");
+
+    return new Options(readsPath, threadLen);
+}
+
+void Options::help() {
+
+    printf(
+    "usage: ra -i <read file> [arguments ...]\n"
+    "\n"
+    "arguments:\n"
+    "    -i, --reads <file>\n"
+    "        (required)\n"
+    "        input fasta/fastq reads file\n"
+    "    -t, --threads <int>\n"
+    "        default: approx. number of processors/cores\n"
+    "        number of threads used\n"
+    "    -h, -help\n"
+    "        prints out the help\n");
+}
+
 void readFastaReads(std::vector<Read*>& reads, const char* path) {
 
     Timer timer;

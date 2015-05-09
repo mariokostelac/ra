@@ -8,17 +8,19 @@
 #pragma once
 
 #include <stdlib.h>
-#include <stdio.h>
+#include <getopt.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
+
+#include <algorithm>
 #include <fstream>
 #include <cstring>
 #include <string>
+#include <thread>
 #include <vector>
+#include <stack>
 #include <map>
 #include <set>
-#include <stack>
-#include <algorithm>
-#include <thread>
 
 #include "Utils.hpp"
