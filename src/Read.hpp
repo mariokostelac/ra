@@ -13,6 +13,7 @@ class Read {
 public:
 
     Read(const std::string& name, const std::string& sequence);
+    ~Read() {};
 
     const std::string& getName() const {
         return name_;

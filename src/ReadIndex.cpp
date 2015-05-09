@@ -67,11 +67,11 @@ ReadIndex::~ReadIndex() {
     }
 }
 
-int ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
+size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
 
     if (pattern == NULL || m <= 0) return 0;
 
-    int num = 0;
+    size_t num = 0;
     for (const auto& it : fragments_) {
 
         int i, j;

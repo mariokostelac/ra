@@ -13,6 +13,7 @@ class Node {
 public:
 
     Node(int edgeStart = -1, int edgeEnd = -1);
+    ~Node() {}
 
     int getEdgeStart() const {
         return edgeStart_;

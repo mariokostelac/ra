@@ -19,7 +19,7 @@ public:
     ~ReadIndex();
 
     // O(m)
-    int getNumberOfOccurrences(const char* pattern, int m) const;
+    size_t getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
     void getPrefixSuffixOverlaps(std::vector<int>& overlaps, const char* pattern, int m) const;

@@ -17,6 +17,7 @@ public:
 
     EnhancedSuffixArray(const std::string& str);
     EnhancedSuffixArray(const std::vector<const std::string*>& vstr);
+    ~EnhancedSuffixArray() {}
 
     int getLength() const {
         return n_;
