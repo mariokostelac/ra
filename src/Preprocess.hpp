@@ -17,7 +17,7 @@
 
 // error correction of reads based on k-mer frequencies
 // - path is used to cache the ReadIndex
-void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path = NULL);
+void errorCorrection(std::vector<Read*>& reads, int threadLen, const char* path);
 
 class KmerDistribution {
 public:
@@ -32,7 +32,7 @@ public:
     // returns the proportion of the distribution less than or equal to n
     double getCumulativeProportion(int n) const;
 
-    // returns the boundary of the left tail which holds erronous kmers
+    // returns the boundary of the left tail which holds erroneous kmers
     int getErrorBoundary() const;
     int getErrorBoundary(double ratio) const;
 

@@ -7,7 +7,7 @@ OBJ_DIR = obj
 SRC_DIR = src
 
 CP_FLAGS = -std=c++0x -O3 -Wall
-LD_FLAGS = -lpthread
+LD_FLAGS = -pthread
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
 OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))

@@ -10,7 +10,7 @@
 #include "Preprocess.hpp"
 
 #define MIN_KMER 20
-#define MAX_KMER 50
+#define MAX_KMER 45
 
 static char switchBase(char c) {
 
@@ -102,19 +102,22 @@ static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
     }
 }
 
-static void correctReads(std::vector<Read*>* reads, int start, int end, int k, int c, const ReadIndex* rindex) {
+static void correctReads(std::vector<Read*>& reads, int start, int end, int k, int c, const ReadIndex* rindex) {
 
     for (int i = start; i < end; ++i) {
-        correctRead((*reads)[i], k, c, rindex);
+        correctRead(reads[i], k, c, rindex);
     }
 }
 
-static void learnErrorCorrectionParameters(int* k, int* c, std::vector<Read*>& reads, const ReadIndex* rindex) {
+static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, const ReadIndex* rindex) {
 
     srand(time(NULL));
 
+    *k = -1;
+    *c = -1;
+
     std::set<int> samples;
-    size_t samples_num = reads.size() * 7 / 100;
+    size_t samples_num = reads.size() * 1.5 / 100;
 
     while (samples.size() != samples_num) {
         samples.insert(rand() % reads.size());
@@ -133,20 +136,24 @@ static void learnErrorCorrectionParameters(int* k, int* c, std::vector<Read*>& r
             }
         }
 
-        int threshold = kmerDistribution.getErrorBoundary();
-        int threshold2 = kmerDistribution.getErrorBoundary(2.0f);
+        //int threshold = kmerDistribution.getErrorBoundary();
+        int threshold = kmerDistribution.getErrorBoundary(2.0f);
+
+        if (threshold == -1) continue;
 
         double cumulative = kmerDistribution.getCumulativeProportion(threshold);
-        double cumulative2 = kmerDistribution.getCumulativeProportion(threshold2);
 
-        printf("k = %d, c1 = %d c2 = %d\n", i, threshold, threshold2);
-        printf("cu1 = %lf cu2 = %lf\n", cumulative, cumulative2);
+        if (cumulative < 0.25f) {
+            *k = i;
+            *c = threshold;
+            break;
+        }
     }
 }
 
-void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
+void errorCorrection(std::vector<Read*>& reads, int threadLen, const char* path) {
 
-    ASSERT(threadLen > 0, "Preproc", "invalid number of threads");
+    threadLen = std::max(threadLen, 1);
 
     Timer timer;
     timer.start();
@@ -178,15 +185,20 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
         }
     }
 
-    learnErrorCorrectionParameters(&k, &c, reads, rindex);
+    int k, c;
+    learnCorrectionParams(&k, &c, reads, rindex);
+
+    ASSERT(k != -1 && c != -1, "Preproc", "learning of correction parameters failed");
+    fprintf(stderr, "[Preproc][error correction] using k = %d, c = %d\n", k, c);
 
     std::vector<std::thread> threads;
-    int taskLen = reads.size() / threadLen;
+    int taskLen = std::ceil((double) reads.size() / threadLen);
     int start = 0;
     int end = taskLen;
 
     for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(correctReads, &reads, start, end, k, c, rindex);
+        threads.emplace_back(correctReads, std::ref(reads), start, end, k, c, rindex);
+
         start = end;
         end = std::min(end + taskLen, (int) reads.size());
     }
@@ -203,8 +215,12 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
 
 double KmerDistribution::getCumulativeProportion(int n) const {
 
+    int max = 1000;
+
+    if (n < 0 || n >= max) return -1;
+
     std::vector<int> countVector;
-    toCountVector(countVector, 1000);
+    toCountVector(countVector, max);
 
     std::int64_t sum = 0;
 
@@ -221,7 +237,6 @@ double KmerDistribution::getCumulativeProportion(int n) const {
         cumulativeVector[i] = (double) runningSum / sum;
     }
 
-    ASSERT(n < (int) cumulativeVector.size(), "KmerDist", "invalid n");
     return cumulativeVector[n];
 }
 
@@ -230,7 +245,7 @@ int KmerDistribution::getErrorBoundary() const {
     int mode = getIgnoreMode(5);
     if (mode == -1) return -1;
 
-    fprintf(stderr, "Trusted mode = %d\n", mode);
+    // fprintf(stderr, "Trusted mode = %d\n", mode);
 
     std::vector<int> countVector;
     toCountVector(countVector, 1000);
@@ -259,7 +274,7 @@ int KmerDistribution::getErrorBoundary(double ratio) const {
     int mode = getIgnoreMode(5);
     if (mode == -1) return -1;
 
-    fprintf(stderr, "Trusted mode = %d\n", mode);
+    // fprintf(stderr, "Trusted mode = %d\n", mode);
 
     std::vector<int> countVector;
     toCountVector(countVector, 1000);
