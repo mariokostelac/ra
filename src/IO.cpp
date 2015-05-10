@@ -18,18 +18,22 @@ static FILE* fileSafeOpen(const char* path, const char* mode) {
 const struct option Options::options_[] = {
     {"reads", required_argument, 0, 'i'},
     {"threads", required_argument, 0, 't'},
+    {"kmer", required_argument, 0, 'k'},
+    {"threshold", required_argument, 0, 'c'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
 };
 
-Options::Options(const char* readsPath, int threadLen) :
-    readsPath(readsPath), threadLen(threadLen) {
+Options::Options(const char* readsPath, int threadLen, int k, int c) :
+    readsPath(readsPath), threadLen(threadLen), k(k), c(c) {
 }
 
 Options* Options::parseOptions(int argc, char** argv) {
 
     char* readsPath = NULL;
     int threadLen = std::thread::hardware_concurrency();
+    int k = -1;
+    int c = -1;
 
     while (1) {
 
@@ -46,6 +50,12 @@ Options* Options::parseOptions(int argc, char** argv) {
         case 't':
             threadLen = atoi(optarg);
             break;
+        case 'k':
+            k = atoi(optarg);
+            break;
+        case 'c':
+            c = atoi(optarg);
+            break;
         default:
             help();
             return NULL;
@@ -55,7 +65,7 @@ Options* Options::parseOptions(int argc, char** argv) {
     ASSERT(readsPath, "IO", "missing option -i (reads file)");
     ASSERT(threadLen >= 0, "IO", "invalid thread number");
 
-    return new Options(readsPath, threadLen);
+    return new Options(readsPath, threadLen, k, c);
 }
 
 void Options::help() {
@@ -70,6 +80,12 @@ void Options::help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
+    "    -kmer <int>\n"
+    "        default: based on dataset\n"
+    "        length of k-mers used in error correction\n"
+    "    -threshold <int>\n"
+    "        default: based on dataset\n"
+    "        minimal number of occurrences for a k-mer to not be erroneous\n"
     "    -h, -help\n"
     "        prints out the help\n");
 }
