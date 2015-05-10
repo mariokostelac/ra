@@ -9,7 +9,7 @@
 #include "ReadIndex.hpp"
 #include "Preprocess.hpp"
 
-#define MIN_KMER 20
+#define MIN_KMER 15
 #define MAX_KMER 45
 
 static char switchBase(char c) {
@@ -109,49 +109,74 @@ static void correctReads(std::vector<Read*>& reads, int start, int end, int k, i
     }
 }
 
-static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, const ReadIndex* rindex) {
+static void learnCorrectionParamC(int* c, int k, std::vector<Read*>& reads, const ReadIndex* rindex) {
+
+    *c = -1;
 
     srand(time(NULL));
 
-    *k = -1;
-    *c = -1;
+    std::set<int> samplesIdx;
+    std::vector<Read*> samples;
 
-    std::set<int> samples;
-    size_t samples_num = reads.size() * 1.5 / 100;
+    size_t samplesNum = reads.size() * 5 / 1000;
 
-    while (samples.size() != samples_num) {
-        samples.insert(rand() % reads.size());
+    if (samplesNum < 50) {
+        samples = reads;
+
+    } else {
+        while (samplesIdx.size() != samplesNum) {
+
+            size_t size = samplesIdx.size();
+            int idx = rand() % reads.size();
+
+            samplesIdx.insert(idx);
+
+            if (size != samplesIdx.size()) {
+                samples.push_back(reads[idx]);
+            }
+        }
     }
 
     KmerDistribution kmerDistribution;
 
-    for (int i = MAX_KMER; i >= MIN_KMER; --i) {
-        for (const auto& it : samples) {
+    for (const auto& it : samples) {
 
-            const char* read = reads[it]->getSequence().c_str();
-            int nk = reads[it]->getLength() - i + 1;
+        const char* sequence = it->getSequence().c_str();
+        int nk = it->getLength() - k + 1;
 
-            for (int j = 0; j < nk; ++j) {
-                kmerDistribution.add(rindex->getNumberOfOccurrences(&read[j], i));
-            }
+        for (int i = 0; i < nk; ++i) {
+            kmerDistribution.add(rindex->getNumberOfOccurrences(&sequence[i], k));
         }
+    }
 
-        //int threshold = kmerDistribution.getErrorBoundary();
-        int threshold = kmerDistribution.getErrorBoundary(2.0f);
+    // int threshold = kmerDistribution.getErrorBoundary();
+    int threshold = kmerDistribution.getErrorBoundary(2.0f);
 
-        if (threshold == -1) continue;
+    if (threshold == -1) return;
 
-        double cumulative = kmerDistribution.getCumulativeProportion(threshold);
+    double cumulative = kmerDistribution.getCumulativeProportion(threshold);
 
-        if (cumulative < 0.25f) {
+    if (cumulative < 0.25f) {
+        *c = threshold;
+    }
+}
+
+static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, const ReadIndex* rindex) {
+
+    *k = -1;
+
+    for (int i = MAX_KMER; i >= MIN_KMER; --i) {
+
+        learnCorrectionParamC(c, i, reads, rindex);
+
+        if (*c != -1) {
             *k = i;
-            *c = threshold;
             break;
         }
     }
 }
 
-void errorCorrection(std::vector<Read*>& reads, int threadLen, const char* path) {
+void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
 
     threadLen = std::max(threadLen, 1);
 
@@ -185,16 +210,23 @@ void errorCorrection(std::vector<Read*>& reads, int threadLen, const char* path)
         }
     }
 
-    int k, c;
-    learnCorrectionParams(&k, &c, reads, rindex);
+    if (k == -1 && c == -1) {
+        learnCorrectionParams(&k, &c, reads, rindex);
+    } else if (k > 0 && c == -1) {
+        learnCorrectionParamC(&c, k, reads, rindex);
+    } else {
+        ASSERT(k > 0, "Preproc", "invalid k-mer length k");
+        ASSERT(c > 1, "Preproc", "invalid threshold c");
+    }
 
     ASSERT(k != -1 && c != -1, "Preproc", "learning of correction parameters failed");
-    fprintf(stderr, "[Preproc][error correction] using k = %d, c = %d\n", k, c);
+    fprintf(stderr, "[Preproc][error correction]: using k = %d, c = %d\n", k, c);
 
-    std::vector<std::thread> threads;
     int taskLen = std::ceil((double) reads.size() / threadLen);
     int start = 0;
     int end = taskLen;
+
+    std::vector<std::thread> threads;
 
     for (int i = 0; i < threadLen; ++i) {
         threads.emplace_back(correctReads, std::ref(reads), start, end, k, c, rindex);
@@ -228,16 +260,17 @@ double KmerDistribution::getCumulativeProportion(int n) const {
         sum += countVector[i];
     }
 
-    std::vector<double> cumulativeVector(countVector.size());
+    // std::vector<double> cumulativeVector(countVector.size());
     std::int64_t runningSum = 0;
 
-    for (size_t i = 0; i < cumulativeVector.size(); ++i) {
+    // for (size_t i = 0; i < cumulativeVector.size(); ++i) {
+    for (int i = 1; i <= n; ++i) {
 
         runningSum += countVector[i];
-        cumulativeVector[i] = (double) runningSum / sum;
+        //cumulativeVector[i] = (double) runningSum / sum;
     }
 
-    return cumulativeVector[n];
+    return (double) runningSum / sum;
 }
 
 int KmerDistribution::getErrorBoundary() const {

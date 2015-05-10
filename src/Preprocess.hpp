@@ -17,7 +17,7 @@
 
 // error correction of reads based on k-mer frequencies
 // - path is used to cache the ReadIndex
-void errorCorrection(std::vector<Read*>& reads, int threadLen, const char* path);
+void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path);
 
 class KmerDistribution {
 public:

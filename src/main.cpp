@@ -14,11 +14,13 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> reads;
     readFastqReads(reads, options->readsPath);
 
-    errorCorrection(reads, options->threadLen, options->readsPath);
+    errorCorrection(reads, options->k, options->c, options->threadLen, options->readsPath);
 
     for (const auto& it : reads) {
         delete it;
     }
+
+    delete options;
 
     return 0;
 }
