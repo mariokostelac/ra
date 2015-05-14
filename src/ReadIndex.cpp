@@ -83,12 +83,12 @@ size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
     return num;
 }
 
-void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& overlaps, const char* pattern, int m) const {
+void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m) const {
 
     if (pattern == NULL || m <= 0) return;
 
-    overlaps.clear();
-    overlaps.resize(n_, 0);
+    dst.clear();
+    dst.resize(n_, 0);
 
     for (int f = 0; f < (int) fragments_.size(); ++f) {
 
@@ -105,7 +105,7 @@ void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& overlaps, const char* 
             if (k == -1 && l == -1) continue;
 
             for (int o = k; o < l + 1; ++o) {
-                overlaps[getIndex(f, fragments_[f]->getSuffix(o))] = c + 1;
+                dst[getIndex(f, fragments_[f]->getSuffix(o))] = c + 1;
             }
         }
     }

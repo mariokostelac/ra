@@ -15,10 +15,6 @@
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
-// error correction of reads based on k-mer frequencies
-// - path is used to cache the ReadIndex
-void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path);
-
 class KmerDistribution {
 public:
 
@@ -45,3 +41,7 @@ private:
 
     std::map<int, int> histogram_;
 };
+
+// error correction of reads based on k-mer frequencies
+// - path is used to cache the ReadIndex
+void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path);

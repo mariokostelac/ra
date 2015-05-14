@@ -176,73 +176,6 @@ static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, con
     }
 }
 
-void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
-
-    Timer timer;
-    timer.start();
-
-    std::string cache(path != NULL ? path : "");
-    cache += ".ra";
-
-    ReadIndex* rindex = NULL;
-
-    if (path != NULL && fileExists(cache.c_str())) {
-        char* bytes;
-        readFromFile(&bytes, cache.c_str());
-
-        rindex = ReadIndex::deserialize(bytes);
-
-        delete[] bytes;
-
-    } else {
-        rindex = new ReadIndex(reads);
-
-        if (path != NULL) {
-            char* bytes;
-            size_t bytesLen;
-            rindex->serialize(&bytes, &bytesLen);
-
-            writeToFile(bytes, bytesLen, cache.c_str());
-
-            delete[] bytes;
-        }
-    }
-
-    if (k == -1 && c == -1) {
-        learnCorrectionParams(&k, &c, reads, rindex);
-    } else if (k > 0 && c == -1) {
-        learnCorrectionParamC(&c, k, reads, rindex);
-    } else {
-        ASSERT(k > 0, "Preproc", "invalid k-mer length k");
-        ASSERT(c > 1, "Preproc", "invalid threshold c");
-    }
-
-    ASSERT(k != -1 && c != -1, "Preproc", "learning of correction parameters failed");
-    fprintf(stderr, "[Preproc][error correction]: using k = %d, c = %d\n", k, c);
-
-    int taskLen = std::ceil((double) reads.size() / threadLen);
-    int start = 0;
-    int end = taskLen;
-
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(correctReads, std::ref(reads), start, end, k, c, rindex);
-
-        start = end;
-        end = std::min(end + taskLen, (int) reads.size());
-    }
-
-    for (auto& it : threads) {
-        it.join();
-    }
-
-    delete rindex;
-
-    timer.stop();
-    timer.print("Preproc", "error correction");
-}
-
 double KmerDistribution::getCumulativeProportion(int n) const {
 
     int max = 1000;
@@ -354,4 +287,71 @@ void KmerDistribution::toCountVector(std::vector<int>& dst, int max) const {
         auto it = histogram_.find(i);
         dst.push_back(it != histogram_.end() ? it->second : 0);
     }
+}
+
+void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    std::string cache(path != NULL ? path : "");
+    cache += ".cra";
+
+    ReadIndex* rindex = NULL;
+
+    if (path != NULL && fileExists(cache.c_str())) {
+        char* bytes;
+        readFromFile(&bytes, cache.c_str());
+
+        rindex = ReadIndex::deserialize(bytes);
+
+        delete[] bytes;
+
+    } else {
+        rindex = new ReadIndex(reads);
+
+        if (path != NULL) {
+            char* bytes;
+            size_t bytesLen;
+            rindex->serialize(&bytes, &bytesLen);
+
+            writeToFile(bytes, bytesLen, cache.c_str());
+
+            delete[] bytes;
+        }
+    }
+
+    if (k == -1 && c == -1) {
+        learnCorrectionParams(&k, &c, reads, rindex);
+    } else if (k > 0 && c == -1) {
+        learnCorrectionParamC(&c, k, reads, rindex);
+    } else {
+        ASSERT(k > 0, "Preproc", "invalid k-mer length k");
+        ASSERT(c > 1, "Preproc", "invalid threshold c");
+    }
+
+    ASSERT(k != -1 && c != -1, "Preproc", "learning of correction parameters failed");
+    fprintf(stderr, "[Preproc][error correction]: using k = %d, c = %d\n", k, c);
+
+    int taskLen = std::ceil((double) reads.size() / threadLen);
+    int start = 0;
+    int end = taskLen;
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < threadLen; ++i) {
+        threads.emplace_back(correctReads, std::ref(reads), start, end, k, c, rindex);
+
+        start = end;
+        end = std::min(end + taskLen, (int) reads.size());
+    }
+
+    for (auto& it : threads) {
+        it.join();
+    }
+
+    delete rindex;
+
+    timer.stop();
+    timer.print("Preproc", "error correction");
 }

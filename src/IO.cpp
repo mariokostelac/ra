@@ -31,7 +31,7 @@ Options::Options(const char* readsPath, int threadLen, int k, int c) :
 Options* Options::parseOptions(int argc, char** argv) {
 
     char* readsPath = NULL;
-    int threadLen = std::max(std::thread::hardware_concurrency(), 1);
+    int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
     int k = -1;
     int c = -1;
 
