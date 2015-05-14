@@ -178,8 +178,6 @@ static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, con
 
 void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
 
-    threadLen = std::max(threadLen, 1);
-
     Timer timer;
     timer.start();
 
