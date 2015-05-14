@@ -3,6 +3,9 @@
 *
 * Created on: Apr 16, 2015
 *     Author: rvaser
+*
+* The code for the Ukkonnen algorithm has been modified from:
+*     stackoverflow.com/questions/9452701/ukkonens-suffix-tree-algorithm-in-plain-english
 */
 
 #pragma once

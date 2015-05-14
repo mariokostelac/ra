@@ -3,6 +3,12 @@
 *
 * Created on: Apr 18, 2015
 *     Author: rvaser
+*
+* Algorithms were rewritten to c++ from following papers:
+*     1. Title: Two efficient algorithms for linear time suffix array construction
+*        Authors: Ge Nong, Sen Zhang, Wai Hong Chan
+*     2. Title: Replacing suffix trees with enhanced suffix arrays
+*        Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch
 */
 
 #pragma once
