@@ -294,32 +294,7 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
     Timer timer;
     timer.start();
 
-    std::string cache(path != NULL ? path : "");
-    cache += ".cra";
-
-    ReadIndex* rindex = NULL;
-
-    if (path != NULL && fileExists(cache.c_str())) {
-        char* bytes;
-        readFromFile(&bytes, cache.c_str());
-
-        rindex = ReadIndex::deserialize(bytes);
-
-        delete[] bytes;
-
-    } else {
-        rindex = new ReadIndex(reads);
-
-        if (path != NULL) {
-            char* bytes;
-            size_t bytesLen;
-            rindex->serialize(&bytes, &bytesLen);
-
-            writeToFile(bytes, bytesLen, cache.c_str());
-
-            delete[] bytes;
-        }
-    }
+    ReadIndex* rindex = createReadIndex(reads, 0, path, "cra");
 
     if (k == -1 && c == -1) {
         learnCorrectionParams(&k, &c, reads, rindex);

@@ -83,7 +83,7 @@ size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
     return num;
 }
 
-void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m) const {
+void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m, int min) const {
 
     if (pattern == NULL || m <= 0) return;
 
@@ -98,9 +98,10 @@ void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* patte
             fragments_[f]->getSubInterval(&i, &j, i, j, pattern[c]);
 
             if (i == -1 && j == -1) break;
+            if (c < min - 1) continue;
 
             int k, l;
-            fragments_[f]->getSubInterval(&k, &l, i, j, pattern[c]);
+            fragments_[f]->getSubInterval(&k, &l, i, j, DELIMITER);
 
             if (k == -1 && l == -1) continue;
 
@@ -237,4 +238,36 @@ int ReadIndex::getIndex(int fragment, int position) const {
 
     auto up = std::upper_bound(dictionary_[fragment].begin(), dictionary_[fragment].end(), position);
     return up - dictionary_[fragment].begin();
+}
+
+ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path, const char* ext) {
+
+    std::string cache(path != NULL ? path : "");
+    cache += "." + ext;
+
+    ReadIndex* rindex = NULL;
+
+    if (path != NULL && fileExists(cache.c_str())) {
+        char* bytes;
+        readFromFile(&bytes, cache.c_str());
+
+        rindex = ReadIndex::deserialize(bytes);
+
+        delete[] bytes;
+
+    } else {
+        rindex = new ReadIndex(reads, rk);
+
+        if (path != NULL) {
+            char* bytes;
+            size_t bytesLen;
+            rindex->serialize(&bytes, &bytesLen);
+
+            writeToFile(bytes, bytesLen, cache.c_str());
+
+            delete[] bytes;
+        }
+    }
+
+    return rindex;
 }
