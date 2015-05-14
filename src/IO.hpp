@@ -14,7 +14,7 @@ class Options {
 public:
 
     Options() {}
-    Options(const char* readsPath, int threadLen, int k, int c);
+    Options(const char* readsPath, int threadLen, int k, int c, int minOverlapLen);
     ~Options() {}
 
     static Options* parseOptions(int argc, char** argv);
@@ -25,6 +25,7 @@ public:
     int threadLen;
     int k;
     int c;
+    int minOverlapLen;
 
 private:
 

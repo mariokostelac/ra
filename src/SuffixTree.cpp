@@ -53,8 +53,8 @@ static void addSuffixLink(int* suffixLinkStart, int suffixLinkEnd, const std::ve
 }
 
 // needed when edge length is lower or equal to activeLength
-static bool adjustActivePoint(int* activeNode, int* activeChar, int* activeLength, const std::vector<Node*>& tree,
-    const std::string& str) {
+static bool adjustActivePoint(int* activeNode, int* activeChar, int* activeLength,
+    const std::vector<Node*>& tree, const std::string& str) {
 
     if (*activeLength == 0) return false;
 
@@ -202,8 +202,11 @@ void SuffixTree::printTree(int i, int lvl) const {
     for (int j = 0; j < (int) children.size(); ++j) {
         if (children[j] == -1) continue;
 
-        int len = (tree_[children[j]]->getEdgeEnd() == -1 ? str_.size() : tree_[children[j]]->getEdgeEnd()) - tree_[children[j]]->getEdgeStart();
-        printf("%s%s\n", std::string(lvl, ' ').c_str(), str_.substr(tree_[children[j]]->getEdgeStart(), len).c_str());
+        int len = (tree_[children[j]]->getEdgeEnd() == -1 ? str_.size() :
+            tree_[children[j]]->getEdgeEnd()) - tree_[children[j]]->getEdgeStart();
+
+        printf("%s%s\n", std::string(lvl, ' ').c_str(),
+            str_.substr(tree_[children[j]]->getEdgeStart(), len).c_str());
 
         printTree(children[j], lvl);
     }

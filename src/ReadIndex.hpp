@@ -22,8 +22,8 @@ public:
     size_t getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    // min = minimal length of overlap
-    void getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m, int min = 1) const;
+    void getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m,
+        int minOverlapLen) const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static ReadIndex* deserialize(char* bytes);
@@ -42,4 +42,5 @@ private:
     std::vector<EnhancedSuffixArray*> fragments_;
 };
 
-ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path, const char* ext);
+ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path,
+    const char* ext);

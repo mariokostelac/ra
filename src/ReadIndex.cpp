@@ -5,6 +5,7 @@
 *     Author: rvaser
 */
 
+#include "IO.hpp"
 #include "ReadIndex.hpp"
 
 #define FRAGMENT_SIZE 2147483645U // 2GB - 2 for sentinels
@@ -83,7 +84,7 @@ size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
     return num;
 }
 
-void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m, int min) const {
+void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m, int minOverlapLen) const {
 
     if (pattern == NULL || m <= 0) return;
 
@@ -98,7 +99,7 @@ void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* patte
             fragments_[f]->getSubInterval(&i, &j, i, j, pattern[c]);
 
             if (i == -1 && j == -1) break;
-            if (c < min - 1) continue;
+            if (c < minOverlapLen - 1) continue;
 
             int k, l;
             fragments_[f]->getSubInterval(&k, &l, i, j, DELIMITER);
@@ -243,7 +244,8 @@ int ReadIndex::getIndex(int fragment, int position) const {
 ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path, const char* ext) {
 
     std::string cache(path != NULL ? path : "");
-    cache += "." + ext;
+    cache += ".";
+    cache += ext;
 
     ReadIndex* rindex = NULL;
 

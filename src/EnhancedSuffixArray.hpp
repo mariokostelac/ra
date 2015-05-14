@@ -15,6 +15,10 @@
 
 #include "CommonHeaders.hpp"
 
+#define DELIMITER '#'
+#define SENTINEL_H '~'
+#define SENTINEL_L '!'
+
 // Enhaced suffix array = suffix array + longest common prefix table + child table
 // (+ other tables which are not needed here)
 

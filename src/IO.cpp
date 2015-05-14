@@ -20,12 +20,13 @@ const struct option Options::options_[] = {
     {"threads", required_argument, 0, 't'},
     {"kmer", required_argument, 0, 'k'},
     {"threshold", required_argument, 0, 'c'},
+    {"min-overlap-length", required_argument, 0, 'o'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
 };
 
-Options::Options(const char* readsPath, int threadLen, int k, int c) :
-    readsPath(readsPath), threadLen(threadLen), k(k), c(c) {
+Options::Options(const char* readsPath, int threadLen, int k, int c, int minOverlapLen) :
+    readsPath(readsPath), threadLen(threadLen), k(k), c(c), minOverlapLen(minOverlapLen) {
 }
 
 Options* Options::parseOptions(int argc, char** argv) {
@@ -34,10 +35,11 @@ Options* Options::parseOptions(int argc, char** argv) {
     int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
     int k = -1;
     int c = -1;
+    int minOverlapLen = 5;
 
     while (1) {
 
-        char argument = getopt_long(argc, argv, "i:t:h", options_, NULL);
+        char argument = getopt_long(argc, argv, "i:t:o:h", options_, NULL);
 
         if (argument == -1) {
             break;
@@ -56,6 +58,9 @@ Options* Options::parseOptions(int argc, char** argv) {
         case 'c':
             c = atoi(optarg);
             break;
+        case 'o':
+            minOverlapLen = atoi(optarg);
+            break;
         default:
             help();
             return NULL;
@@ -64,8 +69,9 @@ Options* Options::parseOptions(int argc, char** argv) {
 
     ASSERT(readsPath, "IO", "missing option -i (reads file)");
     ASSERT(threadLen >= 0, "IO", "invalid thread number");
+    ASSERT(minOverlapLen >= 1, "IO", "invalid minimal overlap length");
 
-    return new Options(readsPath, threadLen, k, c);
+    return new Options(readsPath, threadLen, k, c, minOverlapLen);
 }
 
 void Options::help() {
@@ -80,12 +86,15 @@ void Options::help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
-    "    -kmer <int>\n"
+    "    --kmer <int>\n"
     "        default: based on dataset\n"
     "        length of k-mers used in error correction\n"
-    "    -threshold <int>\n"
+    "    --threshold <int>\n"
     "        default: based on dataset\n"
     "        minimal number of occurrences for a k-mer to not be erroneous\n"
+    "    -o, --min-overlap-length <int>\n"
+    "        default: 5\n"
+    "        minimal length of exact overlap between two reads\n"
     "    -h, -help\n"
     "        prints out the help\n");
 }
@@ -105,6 +114,8 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
     bool isName = false;
     bool createRead = false;
 
+    int idx = 0;
+
     while (!feof(f)) {
 
         int readLen = fread(buffer, sizeof(char), BUFFER_SIZE, f);
@@ -114,7 +125,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
             if (buffer[i] == '>') {
 
                 if (createRead) {
-                    reads.push_back(new Read(name, sequence));
+                    reads.push_back(new Read(idx++, name, sequence));
                 }
 
                 name.clear();
@@ -138,7 +149,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
         }
     }
 
-    reads.push_back(new Read(name, sequence));
+    reads.push_back(new Read(idx, name, sequence));
 
     delete[] buffer;
     fclose(f);
@@ -162,6 +173,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
     std::string quality;
 
     int i = 0;
+    int idx = 0;
 
     while (std::getline(f, line)) {
         if (line.empty()) continue;
@@ -169,7 +181,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         switch (i % 4) {
             case 0:
                 if (i != 0) {
-                    reads.push_back(new Read(name, sequence));
+                    reads.push_back(new Read(idx++, name, sequence));
                 }
 
                 name = line.substr(1, line.size() - 1);
@@ -189,7 +201,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         ++i;
     }
 
-    reads.push_back(new Read(name, sequence));
+    reads.push_back(new Read(idx, name, sequence));
 
     f.close();
 

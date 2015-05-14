@@ -8,10 +8,6 @@
 #include "SuffixTree.hpp"
 #include "EnhancedSuffixArray.hpp"
 
-#define DELIMITER '#'
-#define SENTINEL_H '~'
-#define SENTINEL_L '!'
-
 #define MAX_SIZE 2147483647U
 
 static int getChar(int i, const unsigned char* s, int csize) {
@@ -307,7 +303,8 @@ void EnhancedSuffixArray::createSuffixArray(const unsigned char* s, int n, int c
     t[n - 2] = false;
 
     for (int i = n - 3; i >= 0; --i) {
-        t[i] = (getChar(i, s, csize) < getChar(i + 1, s, csize) || (getChar(i, s, csize) == getChar(i + 1, s, csize) && t[i + 1])) ? true : false;
+        t[i] = (getChar(i, s, csize) < getChar(i + 1, s, csize) ||
+            (getChar(i, s, csize) == getChar(i + 1, s, csize) && t[i + 1])) ? true : false;
     }
 
     std::vector<int> buckets(alphabetSize);
@@ -337,7 +334,9 @@ void EnhancedSuffixArray::createSuffixArray(const unsigned char* s, int n, int c
         bool diff = false;
 
         for (int d = 0; d < n; ++d) {
-            if (prev == -1 || getChar(pos + d, s, csize) != getChar(prev + d, s, csize) || t[pos + d] != t[prev + d]) {
+            if (prev == -1 || getChar(pos + d, s, csize) != getChar(prev + d, s, csize) ||
+                t[pos + d] != t[prev + d]) {
+
                 diff = true;
                 break;
 
