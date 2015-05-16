@@ -10,11 +10,6 @@
 
 #include "Utils.hpp"
 
-bool fileExists(const char* path) {
-    struct stat buf;
-    return stat(path, &buf) != -1;
-}
-
 Timer::Timer() :
     paused_(0), time_(0), timeval_() {
 }
@@ -45,4 +40,9 @@ void Timer::reset() {
 
 void Timer::print(const char* location, const char* message) const {
     fprintf(stderr, "[%s][%s]: %.5lf s\n", location, message, time_ / (double) 1000000);
+}
+
+bool fileExists(const char* path) {
+    struct stat buf;
+    return stat(path, &buf) != -1;
 }
