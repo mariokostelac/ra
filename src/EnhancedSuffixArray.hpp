@@ -15,10 +15,6 @@
 
 #include "CommonHeaders.hpp"
 
-#define DELIMITER '#'
-#define SENTINEL_H '~'
-#define SENTINEL_L '!'
-
 // Enhaced suffix array = suffix array + longest common prefix table + child table
 // (+ other tables which are not needed here)
 
@@ -26,11 +22,14 @@ class EnhancedSuffixArray {
 public:
 
     EnhancedSuffixArray(const std::string& str);
-    EnhancedSuffixArray(const std::vector<const std::string*>& vstr);
     ~EnhancedSuffixArray() {}
 
     int getLength() const {
         return n_;
+    }
+
+    const std::string& getString() const {
+        return str_;
     }
 
     int getSuffix(int i) const {
@@ -42,7 +41,10 @@ public:
     void getInterval(int* s, int* e, const char* pattern, int m) const;
 
     // O(1)
-    void getSubInterval(int* s, int* e, int i, int j, char c) const;
+    void getInterval(int* s, int* e, int i, int j, char c) const;
+
+    // O(1)
+    int getLcpLen(int i, int j) const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
@@ -66,8 +68,6 @@ private:
 
     // From lcptab O(n)
     void createChildTable();
-
-    int getLcp(int i, int j) const;
 
     int n_;
     std::string str_;

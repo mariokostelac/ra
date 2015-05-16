@@ -8,7 +8,10 @@
 #include "SuffixTree.hpp"
 #include "EnhancedSuffixArray.hpp"
 
-#define MAX_SIZE 2147483647U
+#define SENTINEL_H '~'
+#define SENTINEL_L '!'
+
+#define MAX_SIZE 2147483645U
 
 static int getChar(int i, const unsigned char* s, int csize) {
     if (csize == sizeof(int)) return ((int*) s)[i];
@@ -72,27 +75,16 @@ static int lcp(int s1, int s2, const std::string& str) {
     return lcp;
 }
 
-static bool equalSubstr(const std::string& str1, int s1, int e1, const std::string& str2, int s2, int e2) {
-
-    if (e1 - s1 != e2 - s2) return false;
-
-    for (int i = 0; i <= e1 - s1; ++i) {
-        if (str1[s1 + i] != str2[s2 + i]) return false;
-    }
-
-    return true;
-}
-
 EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
 
+    ASSERT(str.size() <= MAX_SIZE, "ESA", "invalid input string length");
+
     Timer timer;
     timer.start();
 
-    str_ += str + DELIMITER;
+    str_ = str;
     str_ += SENTINEL_H;
     str_ += SENTINEL_L;
-
-    ASSERT(str_.size() <= MAX_SIZE, "ESA", "invalid input string length");
 
     n_ = str_.size();
     suftab_.resize(n_);
@@ -105,73 +97,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
     timer.print("ESA", "construction");
 }
 
-EnhancedSuffixArray::EnhancedSuffixArray(const std::vector<const std::string*>& vstr) {
-
-    Timer timer;
-    timer.start();
-
-    for (const auto& it : vstr) {
-        str_ += *it + DELIMITER;
-    }
-
-    str_ += SENTINEL_H;
-    str_ += SENTINEL_L;
-
-    ASSERT(str_.size() <= MAX_SIZE, "ESA", "invalid input string length");
-
-    n_ = str_.size();
-    suftab_.resize(n_);
-
-    createSuffixArray((unsigned char*) &str_[0], n_, sizeof(unsigned char));
-    createLongestCommonPrefixTable();
-    createChildTable();
-
-    timer.stop();
-    timer.print("ESA", "construction");
-}
-
-void EnhancedSuffixArray::getInterval(int* s, int* e, const char* pattern, int m) const {
-
-    int i, j, c = 0;
-    bool found = false;
-
-    getSubInterval(&i, &j, 0, n_ - 1, pattern[c]);
-
-    while (i != -1 && j != -1 && c < m) {
-        found = true;
-
-        if (i != j) {
-            int l = getLcp(i, j);
-            int min = l < m ? l : m;
-
-            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + min - 1,
-                pattern, c, min - 1);
-
-            c = min;
-            if (c == m) break;
-
-            getSubInterval(&i, &j, i, j, pattern[c]);
-
-        } else {
-            found = equalSubstr(str_, suftab_[i] + c, suftab_[i] + m - 1,
-                pattern, c, m - 1);
-            c = m;
-        }
-
-        if (!found) break;
-    }
-
-    if (found) {
-        *s = i;
-        *e = j;
-        return;
-    }
-
-    *s = -1;
-    *e = -1;
-}
-
-void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) const {
+void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) const {
 
     if (i > j) {
         *s = -1;
@@ -203,6 +129,10 @@ void EnhancedSuffixArray::getSubInterval(int* s, int* e, int i, int j, char c) c
 
     *s = -1;
     *e = -1;
+}
+
+int EnhancedSuffixArray::getLcpLen(int i, int j) const {
+    return lcptab_[childtab_[(i < childtab_[i] && childtab_[i] <= j) ? i : j]];
 }
 
 void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
@@ -440,8 +370,4 @@ void EnhancedSuffixArray::createChildTable() {
 
         st.push(i);
     }
-}
-
-int EnhancedSuffixArray::getLcp(int i, int j) const {
-    return lcptab_[childtab_[(i < childtab_[i] && childtab_[i] <= j) ? i : j]];
 }
