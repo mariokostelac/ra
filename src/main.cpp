@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Read.hpp"
 #include "IO.hpp"
 #include "Preprocess.hpp"
+#include "Overlap.hpp"
 
 int main(int argc, char* argv[]) {
 
@@ -14,7 +14,15 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> reads;
     readFastqReads(reads, options->readsPath);
 
-    errorCorrection(reads, options->k, options->c, options->threadLen, options->readsPath);
+    // errorCorrection(reads, options->k, options->c, options->threadLen, options->readsPath);
+
+    std::vector<Overlap*> overlaps;
+    getOverlaps(overlaps, reads, options->minOverlapLen, options->threadLen, options->readsPath);
+
+    for (const auto& it : overlaps) {
+        it->print();
+        delete it;
+    }
 
     for (const auto& it : reads) {
         delete it;
