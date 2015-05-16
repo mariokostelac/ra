@@ -118,7 +118,7 @@ void getOverlaps(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minO
     std::vector<std::thread>().swap(threads);
 
     getOverlapsParralel(dst, reads, minOverlapLen, 0, threadLen, path, "nra");
-    // getOverlapsParralel(dst, reads, minOverlapLen, 1, threadLen, path, "rra");
+    getOverlapsParralel(dst, reads, minOverlapLen, 1, threadLen, path, "rra");
 
     timer.stop();
     timer.print("Overlap", "overlaps");

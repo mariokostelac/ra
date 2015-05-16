@@ -68,8 +68,8 @@ Options* Options::parseOptions(int argc, char** argv) {
     }
 
     ASSERT(readsPath, "IO", "missing option -i (reads file)");
-    ASSERT(threadLen >= 0, "IO", "invalid thread number");
-    ASSERT(minOverlapLen >= 1, "IO", "invalid minimal overlap length");
+    ASSERT(threadLen > 0, "IO", "invalid thread number");
+    ASSERT(minOverlapLen > 0, "IO", "invalid minimal overlap length");
 
     return new Options(readsPath, threadLen, k, c, minOverlapLen);
 }
