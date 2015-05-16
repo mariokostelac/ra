@@ -12,8 +12,12 @@
 class Read {
 public:
 
-    Read(const std::string& name, const std::string& sequence);
+    Read(int id, const std::string& name, const std::string& sequence);
     ~Read() {};
+
+    int getId() const {
+        return id_;
+    }
 
     const std::string& getName() const {
         return name_;
@@ -39,6 +43,7 @@ public:
 
 private:
 
+    int id_;
     std::string name_;
     std::string sequence_;
     int length_;

@@ -12,10 +12,11 @@ static bool isValidChar(char c) {
     return false;
 }
 
-Read::Read(const std::string& name, const std::string& sequence) {
+Read::Read(int id, const std::string& name, const std::string& sequence) {
 
     ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
 
+    id_ = id;
     name_ = name;
 
     for (int i = 0; i < (int) sequence.size(); ++i) {
