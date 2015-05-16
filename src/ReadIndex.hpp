@@ -22,7 +22,7 @@ public:
     size_t getNumberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    void getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m,
+    void getPrefixSuffixMatches(std::vector<int>& dst, const char* pattern, int m,
         int minOverlapLen) const;
 
     void serialize(char** bytes, size_t* bytesLen) const;

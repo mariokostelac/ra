@@ -8,7 +8,20 @@
 #include "IO.hpp"
 #include "ReadIndex.hpp"
 
-#define FRAGMENT_SIZE 2147483645U // 2GB - 2 for sentinels
+#define DELIMITER '#'
+
+#define FRAGMENT_SIZE 2147483645U // 2GB - 2B for sentinels
+
+static bool equalSubstr(const char* str1, int s1, int e1, const char* str2, int s2, int e2) {
+
+    if (e1 - s1 != e2 - s2) return false;
+
+    for (int i = 0; i <= e1 - s1; ++i) {
+        if (str1[s1 + i] != str2[s2 + i]) return false;
+    }
+
+    return true;
+}
 
 ReadIndex::ReadIndex(const Read* read, int rk) {
 
@@ -32,30 +45,27 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
     offsets_.push_back(0);
     dictionary_.resize(1);
 
-    size_t length = 0;
-
-    std::vector<const std::string*> vstr;
+    std::string str;
 
     for (size_t i = 0; i < reads.size(); ++i) {
 
-        if (length + reads[i]->getLength() + 1 > FRAGMENT_SIZE) {
+        if (str.size() + reads[i]->getLength() + 1 > FRAGMENT_SIZE) {
 
             offsets_.push_back(i);
             dictionary_.resize(dictionary_.size() + 1);
 
-            fragments_.push_back(new EnhancedSuffixArray(vstr));
+            fragments_.push_back(new EnhancedSuffixArray(str));
 
-            vstr.clear();
-            length = 0;
+            str.clear();
         }
 
-        vstr.push_back(&(rk == 0 ? reads[i]->getSequence() : reads[i]->getReverseComplement()));
+        str += rk == 0 ? reads[i]->getSequence() : reads[i]->getReverseComplement();
+        str += DELIMITER;
 
-        length += reads[i]->getLength() + 1; // DELIMITER
-        dictionary_.back().push_back(length);
+        dictionary_.back().push_back(str.size());
     }
 
-    fragments_.push_back(new EnhancedSuffixArray(vstr));
+    fragments_.push_back(new EnhancedSuffixArray(str));
 
     timer.stop();
     timer.print("RI", "construction");
@@ -75,41 +85,106 @@ size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
     size_t num = 0;
     for (const auto& it : fragments_) {
 
-        int i, j;
-        it->getInterval(&i, &j, pattern, m);
+        int i, j, c = 0;
+        bool found = false;
 
-        num += (i == -1 && j == -1) ? 0 : j - i + 1;
+        const std::string& str = it->getString();
+
+        it->getInterval(&i, &j, 0, it->getLength() - 1, pattern[c]);
+
+        while (i != -1 && j != -1 && c < m) {
+            found = true;
+
+            if (i != j) {
+                int l = it->getLcpLen(i, j);
+                int min = l < m ? l : m;
+
+                found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
+                    pattern, c, min - 1);
+
+                c = min;
+                if (c == m) break;
+
+                it->getInterval(&i, &j, i, j, pattern[c]);
+
+            } else {
+                found = it->getSuffix(i) + m > (int) str.size() ? false :
+                    equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
+                    pattern, c, m - 1);
+
+                c = m;
+            }
+
+            if (!found) break;
+        }
+
+        num += found ? j - i + 1 : 0;
     }
 
     return num;
 }
 
-void ReadIndex::getPrefixSuffixOverlaps(std::vector<int>& dst, const char* pattern, int m, int minOverlapLen) const {
+void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* pattern, int m, int minOverlapLen) const {
 
     if (pattern == NULL || m <= 0) return;
+    if (m < minOverlapLen) return;
 
     dst.clear();
     dst.resize(n_, 0);
 
-    for (int f = 0; f < (int) fragments_.size(); ++f) {
+    int f = 0;
+    for (const auto& it : fragments_) {
 
-        int i = 0, j = fragments_[f]->getLength() - 1;
+        int i, j, c = 0;
+        bool found = false;
 
-        for (int c = 0; c < m; ++c) {
-            fragments_[f]->getSubInterval(&i, &j, i, j, pattern[c]);
+        const std::string& str = it->getString();
 
-            if (i == -1 && j == -1) break;
-            if (c < minOverlapLen - 1) continue;
+        it->getInterval(&i, &j, 0, it->getLength() - 1, pattern[c]);
 
-            int k, l;
-            fragments_[f]->getSubInterval(&k, &l, i, j, DELIMITER);
+        while (i != -1 && j != -1 && c < m) {
 
-            if (k == -1 && l == -1) continue;
+            if (i != j) {
+                int l = it->getLcpLen(i, j);
+                int min = l < m ? l : m;
 
-            for (int o = k; o < l + 1; ++o) {
-                dst[getIndex(f, fragments_[f]->getSuffix(o))] = c + 1;
+                found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
+                    pattern, c, min - 1);
+
+                if (!found) break;
+                c = min;
+
+                if (c == m) {
+                    if (str[it->getSuffix(i) + m] == DELIMITER) {
+                        for (int o = i ; o <= j; ++o) dst[getIndex(f, it->getSuffix(o))] = m;
+                    }
+                    break;
+
+                } else {
+                    int b, d;
+                    it->getInterval(&b, &d, i, j, DELIMITER);
+
+                    if (b != -1 && d != -1 && min >= minOverlapLen) {
+                        for (int o = b; o <= d; ++o) dst[getIndex(f, it->getSuffix(o))] = min;
+                    }
+                }
+
+                it->getInterval(&i, &j, i, j, pattern[c]);
+
+            } else {
+                if (it->getSuffix(i) + m > it->getLength() - 1) break;
+
+                if (equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
+                    pattern, c, m - 1) && str[it->getSuffix(i) + m] == DELIMITER) {
+
+                    dst[getIndex(f, it->getSuffix(i))] = m;
+                }
+
+                c = m;
             }
         }
+
+        ++f;
     }
 }
 
