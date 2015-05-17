@@ -155,8 +155,10 @@ void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* patter
                 c = min;
 
                 if (c == m) {
-                    if (str[it->getSuffix(i) + m] == DELIMITER) {
-                        for (int o = i ; o <= j; ++o) dst[getIndex(f, it->getSuffix(o))] = m;
+                    for (int o = i ; o <= j; ++o) {
+                        if (it->getSuffix(0) + m < it->getLength() && str[it->getSuffix(o) + m] == DELIMITER) {
+                            dst[getIndex(f, it->getSuffix(o))] = m;
+                        }
                     }
                     break;
 
