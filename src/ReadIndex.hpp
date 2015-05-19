@@ -14,7 +14,6 @@
 class ReadIndex {
 public:
 
-    ReadIndex(const Read* read, int rk = 0);
     ReadIndex(const std::vector<Read*>& reads, int rk = 0);
     ~ReadIndex();
 
@@ -34,11 +33,10 @@ private:
 
     ReadIndex() {}
 
-    int getIndex(int fragment, int position) const;
+    void updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads);
 
     int n_;
-    std::vector<int> offsets_;
-    std::vector<std::vector<int>> dictionary_;
+    std::vector<int> fragmentSizes_;
     std::vector<EnhancedSuffixArray*> fragments_;
 };
 

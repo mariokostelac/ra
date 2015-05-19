@@ -9,6 +9,7 @@
 #include "ReadIndex.hpp"
 
 #define DELIMITER '#'
+#define SUBSTITUTE "$$$$"
 
 #define FRAGMENT_SIZE 2147483645U // 2GB - 2B for sentinels
 
@@ -23,18 +24,6 @@ static bool equalSubstr(const char* str1, int s1, int e1, const char* str2, int 
     return true;
 }
 
-ReadIndex::ReadIndex(const Read* read, int rk) {
-
-    n_ = 1;
-
-    offsets_.push_back(0);
-
-    dictionary_.resize(1);
-    dictionary_[0].push_back(read->getLength());
-
-    fragments_.push_back(new EnhancedSuffixArray(rk == 0 ? read->getSequence() : read->getReverseComplement()));
-}
-
 ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     Timer timer;
@@ -42,30 +31,34 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     n_ = reads.size();
 
-    offsets_.push_back(0);
-    dictionary_.resize(1);
+    std::string str = "";
 
-    std::string str;
+    int f = 0;
+    size_t j = 0;
 
     for (size_t i = 0; i < reads.size(); ++i) {
 
-        if (str.size() + reads[i]->getLength() + 1 > FRAGMENT_SIZE) {
+        if (str.size() + reads[i]->getLength() + 5 > FRAGMENT_SIZE) {
 
-            offsets_.push_back(i);
-            dictionary_.resize(dictionary_.size() + 1);
-
+            fragmentSizes_.push_back(i - j);
             fragments_.push_back(new EnhancedSuffixArray(str));
 
+            updateFragment(f, j, i, reads);
+
             str.clear();
+            j = i;
+            ++f;
         }
 
         str += rk == 0 ? reads[i]->getSequence() : reads[i]->getReverseComplement();
         str += DELIMITER;
-
-        dictionary_.back().push_back(str.size());
+        str += SUBSTITUTE;
     }
 
+    fragmentSizes_.push_back(reads.size() - j);
     fragments_.push_back(new EnhancedSuffixArray(str));
+
+    updateFragment(f, j, reads.size(), reads);
 
     timer.stop();
     timer.print("RI", "construction");
@@ -83,14 +76,17 @@ size_t ReadIndex::getNumberOfOccurrences(const char* pattern, int m) const {
     if (pattern == NULL || m <= 0) return 0;
 
     size_t num = 0;
+    int f = 0;
+
     for (const auto& it : fragments_) {
 
         int i, j, c = 0;
         bool found = false;
 
         const std::string& str = it->getString();
+        int start = 1 + 5 * fragmentSizes_[f++];
 
-        it->getInterval(&i, &j, 0, it->getLength() - 1, pattern[c]);
+        it->getInterval(&i, &j, start, it->getLength() - 1, pattern[c]);
 
         while (i != -1 && j != -1 && c < m) {
             found = true;
@@ -133,14 +129,16 @@ void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* patter
     dst.resize(n_, 0);
 
     int f = 0;
+
     for (const auto& it : fragments_) {
 
         int i, j, c = 0;
         bool found = false;
 
         const std::string& str = it->getString();
+        int start = 1 + 5 * fragmentSizes_[f++];
 
-        it->getInterval(&i, &j, 0, it->getLength() - 1, pattern[c]);
+        it->getInterval(&i, &j, start, it->getLength() - 1, pattern[c]);
 
         while (i != -1 && j != -1 && c < m) {
 
@@ -156,8 +154,8 @@ void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* patter
 
                 if (c == m) {
                     for (int o = i ; o <= j; ++o) {
-                        if (it->getSuffix(0) + m < it->getLength() && str[it->getSuffix(o) + m] == DELIMITER) {
-                            dst[getIndex(f, it->getSuffix(o))] = m;
+                        if (it->getSuffix(o) + m < it->getLength() && str[it->getSuffix(o) + m] == DELIMITER) {
+                            dst[*((int32_t*) (it->str_.c_str() + it->getSuffix(o) + m + 1))] = m;
                         }
                     }
                     break;
@@ -167,7 +165,9 @@ void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* patter
                     it->getInterval(&b, &d, i, j, DELIMITER);
 
                     if (b != -1 && d != -1 && min >= minOverlapLen) {
-                        for (int o = b; o <= d; ++o) dst[getIndex(f, it->getSuffix(o))] = min;
+                        for (int o = b; o <= d; ++o) {
+                            dst[*((int32_t*) (it->str_.c_str() + it->getSuffix(o) + min + 1))] = min;
+                        }
                     }
                 }
 
@@ -179,14 +179,12 @@ void ReadIndex::getPrefixSuffixMatches(std::vector<int>& dst, const char* patter
                 if (equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
                     pattern, c, m - 1) && str[it->getSuffix(i) + m] == DELIMITER) {
 
-                    dst[getIndex(f, it->getSuffix(i))] = m;
+                    dst[*((int32_t*) (it->str_.c_str() + it->getSuffix(i) + m + 1))] = m;
                 }
 
                 c = m;
             }
         }
-
-        ++f;
     }
 }
 
@@ -206,19 +204,8 @@ void ReadIndex::serialize(char** bytes, size_t* bytesLen) const {
     std::memcpy(*bytes + ptr, &numFragments, size);
     ptr += size;
 
-    std::memcpy(*bytes + ptr, &offsets_[0], numFragments * size);
+    std::memcpy(*bytes + ptr, &fragmentSizes_[0], numFragments * size);
     ptr += numFragments * size;
-
-    for (const auto& it : dictionary_) {
-
-        int numReads = it.size();
-
-        std::memcpy(*bytes + ptr, &numReads, size);
-        ptr += size;
-
-        std::memcpy(*bytes + ptr, &it[0], numReads * size);
-        ptr += numReads * size;
-    }
 
     for (const auto& it : fragments_) {
 
@@ -254,24 +241,10 @@ ReadIndex* ReadIndex::deserialize(char* bytes) {
     std::memcpy(&numFragments, bytes + ptr, size);
     ptr += size;
 
-    rindex->offsets_.resize(numFragments);
-    rindex->dictionary_.resize(numFragments);
+    rindex->fragmentSizes_.resize(numFragments);
 
-    std::memcpy(&rindex->offsets_[0], bytes + ptr, numFragments * size);
+    std::memcpy(&rindex->fragmentSizes_[0], bytes + ptr, numFragments * size);
     ptr += numFragments * size;
-
-    for (int i = 0; i < numFragments; ++i) {
-
-        int numReads = 0;
-
-        std::memcpy(&numReads, bytes + ptr, size);
-        ptr += size;
-
-        rindex->dictionary_[i].resize(numReads);
-
-        std::memcpy(&rindex->dictionary_[i][0], bytes + ptr, numReads * size);
-        ptr += numReads * size;
-    }
 
     for (int i = 0; i < numFragments; ++i) {
 
@@ -297,12 +270,7 @@ size_t ReadIndex::getSizeInBytes() const {
 
     bytesLen += size; // n_
     bytesLen += size; // number of fragments
-    bytesLen += offsets_.size() * size;
-
-    for (const auto& it : dictionary_) {
-        bytesLen += size;
-        bytesLen += it.size() * size;
-    }
+    bytesLen += fragmentSizes_.size() * size;
 
     for (const auto& it : fragments_) {
         bytesLen += sizeof(size_t);
@@ -312,10 +280,16 @@ size_t ReadIndex::getSizeInBytes() const {
     return bytesLen;
 }
 
-int ReadIndex::getIndex(int fragment, int position) const {
+void ReadIndex::updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads) {
 
-    auto up = std::upper_bound(dictionary_[fragment].begin(), dictionary_[fragment].end(), position);
-    return up - dictionary_[fragment].begin();
+    int sum = 0;
+    for (int i = start; i < end; ++i) {
+        sum += reads[i]->getLength() + 1;
+
+        *((int32_t*) (fragments_[fragment]->str_.c_str() + sum)) = i;
+
+        sum += 4;
+    }
 }
 
 ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path, const char* ext) {

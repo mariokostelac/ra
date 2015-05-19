@@ -37,9 +37,6 @@ public:
         return suftab_[i];
     }
 
-    // O(m)
-    void getInterval(int* s, int* e, const char* pattern, int m) const;
-
     // O(1)
     void getInterval(int* s, int* e, int i, int j, char c) const;
 
@@ -52,6 +49,8 @@ public:
     void print() const;
 
     size_t getSizeInBytes() const;
+
+    friend class ReadIndex;
 
 private:
 
