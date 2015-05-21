@@ -134,6 +134,8 @@ void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
 
     int m = pattern.size();
 
+    int f = 0;
+
     for (const auto& it : fragments_) {
 
         int i, j, c = 0;
@@ -141,7 +143,7 @@ void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
 
         const std::string& str = it->getString();
 
-        it->intervalSubInterval(&i, &j, 0, it->getLength() - 1, pattern[c]);
+        it->intervalSubInterval(&i, &j, 1 + 5 * fragmentSizes_[f++], it->getLength() - 1, pattern[c]);
 
         while (i != -1 && j != -1 && c < m) {
             found = true;
