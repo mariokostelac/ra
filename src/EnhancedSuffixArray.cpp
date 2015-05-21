@@ -57,7 +57,6 @@ static void induceS(std::vector<int>& suftab, std::vector<int>& buckets, const u
     }
 }
 
-
 static bool isLMS(int i, std::vector<bool>& t) {
     return i > 0 && t[i] && !t[i - 1];
 }
@@ -97,7 +96,7 @@ EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
     timer.print("ESA", "construction");
 }
 
-void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) const {
+void EnhancedSuffixArray::intervalSubInterval(int* s, int* e, int i, int j, char c) const {
 
     if (i > j) {
         *s = -1;
@@ -131,13 +130,27 @@ void EnhancedSuffixArray::getInterval(int* s, int* e, int i, int j, char c) cons
     *e = -1;
 }
 
-int EnhancedSuffixArray::getLcpLen(int i, int j) const {
+int EnhancedSuffixArray::intervalLcpLen(int i, int j) const {
     return lcptab_[childtab_[(i < childtab_[i] && childtab_[i] <= j) ? i : j]];
+}
+
+size_t EnhancedSuffixArray::sizeInBytes() const {
+
+    size_t bytesLen = 0;
+    size_t size = sizeof(int);
+
+    bytesLen += size; // n_
+    bytesLen += n_; // str_
+    bytesLen += (size_t) n_ * size; // suftab_
+    bytesLen += (size_t) n_ * size; // lcptab_
+    bytesLen += (size_t) n_ * size; // childtab_
+
+    return bytesLen;
 }
 
 void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
 
-    *bytesLen = getSizeInBytes();
+    *bytesLen = sizeInBytes();
     *bytes = new char[*bytesLen];
 
     size_t size = sizeof(int);
@@ -159,9 +172,6 @@ void EnhancedSuffixArray::serialize(char** bytes, size_t* bytesLen) const {
 }
 
 EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
-
-    Timer timer;
-    timer.start();
 
     EnhancedSuffixArray* esa = new EnhancedSuffixArray();
 
@@ -187,9 +197,6 @@ EnhancedSuffixArray* EnhancedSuffixArray::deserialize(const char* bytes) {
 
     std::memcpy(&esa->childtab_[0], bytes + ptr, esa->n_ * size);
 
-    timer.stop();
-    timer.print("ESA", "cached construction");
-
     return esa;
 }
 
@@ -201,28 +208,6 @@ void EnhancedSuffixArray::print() const {
         printf("%5d %6d %6d %8d %-s\n", i, suftab_[i], lcptab_[i], childtab_[i],
             str_.substr(suftab_[i], n_ - suftab_[i]).c_str());
     }
-}
-
-size_t EnhancedSuffixArray::getSizeInBytes() const {
-
-    size_t bytesLen = 0;
-    size_t size = sizeof(int);
-
-    bytesLen += size; // n_
-    bytesLen += n_; // str_
-    bytesLen += (size_t) n_ * size; // suftab_
-    bytesLen += (size_t) n_ * size; // lcptab_
-    bytesLen += (size_t) n_ * size; // childtab_
-
-    return bytesLen;
-}
-
-void EnhancedSuffixArray::createSuffixArrayST() {
-
-    SuffixTree* st = new SuffixTree(str_);
-    // st->print();
-    st->toSuffixArray(suftab_);
-    delete st;
 }
 
 void EnhancedSuffixArray::createSuffixArray(const unsigned char* s, int n, int csize, int alphabetSize) {

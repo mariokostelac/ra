@@ -38,26 +38,23 @@ public:
     }
 
     // O(1)
-    void getInterval(int* s, int* e, int i, int j, char c) const;
+    void intervalSubInterval(int* s, int* e, int i, int j, char c) const;
 
     // O(1)
-    int getLcpLen(int i, int j) const;
+    int intervalLcpLen(int i, int j) const;
+
+    size_t sizeInBytes() const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static EnhancedSuffixArray* deserialize(const char* bytes);
 
     void print() const;
 
-    size_t getSizeInBytes() const;
-
     friend class ReadIndex;
 
 private:
 
     EnhancedSuffixArray() {};
-
-    // From suffix tree O(n)
-    void createSuffixArrayST();
 
     // Induced sorting O(n)
     void createSuffixArray(const unsigned char* s, int n, int csize, int alphabetSize = 256);
