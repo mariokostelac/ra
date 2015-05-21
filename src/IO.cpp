@@ -213,7 +213,12 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
 
 }
 
-void readFromFile(char** bytes, const char* path) {
+bool fileExists(const char* path) {
+    struct stat buf;
+    return stat(path, &buf) != -1;
+}
+
+void fileRead(char** bytes, const char* path) {
 
     FILE* f = fileSafeOpen(path, "rb");
 
@@ -227,7 +232,7 @@ void readFromFile(char** bytes, const char* path) {
     fclose(f);
 }
 
-void writeToFile(const char* bytes, size_t bytesLen, const char* path) {
+void fileWrite(const char* bytes, size_t bytesLen, const char* path) {
 
     FILE* f = fileSafeOpen(path, "wb");
 

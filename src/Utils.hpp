@@ -35,5 +35,3 @@ private:
     long long time_;
     timeval timeval_;
 };
-
-bool fileExists(const char* path);

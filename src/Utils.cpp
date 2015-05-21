@@ -41,8 +41,3 @@ void Timer::reset() {
 void Timer::print(const char* location, const char* message) const {
     fprintf(stderr, "[%s][%s]: %.5lf s\n", location, message, time_ / (double) 1000000);
 }
-
-bool fileExists(const char* path) {
-    struct stat buf;
-    return stat(path, &buf) != -1;
-}
