@@ -31,13 +31,13 @@ public:
         return length_;
     }
 
-    void correctBase(int idx, int c) {
-        sequence_[idx] = c;
-    }
-
     const std::string& getReverseComplement() const {
         return reverseComplement_;
     }
+
+    Read* clone() const;
+
+    void correctBase(int idx, int c);
 
     void createReverseComplement();
 
