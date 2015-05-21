@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "IO.hpp"
 #include "Read.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "CommonHeaders.hpp"
@@ -18,16 +19,22 @@ public:
     ~ReadIndex();
 
     // O(m)
-    size_t getNumberOfOccurrences(const char* pattern, int m) const;
+    size_t numberOfOccurrences(const char* pattern, int m) const;
 
     // O(m + z)
-    void getPrefixSuffixMatches(std::vector<int>& dst, const char* pattern, int m,
-        int minOverlapLen) const;
+    void readDuplicates(std::vector<int>& dst, const Read* read) const;
+
+    // O(m + z)
+    void readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, const Read* read,
+        int rk, int minOverlapLen) const;
+
+    size_t sizeInBytes() const;
 
     void serialize(char** bytes, size_t* bytesLen) const;
     static ReadIndex* deserialize(char* bytes);
 
-    size_t getSizeInBytes() const;
+    void store(const char* path) const;
+    static ReadIndex* load(const char* path);
 
 private:
 
@@ -39,6 +46,3 @@ private:
     std::vector<int> fragmentSizes_;
     std::vector<EnhancedSuffixArray*> fragments_;
 };
-
-ReadIndex* createReadIndex(const std::vector<Read*>& reads, int rk, const char* path,
-    const char* ext);
