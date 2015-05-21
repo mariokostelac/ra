@@ -359,7 +359,7 @@ void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads) {
 
         equals.clear();
 
-        dst.push_back(reads[i]);
+        dst.push_back(reads[i]->clone());
     }
 
     delete rindex;
