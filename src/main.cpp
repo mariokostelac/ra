@@ -14,13 +14,21 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> reads;
     readFastqReads(reads, options->readsPath);
 
-    // errorCorrection(reads, options->k, options->c, options->threadLen, options->readsPath);
+    // correctReads(reads, options->k, options->c, options->threadLen, options->readsPath);
+
+    std::vector<Read*> filteredReads;
+    filterReads(filteredReads, reads);
+
+    for (const auto& it : filteredReads) {
+        delete it;
+    }
 
     std::vector<Overlap*> overlaps;
-    getOverlaps(overlaps, reads, options->minOverlapLen, options->threadLen, options->readsPath);
+    overlapReads(overlaps, reads, options->minOverlapLen, options->threadLen, options->readsPath);
+
+    fprintf(stderr, "Overlaps num = %zu\n", overlaps.size());
 
     for (const auto& it : overlaps) {
-        it->print();
         delete it;
     }
 

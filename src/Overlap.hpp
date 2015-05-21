@@ -35,5 +35,5 @@ private:
 };
 
 // path is used to cache the ReadIndex
-void getOverlaps(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
+void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path);
