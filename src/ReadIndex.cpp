@@ -220,7 +220,7 @@ void ReadIndex::readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, c
 
                     if (b != -1 && d != -1 && min >= minOverlapLen) {
                         for (int o = b; o <= d; ++o) {
-                            dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + m + 1)), min);
+                            dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + min + 1)), min);
                         }
                     }
                 }
