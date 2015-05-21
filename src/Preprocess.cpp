@@ -42,7 +42,7 @@ static bool correctBase(int i, int s, std::string& sequence, int k, int c, const
     for (int j = 0; j < 3; ++j) {
         sequence[i] = switchBase(sequence[i]);
 
-        if (rindex->getNumberOfOccurrences(&sequence[s], k) >= (size_t) c) {
+        if (rindex->numberOfOccurrences(&sequence[s], k) >= (size_t) c) {
             return true;
         }
 
@@ -62,7 +62,7 @@ static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
     bool correct = false;
 
     for (int i = 0; i < (int) sequence.size() - k + 1;) {
-        if (rindex->getNumberOfOccurrences(&sequence[i], k) >= (size_t) c) {
+        if (rindex->numberOfOccurrences(&sequence[i], k) >= (size_t) c) {
             i += k;
             continue;
         }
@@ -102,7 +102,8 @@ static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
     }
 }
 
-static void correctReads(std::vector<Read*>& reads, int start, int end, int k, int c, const ReadIndex* rindex) {
+static void threadCorrectReads(std::vector<Read*>& reads, int k, int c, const ReadIndex* rindex,
+    int start, int end) {
 
     for (int i = start; i < end; ++i) {
         correctRead(reads[i], k, c, rindex);
@@ -145,16 +146,16 @@ static void learnCorrectionParamC(int* c, int k, std::vector<Read*>& reads, cons
         int nk = it->getLength() - k + 1;
 
         for (int i = 0; i < nk; ++i) {
-            kmerDistribution.add(rindex->getNumberOfOccurrences(&sequence[i], k));
+            kmerDistribution.add(rindex->numberOfOccurrences(&sequence[i], k));
         }
     }
 
-    // int threshold = kmerDistribution.getErrorBoundary();
-    int threshold = kmerDistribution.getErrorBoundary(2.0f);
+    // int threshold = kmerDistribution.errorBoundary();
+    int threshold = kmerDistribution.errorBoundary(2.0f);
 
     if (threshold == -1) return;
 
-    double cumulative = kmerDistribution.getCumulativeProportion(threshold);
+    double cumulative = kmerDistribution.cumulativeProportion(threshold);
 
     if (cumulative < 0.25f) {
         *c = threshold;
@@ -176,7 +177,7 @@ static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, con
     }
 }
 
-double KmerDistribution::getCumulativeProportion(int n) const {
+double KmerDistribution::cumulativeProportion(int n) const {
 
     int max = 1000;
 
@@ -185,28 +186,25 @@ double KmerDistribution::getCumulativeProportion(int n) const {
     std::vector<int> countVector;
     toCountVector(countVector, max);
 
-    std::int64_t sum = 0;
+    int64_t sum = 0;
 
     for (size_t i = 0; i < countVector.size(); ++i) {
         sum += countVector[i];
     }
 
-    // std::vector<double> cumulativeVector(countVector.size());
-    std::int64_t runningSum = 0;
+    int64_t runningSum = 0;
 
-    // for (size_t i = 0; i < cumulativeVector.size(); ++i) {
     for (int i = 1; i <= n; ++i) {
 
         runningSum += countVector[i];
-        //cumulativeVector[i] = (double) runningSum / sum;
     }
 
     return (double) runningSum / sum;
 }
 
-int KmerDistribution::getErrorBoundary() const {
+int KmerDistribution::errorBoundary() const {
 
-    int mode = getIgnoreMode(5);
+    int mode = ignoreMode(5);
     if (mode == -1) return -1;
 
     // fprintf(stderr, "Trusted mode = %d\n", mode);
@@ -233,9 +231,9 @@ int KmerDistribution::getErrorBoundary() const {
     return idx;
 }
 
-int KmerDistribution::getErrorBoundary(double ratio) const {
+int KmerDistribution::errorBoundary(double ratio) const {
 
-    int mode = getIgnoreMode(5);
+    int mode = ignoreMode(5);
     if (mode == -1) return -1;
 
     // fprintf(stderr, "Trusted mode = %d\n", mode);
@@ -258,7 +256,7 @@ int KmerDistribution::getErrorBoundary(double ratio) const {
     return -1;
 }
 
-int KmerDistribution::getIgnoreMode(size_t n) const {
+int KmerDistribution::ignoreMode(size_t n) const {
 
     std::vector<int> countVector;
     toCountVector(countVector, 1000);
@@ -289,12 +287,20 @@ void KmerDistribution::toCountVector(std::vector<int>& dst, int max) const {
     }
 }
 
-void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
+void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
 
     Timer timer;
     timer.start();
 
-    ReadIndex* rindex = createReadIndex(reads, 0, path, "cra");
+    std::string cache = path;
+    cache += "cra";
+
+    ReadIndex* rindex = ReadIndex::load(cache.c_str());
+
+    if (rindex == NULL) {
+        rindex = new ReadIndex(reads, 0);
+        rindex->store(cache.c_str());
+    }
 
     if (k == -1 && c == -1) {
         learnCorrectionParams(&k, &c, reads, rindex);
@@ -315,7 +321,7 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
     std::vector<std::thread> threads;
 
     for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(correctReads, std::ref(reads), start, end, k, c, rindex);
+        threads.emplace_back(threadCorrectReads, std::ref(reads), k, c, rindex, start, end);
 
         start = end;
         end = std::min(end + taskLen, (int) reads.size());
@@ -329,4 +335,37 @@ void errorCorrection(std::vector<Read*>& reads, int k, int c, int threadLen, con
 
     timer.stop();
     timer.print("Preproc", "error correction");
+}
+
+void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads) {
+
+    Timer timer;
+    timer.start();
+
+    ReadIndex* rindex = new ReadIndex(reads);
+
+    std::vector<bool> duplicates(reads.size(), false);
+    std::vector<int> equals;
+
+    for (size_t i = 0; i < reads.size(); ++i) {
+
+        if (duplicates[i] == true) continue;
+
+        rindex->readDuplicates(equals, reads[i]);
+
+        for (size_t j = 0; j < equals.size(); ++j) {
+            duplicates[equals[j]] = true;
+        }
+
+        equals.clear();
+
+        dst.push_back(reads[i]);
+    }
+
+    delete rindex;
+
+    fprintf(stderr, "[Preproc][filtering]: reduction percentage = %.2lf%%\n", 1 - (dst.size() / (double) reads.size()));
+
+    timer.stop();
+    timer.print("Preproc", "filtering");
 }
