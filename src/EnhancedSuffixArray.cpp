@@ -5,7 +5,6 @@
 *     Author: rvaser
 */
 
-#include "SuffixTree.hpp"
 #include "EnhancedSuffixArray.hpp"
 
 #define SENTINEL_H '~'
