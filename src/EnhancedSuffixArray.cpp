@@ -60,19 +60,6 @@ static bool isLMS(int i, std::vector<bool>& t) {
     return i > 0 && t[i] && !t[i - 1];
 }
 
-static int lcp(int s1, int s2, const std::string& str) {
-
-    int n = str.size();
-    int lcp = 0;
-
-    for (int i = s1, j = s2; i < n && j < n; ++i, ++j) {
-        if (str[i] != str[j]) break;
-        ++lcp;
-    }
-
-    return lcp;
-}
-
 EnhancedSuffixArray::EnhancedSuffixArray(const std::string& str) {
 
     ASSERT(str.size() <= MAX_SIZE, "ESA", "invalid input string length");
@@ -305,8 +292,20 @@ void EnhancedSuffixArray::createLongestCommonPrefixTable() {
 
     lcptab_.resize(n_, 0);
 
-    for (int i = 1; i < n_; ++i) {
-        lcptab_[i] = lcp(suftab_[i], suftab_[i - 1], str_);
+    std::vector<int> rank(n_);
+    for (int i = 0; i < n_; ++i) rank[suftab_[i]] = i;
+
+    int h = 0;
+
+    for (int i = 0; i < n_; ++i) {
+        if (rank[i] > 0) {
+            int j = suftab_[rank[i] - 1];
+
+            while (str_[i + h] == str_[j + h]) ++h;
+
+            lcptab_[rank[i]] = h;
+            if (h > 0) --h;
+        }
     }
 }
 

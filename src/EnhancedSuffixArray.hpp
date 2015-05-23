@@ -9,6 +9,8 @@
 *        Authors: Ge Nong, Sen Zhang, Wai Hong Chan
 *     2. Title: Replacing suffix trees with enhanced suffix arrays
 *        Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch
+*     3. Title: Linear-time longest-common-prefix computation in suffix arrays and its applications
+*        Authors: Toru Kasai, Gunho Lee, Hiroki Arimura, Setsuo Arikawa, Kunsoo Park
 */
 
 #pragma once
