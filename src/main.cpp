@@ -14,25 +14,27 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> reads;
     readFastqReads(reads, options->readsPath);
 
-    // correctReads(reads, options->k, options->c, options->threadLen, options->readsPath);
-
     std::vector<Read*> filteredReads;
     filterReads(filteredReads, reads);
 
-    for (const auto& it : filteredReads) {
+    correctReads(filteredReads, options->k, options->c, options->threadLen, options->readsPath);
+
+    for (const auto& it : reads) {
         delete it;
     }
 
     std::vector<Overlap*> overlaps;
-    overlapReads(overlaps, reads, options->minOverlapLen, options->threadLen, options->readsPath);
+    overlapReads(overlaps, filteredReads, options->minOverlapLen, options->threadLen, options->readsPath);
 
     fprintf(stderr, "Overlaps num = %zu\n", overlaps.size());
+
+    writeAfgOverlaps(overlaps, "out.am");
 
     for (const auto& it : overlaps) {
         delete it;
     }
 
-    for (const auto& it : reads) {
+    for (const auto& it : filteredReads) {
         delete it;
     }
 

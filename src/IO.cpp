@@ -213,6 +213,30 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
 
 }
 
+void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    ASSERT(!fileExists(path), "IO", "file %s already exists", path);
+
+    std::ofstream f(path);
+
+    for (const auto& it : overlaps) {
+        f << "{OVL" << std::endl;
+        f << "adj:" << (it->isInnie() ? "I" : "N") << std::endl;
+        f << "rds:" << it->getReadA()->getId() << "," << it->getReadB()->getId() << std::endl;
+        f << "ahg:" << it->getAHang() << std::endl;
+        f << "bhg:" << it->getAHang() << std::endl;
+        f << "}" << std::endl;
+    }
+
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg output");
+}
+
 bool fileExists(const char* path) {
     struct stat buf;
     return stat(path, &buf) != -1;
