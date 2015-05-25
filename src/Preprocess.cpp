@@ -293,7 +293,7 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
     timer.start();
 
     std::string cache = path;
-    cache += "cra";
+    cache += ".cra";
 
     ReadIndex* rindex = ReadIndex::load(cache.c_str());
 
