@@ -15,11 +15,27 @@
 class Overlap {
 public:
 
-    Overlap(const Read* a, const Read* b, int length, int aHang, int bHang, bool innie);
+    Overlap(const Read* a, const Read* b, int aHang, int bHang, bool innie);
     ~Overlap() {}
 
-    int getLength() const {
-        return length_;
+    const Read* getReadA() const {
+        return a_;
+    }
+
+    const Read* getReadB() const {
+        return b_;
+    }
+
+    int getAHang() const {
+        return aHang_;
+    }
+
+    int getBHang() const {
+        return bHang_;
+    }
+
+    bool isInnie() const {
+        return innie_;
     }
 
     void print();
@@ -28,7 +44,6 @@ private:
 
     const Read* a_;
     const Read* b_;
-    int length_;
     int aHang_;
     int bHang_;
     bool innie_;

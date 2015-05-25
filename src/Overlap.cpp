@@ -22,7 +22,7 @@ static void pickMatches(std::vector<Overlap*>& dst, std::vector<std::pair<int, i
     std::sort(matches.begin(), matches.end(), compareMatches);
 
     if (matches[0].first != i) {
-        dst.push_back(new Overlap(reads[i], reads[matches[0].first], matches[0].second,
+        dst.push_back(new Overlap(reads[i], reads[matches[0].first],
             -1 * (reads[matches[0].first]->getLength() - matches[0].second),
             -1 * (reads[i]->getLength() - matches[0].second), rk));
     }
@@ -31,7 +31,7 @@ static void pickMatches(std::vector<Overlap*>& dst, std::vector<std::pair<int, i
 
         if (matches[j].first == matches[j - 1].first || matches[j].first == i) continue;
 
-        dst.push_back(new Overlap(reads[i], reads[matches[j].first], matches[j].second,
+        dst.push_back(new Overlap(reads[i], reads[matches[j].first],
             -1 * (reads[matches[j].first]->getLength() - matches[j].second),
             -1 * (reads[i]->getLength() - matches[j].second), rk));
     }
@@ -51,11 +51,11 @@ static void pickMatchesGT(std::vector<Overlap*>& dst, std::vector<std::pair<int,
     if (matches[0].first > i) {
 
         if (rk == 1) {
-            dst.push_back(new Overlap(reads[i], reads[matches[0].first], matches[0].second,
+            dst.push_back(new Overlap(reads[i], reads[matches[0].first],
                 -1 * (reads[matches[0].first]->getLength() - matches[0].second),
                 -1 * (reads[i]->getLength() - matches[0].second), rk));
         } else {
-            dst.push_back(new Overlap(reads[matches[0].first], reads[i], matches[0].second,
+            dst.push_back(new Overlap(reads[matches[0].first], reads[i],
                 reads[i]->getLength() - matches[0].second,
                 reads[matches[0].first]->getLength() - matches[0].second, rk));
         }
@@ -66,11 +66,11 @@ static void pickMatchesGT(std::vector<Overlap*>& dst, std::vector<std::pair<int,
         if (matches[j].first == matches[j - 1].first || matches[j].first <= i) continue;
 
         if (rk == 1) {
-            dst.push_back(new Overlap(reads[i], reads[matches[j].first], matches[j].second,
+            dst.push_back(new Overlap(reads[i], reads[matches[j].first],
                 -1 * (reads[matches[j].first]->getLength() - matches[j].second),
                 -1 * (reads[i]->getLength() - matches[j].second), rk));
         } else {
-            dst.push_back(new Overlap(reads[matches[j].first], reads[i], matches[j].second,
+            dst.push_back(new Overlap(reads[matches[j].first], reads[i],
                 reads[i]->getLength() - matches[j].second,
                 reads[matches[j].first]->getLength() - matches[j].second, rk));
         }
@@ -146,8 +146,8 @@ static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*
     delete rindex;
 }
 
-Overlap::Overlap(const Read* a, const Read* b, int length, int aHang, int bHang, bool innie) :
-    a_(a), b_(b), length_(length), aHang_(aHang), bHang_(bHang), innie_(innie) {
+Overlap::Overlap(const Read* a, const Read* b, int aHang, int bHang, bool innie) :
+    a_(a), b_(b), aHang_(aHang), bHang_(bHang), innie_(innie) {
 }
 
 void Overlap::print() {
