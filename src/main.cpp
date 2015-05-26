@@ -11,32 +11,18 @@ int main(int argc, char* argv[]) {
 
     if (options == NULL) return -1;
 
-    std::vector<Read*> reads;
+    std::vector<ReadPtr> reads;
     readFastqReads(reads, options->readsPath);
 
-    std::vector<Read*> filteredReads;
+    std::vector<ReadPtr> filteredReads;
     filterReads(filteredReads, reads);
 
     correctReads(filteredReads, options->k, options->c, options->threadLen, options->readsPath);
 
-    for (const auto& it : reads) {
-        delete it;
-    }
-
-    std::vector<Overlap*> overlaps;
+    std::vector<OverlapPtr> overlaps;
     overlapReads(overlaps, filteredReads, options->minOverlapLen, options->threadLen, options->readsPath);
 
-    fprintf(stderr, "Overlaps num = %zu\n", overlaps.size());
-
-    writeAfgOverlaps(overlaps, "out.am");
-
-    for (const auto& it : overlaps) {
-        delete it;
-    }
-
-    for (const auto& it : filteredReads) {
-        delete it;
-    }
+    writeAfgOverlaps(overlaps, "overlaps.afg");
 
     delete options;
 

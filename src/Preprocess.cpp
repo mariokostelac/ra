@@ -37,12 +37,12 @@ static char switchBase(char c) {
     return b;
 }
 
-static bool correctBase(int i, int s, std::string& sequence, int k, int c, const ReadIndex* rindex) {
+static bool correctBase(int i, int suffix, std::string& sequence, int k, int c, const ReadIndex* rindex) {
 
     for (int j = 0; j < 3; ++j) {
         sequence[i] = switchBase(sequence[i]);
 
-        if (rindex->numberOfOccurrences(&sequence[s], k) >= (size_t) c) {
+        if (rindex->numberOfOccurrences(&sequence[suffix], k) >= (size_t) c) {
             return true;
         }
 
@@ -52,7 +52,7 @@ static bool correctBase(int i, int s, std::string& sequence, int k, int c, const
     return false;
 }
 
-static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
+static bool correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
 
     std::string sequence(read->getSequence());
 
@@ -100,24 +100,32 @@ static void correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
             read->correctBase(positions[i], chars[i]);
         }
     }
+
+    return correct;
 }
 
-static void threadCorrectReads(std::vector<Read*>& reads, int k, int c, const ReadIndex* rindex,
-    int start, int end) {
+static void threadCorrectReads(std::vector<ReadPtr>& reads, int k, int c, const ReadIndex* rindex,
+    int start, int end, int* totalCorrected) {
+
+    int total = 0;
 
     for (int i = start; i < end; ++i) {
-        correctRead(reads[i], k, c, rindex);
+        if (correctRead(reads[i].get(), k, c, rindex)) {
+            ++total;
+        }
     }
+
+    *totalCorrected = total;
 }
 
-static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const ReadIndex* rindex) {
+static void learnCutoff(int* c, int k, const std::vector<ReadPtr>& reads, const ReadIndex* rindex) {
 
     *c = -1;
 
     srand(time(NULL));
 
     std::set<int> samplesIdx;
-    std::vector<Read*> samples;
+    std::vector<ReadPtr> samples;
 
     size_t samplesNum = reads.size() * 5 / 1000;
 
@@ -162,7 +170,7 @@ static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const Re
     }
 }
 
-static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<Read*>& reads,
+static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<ReadPtr>& reads,
     const ReadIndex* rindex, int start, int end) {
 
     for (int k = start; k > end; --k) {
@@ -177,7 +185,7 @@ static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::ve
     }
 }
 
-static void learnCorrectionParams(int* k, int* c, const std::vector<Read*>& reads, const ReadIndex* rindex,
+static void learnCorrectionParams(int* k, int* c, const std::vector<ReadPtr>& reads, const ReadIndex* rindex,
     int threadLen) {
 
     *k = -1;
@@ -255,7 +263,7 @@ int KmerDistribution::errorBoundary() const {
     for (int i = 1; i < mode; ++i) {
 
         sum += countVector[i];
-        double contribution = (double) countVector[i] / sum;
+        double contribution = sum == 0 ? std::numeric_limits<double>::max() : (double) countVector[i] / sum;
 
         if (contribution < minContribution) {
             minContribution = contribution;
@@ -283,7 +291,7 @@ int KmerDistribution::errorBoundary(double ratio) const {
         int currCount = countVector[i];
         int nextCount = countVector[i + 1];
 
-        double countRatio = (double) currCount / nextCount;
+        double countRatio = nextCount == 0 ? std::numeric_limits<double>::max() : (double) currCount / nextCount;
 
         if (countRatio < ratio) return i;
     }
@@ -322,7 +330,7 @@ void KmerDistribution::toCountVector(std::vector<int>& dst, int max) const {
     }
 }
 
-void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
+void correctReads(std::vector<ReadPtr>& reads, int k, int c, int threadLen, const char* path) {
 
     Timer timer;
     timer.start();
@@ -342,11 +350,11 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
     } else if (k > 0 && c == -1) {
         learnCutoff(&c, k, reads, rindex);
     } else {
-        ASSERT(k > 0, "Preproc", "invalid k-mer length k");
+        ASSERT(k > 1, "Preproc", "invalid k-mer length k");
         ASSERT(c > 1, "Preproc", "invalid threshold c");
     }
 
-    if (k == -1 && c == -1) {
+    if (k < 2 || c < 2) {
         fprintf(stderr, "[Preproc]: learning of correction parameters failed\n");
 
         delete rindex;
@@ -360,9 +368,11 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
     int end = taskLen;
 
     std::vector<std::thread> threads;
+    std::vector<int> readsCorrected(threadLen);
 
     for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(threadCorrectReads, std::ref(reads), k, c, rindex, start, end);
+        threads.emplace_back(threadCorrectReads, std::ref(reads), k, c, rindex, start, end,
+            &readsCorrected[i]);
 
         start = end;
         end = std::min(end + taskLen, (int) reads.size());
@@ -372,13 +382,19 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
         it.join();
     }
 
+    int readsCorrectedTotal = 0;
+    for (const auto& it : readsCorrected) readsCorrectedTotal += it;
+
+    fprintf(stderr, "[Preproc][error correction]: correction percentage = %.2lf%%\n",
+        readsCorrectedTotal / (double) reads.size());
+
     delete rindex;
 
     timer.stop();
     timer.print("Preproc", "error correction");
 }
 
-void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads) {
+void filterReads(std::vector<ReadPtr>& dst, const std::vector<ReadPtr>& reads) {
 
     Timer timer;
     timer.start();
@@ -392,7 +408,7 @@ void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads) {
 
         if (duplicates[i] == true) continue;
 
-        rindex->readDuplicates(equals, reads[i]);
+        rindex->readDuplicates(equals, reads[i].get());
 
         for (size_t j = 0; j < equals.size(); ++j) {
             duplicates[equals[j]] = true;
@@ -400,12 +416,13 @@ void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads) {
 
         equals.clear();
 
-        dst.push_back(reads[i]->clone());
+        dst.push_back(reads[i]);
     }
 
     delete rindex;
 
-    fprintf(stderr, "[Preproc][filtering]: reduction percentage = %.2lf%%\n", 1 - (dst.size() / (double) reads.size()));
+    fprintf(stderr, "[Preproc][filtering]: reduction percentage = %.2lf%%\n",
+        1 - (dst.size() / (double) reads.size()));
 
     timer.stop();
     timer.print("Preproc", "filtering");

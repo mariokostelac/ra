@@ -99,7 +99,7 @@ void Options::help() {
     "        prints out the help\n");
 }
 
-void readFastaReads(std::vector<Read*>& reads, const char* path) {
+void readFastaReads(std::vector<ReadPtr>& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -125,7 +125,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
             if (buffer[i] == '>') {
 
                 if (createRead) {
-                    reads.push_back(new Read(idx++, name, sequence));
+                    reads.emplace_back(std::make_shared<Read>(idx++, name, sequence));
                 }
 
                 name.clear();
@@ -149,7 +149,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
         }
     }
 
-    reads.push_back(new Read(idx, name, sequence));
+    reads.emplace_back(std::make_shared<Read>(idx, name, sequence));
 
     delete[] buffer;
     fclose(f);
@@ -158,7 +158,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "fasta input");
 }
 
-void readFastqReads(std::vector<Read*>& reads, const char* path) {
+void readFastqReads(std::vector<ReadPtr>& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -181,7 +181,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         switch (i % 4) {
             case 0:
                 if (i != 0) {
-                    reads.push_back(new Read(idx++, name, sequence));
+                    reads.emplace_back(std::make_shared<Read>(idx++, name, sequence));
                 }
 
                 name = line.substr(1, line.size() - 1);
@@ -201,7 +201,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         ++i;
     }
 
-    reads.push_back(new Read(idx, name, sequence));
+    reads.emplace_back(std::make_shared<Read>(idx, name, sequence));
 
     f.close();
 
@@ -209,11 +209,11 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "fastq input");
 }
 
-void readAfgReads(std::vector<Read*>& reads, const char* path) {
+void readAfgReads(std::vector<ReadPtr>& reads, const char* path) {
 
 }
 
-void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
+void writeAfgOverlaps(const std::vector<OverlapPtr>& overlaps, const char* path) {
 
     Timer timer;
     timer.start();
@@ -223,7 +223,8 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
     for (const auto& it : overlaps) {
         f << "{OVL" << std::endl;
         f << "adj:" << (it->isInnie() ? "I" : "N") << std::endl;
-        f << "rds:" << it->getReadA()->getId() << "," << it->getReadB()->getId() << std::endl;
+        f << "rds:" << it->getAId() << "," << it->getBId() << std::endl;
+        f << "scr:" << it->getLength() << std::endl;
         f << "ahg:" << it->getAHang() << std::endl;
         f << "bhg:" << it->getAHang() << std::endl;
         f << "}" << std::endl;
