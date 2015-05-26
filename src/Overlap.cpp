@@ -15,7 +15,7 @@ static bool compareMatches(const std::pair<int, int>& left, const std::pair<int,
 // pick all matches with id different than i
 // normal x normal overlaps
 static void pickMatches(std::vector<OverlapPtr>& dst, std::vector<std::pair<int, int>>& matches,
-    int i, const std::vector<ReadPtr>& reads, int rk) {
+    int i, const std::vector<ReadPtr>& reads) {
 
     if (matches.size() == 0) return;
 
@@ -28,7 +28,7 @@ static void pickMatches(std::vector<OverlapPtr>& dst, std::vector<std::pair<int,
             matches[0].second,
             -1 * (reads[matches[0].first]->getLength() - matches[0].second),
             -1 * (reads[i]->getLength() - matches[0].second),
-            rk
+            false
         ));
     }
 
@@ -42,7 +42,7 @@ static void pickMatches(std::vector<OverlapPtr>& dst, std::vector<std::pair<int,
             matches[j].second,
             -1 * (reads[matches[j].first]->getLength() - matches[j].second),
             -1 * (reads[i]->getLength() - matches[j].second),
-            rk
+            false
         ));
     }
 
@@ -60,24 +60,24 @@ static void pickMatchesGT(std::vector<OverlapPtr>& dst, std::vector<std::pair<in
 
     if (matches[0].first > i) {
 
-        if (rk == 1) {
+        if (rk == 1) { // normal x rk
             dst.emplace_back(std::make_shared<Overlap>(
                 i,
                 matches[0].first,
                 matches[0].second,
                 -1 * (reads[matches[0].first]->getLength() - matches[0].second),
                 -1 * (reads[i]->getLength() - matches[0].second),
-                rk
+                true
             ));
 
-        } else {
+        } else { // rk x normal
             dst.emplace_back(std::make_shared<Overlap>(
                 matches[0].first,
                 i,
                 matches[0].second,
                 reads[i]->getLength() - matches[0].second,
                 reads[matches[0].first]->getLength() - matches[0].second,
-                rk
+                true
             ));
         }
     }
@@ -86,24 +86,24 @@ static void pickMatchesGT(std::vector<OverlapPtr>& dst, std::vector<std::pair<in
 
         if (matches[j].first == matches[j - 1].first || matches[j].first <= i) continue;
 
-        if (rk == 1) {
+        if (rk == 1) { // normal x rk
             dst.emplace_back(std::make_shared<Overlap>(
                 i,
                 matches[j].first,
                 matches[j].second,
                 -1 * (reads[matches[j].first]->getLength() - matches[j].second),
                 -1 * (reads[i]->getLength() - matches[j].second),
-                rk
+                true
             ));
 
-        } else {
+        } else { // rk x normal
             dst.emplace_back(std::make_shared<Overlap>(
                 matches[j].first,
                 i,
                 matches[j].second,
                 reads[i]->getLength() - matches[j].second,
                 reads[matches[j].first]->getLength() - matches[j].second,
-                rk
+                true
             ));
         }
     }
@@ -127,7 +127,7 @@ static void threadOverlapReads(std::vector<OverlapPtr>& dst, const std::vector<R
 
         if (rk == 0) {
             rindex->readPrefixSuffixMatches(matches, reads[i].get(), 0, minOverlapLen);
-            pickMatches(dst, matches, i, reads, rk);
+            pickMatches(dst, matches, i, reads);
         }
 
         rindex->readPrefixSuffixMatches(matches, reads[i].get(), rk == 0, minOverlapLen);
