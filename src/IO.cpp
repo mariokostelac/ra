@@ -218,8 +218,6 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
     Timer timer;
     timer.start();
 
-    ASSERT(!fileExists(path), "IO", "file %s already exists", path);
-
     std::ofstream f(path);
 
     for (const auto& it : overlaps) {
