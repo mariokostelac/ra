@@ -12,18 +12,24 @@
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
+typedef std::shared_ptr<class Overlap> OverlapPtr;
+
 class Overlap {
 public:
 
-    Overlap(const Read* a, const Read* b, int aHang, int bHang, bool innie);
+    Overlap(int aId, int bId, int length, int aHang, int bHang, bool innie);
     ~Overlap() {}
 
-    const Read* getReadA() const {
-        return a_;
+    int getAId() const {
+        return aId_;
     }
 
-    const Read* getReadB() const {
-        return b_;
+    int getBId() const {
+        return bId_;
+    }
+
+    int getLength() const {
+        return length_;
     }
 
     int getAHang() const {
@@ -42,13 +48,14 @@ public:
 
 private:
 
-    const Read* a_;
-    const Read* b_;
+    int aId_;
+    int bId_;
+    int length_;
     int aHang_;
     int bHang_;
     bool innie_;
 };
 
 // path is used to cache the ReadIndex
-void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
+void overlapReads(std::vector<OverlapPtr>& dst, std::vector<ReadPtr>& reads, int minOverlapLen,
     int threadLen, const char* path);
