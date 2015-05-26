@@ -165,7 +165,7 @@ static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const Re
 static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<Read*>& reads,
     const ReadIndex* rindex, int start, int end) {
 
-    for (int k = start; k < end; ++k) {
+    for (int k = start; k > end; --k) {
 
         int c;
         learnCutoff(&c, k, reads, rindex);
@@ -184,9 +184,9 @@ static void learnCorrectionParams(int* k, int* c, const std::vector<Read*>& read
 
     std::vector<int> cutoffs(MAX_KMER + 1, -1);
 
-    int taskLen = std::ceil((double) (MAX_KMER - MIN_KMER + 1) / threadLen);
-    int start = 0;
-    int end = taskLen;
+    int taskLen = (MAX_KMER - MIN_KMER + 1) / threadLen;
+    int start = MAX_KMER;
+    int end = start - taskLen;
 
     std::vector<std::thread> threads;
 
@@ -195,7 +195,7 @@ static void learnCorrectionParams(int* k, int* c, const std::vector<Read*>& read
             start, end);
 
         start = end;
-        end = std::min(end + taskLen, MAX_KMER + 1);
+        end = (i == threadLen - 2) ? MIN_KMER - 1 : end - taskLen;
     }
 
     for (auto& it : threads) {
@@ -346,7 +346,13 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
         ASSERT(c > 1, "Preproc", "invalid threshold c");
     }
 
-    ASSERT(k != -1 && c != -1, "Preproc", "learning of correction parameters failed");
+    if (k == -1 && c == -1) {
+        fprintf(stderr, "[Preproc]: learning of correction parameters failed\n");
+
+        delete rindex;
+        return;
+    }
+
     fprintf(stderr, "[Preproc][error correction]: using k = %d, c = %d\n", k, c);
 
     int taskLen = std::ceil((double) reads.size() / threadLen);
