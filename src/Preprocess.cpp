@@ -9,8 +9,8 @@
 #include "ReadIndex.hpp"
 #include "Preprocess.hpp"
 
-#define MIN_KMER 15
-#define MAX_KMER 45
+#define MIN_KMER 10
+#define MAX_KMER 50
 
 static char switchBase(char c) {
 
@@ -110,7 +110,7 @@ static void threadCorrectReads(std::vector<Read*>& reads, int k, int c, const Re
     }
 }
 
-static void learnCorrectionParamC(int* c, int k, std::vector<Read*>& reads, const ReadIndex* rindex) {
+static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const ReadIndex* rindex) {
 
     *c = -1;
 
@@ -162,16 +162,51 @@ static void learnCorrectionParamC(int* c, int k, std::vector<Read*>& reads, cons
     }
 }
 
-static void learnCorrectionParams(int* k, int* c, std::vector<Read*>& reads, const ReadIndex* rindex) {
+static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<Read*>& reads,
+    const ReadIndex* rindex, int start, int end) {
+
+    for (int k = start; k < end; ++k) {
+
+        int c;
+        learnCutoff(&c, k, reads, rindex);
+
+        if (c != -1) {
+            cutoffs[k] = c;
+            break;
+        }
+    }
+}
+
+static void learnCorrectionParams(int* k, int* c, const std::vector<Read*>& reads, const ReadIndex* rindex,
+    int threadLen) {
 
     *k = -1;
 
+    std::vector<int> cutoffs(MAX_KMER + 1, -1);
+
+    int taskLen = std::ceil((double) (MAX_KMER - MIN_KMER + 1) / threadLen);
+    int start = 0;
+    int end = taskLen;
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < threadLen; ++i) {
+        threads.emplace_back(threadLearnCorrectionParams, std::ref(cutoffs), std::ref(reads), rindex,
+            start, end);
+
+        start = end;
+        end = std::min(end + taskLen, MAX_KMER + 1);
+    }
+
+    for (auto& it : threads) {
+        it.join();
+    }
+
     for (int i = MAX_KMER; i >= MIN_KMER; --i) {
 
-        learnCorrectionParamC(c, i, reads, rindex);
-
-        if (*c != -1) {
+        if (cutoffs[i] != -1) {
             *k = i;
+            *c = cutoffs[i];
             break;
         }
     }
@@ -303,9 +338,9 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
     }
 
     if (k == -1 && c == -1) {
-        learnCorrectionParams(&k, &c, reads, rindex);
+        learnCorrectionParams(&k, &c, reads, rindex, threadLen);
     } else if (k > 0 && c == -1) {
-        learnCorrectionParamC(&c, k, reads, rindex);
+        learnCutoff(&c, k, reads, rindex);
     } else {
         ASSERT(k > 0, "Preproc", "invalid k-mer length k");
         ASSERT(c > 1, "Preproc", "invalid threshold c");
