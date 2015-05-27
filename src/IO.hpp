@@ -33,13 +33,13 @@ private:
     static const struct option options_[];
 };
 
-void readFastaReads(std::vector<ReadPtr>& reads, const char* path);
+void readFastaReads(std::vector<Read*>& reads, const char* path);
 
-void readFastqReads(std::vector<ReadPtr>& reads, const char* path);
+void readFastqReads(std::vector<Read*>& reads, const char* path);
 
-void readAfgReads(std::vector<ReadPtr>& reads, const char* path);
+void readAfgReads(std::vector<Read*>& reads, const char* path);
 
-void writeAfgOverlaps(const std::vector<OverlapPtr>& overlaps, const char* path);
+void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
 
 bool fileExists(const char* path);
 

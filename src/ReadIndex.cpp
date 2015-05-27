@@ -24,7 +24,7 @@ static bool equalSubstr(const char* str1, int s1, int e1, const char* str2, int 
     return true;
 }
 
-ReadIndex::ReadIndex(const std::vector<ReadPtr>& reads, int rk) {
+ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     ASSERT(reads.size() > 0, "RI", "invalid number of input reads");
 
@@ -361,7 +361,7 @@ ReadIndex* ReadIndex::load(const char* path) {
     return rindex;
 }
 
-void ReadIndex::updateFragment(int fragment, int start, int end, const std::vector<ReadPtr>& reads) {
+void ReadIndex::updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads) {
 
     int len = 0;
     for (int i = start; i < end; ++i) {

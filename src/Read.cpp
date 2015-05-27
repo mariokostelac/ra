@@ -30,6 +30,15 @@ Read::Read(int id, const std::string& name, const std::string& sequence) {
     length_ = sequence_.size();
 }
 
+Read* Read::clone() const {
+
+    Read* copy = new Read(id_, name_, sequence_);
+
+    if (!reverseComplement_.empty()) copy->createReverseComplement();
+
+    return copy;
+}
+
 void Read::correctBase(int idx, int c) {
     sequence_[idx] = c;
 }

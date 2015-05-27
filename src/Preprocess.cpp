@@ -104,13 +104,13 @@ static bool correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
     return correct;
 }
 
-static void threadCorrectReads(std::vector<ReadPtr>& reads, int k, int c, const ReadIndex* rindex,
+static void threadCorrectReads(std::vector<Read*>& reads, int k, int c, const ReadIndex* rindex,
     int start, int end, int* totalCorrected) {
 
     int total = 0;
 
     for (int i = start; i < end; ++i) {
-        if (correctRead(reads[i].get(), k, c, rindex)) {
+        if (correctRead(reads[i], k, c, rindex)) {
             ++total;
         }
     }
@@ -118,14 +118,14 @@ static void threadCorrectReads(std::vector<ReadPtr>& reads, int k, int c, const 
     *totalCorrected = total;
 }
 
-static void learnCutoff(int* c, int k, const std::vector<ReadPtr>& reads, const ReadIndex* rindex) {
+static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const ReadIndex* rindex) {
 
     *c = -1;
 
     srand(time(NULL));
 
     std::set<int> samplesIdx;
-    std::vector<ReadPtr> samples;
+    std::vector<Read*> samples;
 
     size_t samplesNum = reads.size() * 5 / 1000;
 
@@ -170,7 +170,7 @@ static void learnCutoff(int* c, int k, const std::vector<ReadPtr>& reads, const 
     }
 }
 
-static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<ReadPtr>& reads,
+static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::vector<Read*>& reads,
     const ReadIndex* rindex, int start, int end) {
 
     for (int k = start; k > end; --k) {
@@ -185,7 +185,7 @@ static void threadLearnCorrectionParams(std::vector<int>& cutoffs, const std::ve
     }
 }
 
-static void learnCorrectionParams(int* k, int* c, const std::vector<ReadPtr>& reads, const ReadIndex* rindex,
+static void learnCorrectionParams(int* k, int* c, const std::vector<Read*>& reads, const ReadIndex* rindex,
     int threadLen) {
 
     *k = -1;
@@ -330,7 +330,7 @@ void KmerDistribution::toCountVector(std::vector<int>& dst, int max) const {
     }
 }
 
-void correctReads(std::vector<ReadPtr>& reads, int k, int c, int threadLen, const char* path) {
+void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
 
     Timer timer;
     timer.start();
@@ -386,7 +386,7 @@ void correctReads(std::vector<ReadPtr>& reads, int k, int c, int threadLen, cons
     for (const auto& it : readsCorrected) readsCorrectedTotal += it;
 
     fprintf(stderr, "[Preproc][error correction]: correction percentage = %.2lf%%\n",
-        readsCorrectedTotal / (double) reads.size());
+        (readsCorrectedTotal / (double) reads.size()) * 100);
 
     delete rindex;
 
@@ -394,7 +394,7 @@ void correctReads(std::vector<ReadPtr>& reads, int k, int c, int threadLen, cons
     timer.print("Preproc", "error correction");
 }
 
-void filterReads(std::vector<ReadPtr>& dst, const std::vector<ReadPtr>& reads) {
+void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads, bool view) {
 
     Timer timer;
     timer.start();
@@ -408,7 +408,7 @@ void filterReads(std::vector<ReadPtr>& dst, const std::vector<ReadPtr>& reads) {
 
         if (duplicates[i] == true) continue;
 
-        rindex->readDuplicates(equals, reads[i].get());
+        rindex->readDuplicates(equals, reads[i]);
 
         for (size_t j = 0; j < equals.size(); ++j) {
             duplicates[equals[j]] = true;
@@ -416,13 +416,13 @@ void filterReads(std::vector<ReadPtr>& dst, const std::vector<ReadPtr>& reads) {
 
         equals.clear();
 
-        dst.push_back(reads[i]);
+        dst.push_back(view ? reads[i] : reads[i]->clone());
     }
 
     delete rindex;
 
     fprintf(stderr, "[Preproc][filtering]: reduction percentage = %.2lf%%\n",
-        1 - (dst.size() / (double) reads.size()));
+        (1 - (dst.size() / (double) reads.size())) * 100);
 
     timer.stop();
     timer.print("Preproc", "filtering");

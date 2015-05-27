@@ -9,8 +9,6 @@
 
 #include "CommonHeaders.hpp"
 
-typedef std::shared_ptr<class Read> ReadPtr;
-
 class Read {
 public:
 
@@ -36,6 +34,8 @@ public:
     const std::string& getReverseComplement() const {
         return reverseComplement_;
     }
+
+    Read* clone() const;
 
     void correctBase(int idx, int c);
 

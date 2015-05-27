@@ -11,18 +11,22 @@ int main(int argc, char* argv[]) {
 
     if (options == NULL) return -1;
 
-    std::vector<ReadPtr> reads;
+    std::vector<Read*> reads;
     readFastqReads(reads, options->readsPath);
 
-    std::vector<ReadPtr> filteredReads;
+    std::vector<Read*> filteredReads;
     filterReads(filteredReads, reads);
 
     correctReads(filteredReads, options->k, options->c, options->threadLen, options->readsPath);
 
-    std::vector<OverlapPtr> overlaps;
+    std::vector<Overlap*> overlaps;
     overlapReads(overlaps, filteredReads, options->minOverlapLen, options->threadLen, options->readsPath);
 
     writeAfgOverlaps(overlaps, "overlaps.afg");
+
+    for (const auto& it : overlaps) delete it;
+
+    for (const auto& it : reads) delete it;
 
     delete options;
 

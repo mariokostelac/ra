@@ -15,7 +15,7 @@
 class ReadIndex {
 public:
 
-    ReadIndex(const std::vector<ReadPtr>& reads, int rk = 0);
+    ReadIndex(const std::vector<Read*>& reads, int rk = 0);
     ~ReadIndex();
 
     // O(m)
@@ -40,7 +40,7 @@ private:
 
     ReadIndex() {}
 
-    void updateFragment(int fragment, int start, int end, const std::vector<ReadPtr>& reads);
+    void updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads);
 
     int n_;
     std::vector<int> fragmentSizes_;
