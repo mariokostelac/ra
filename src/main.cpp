@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
     std::vector<Overlap*> overlaps;
     overlapReads(overlaps, filteredReads, options->minOverlapLen, options->threadLen, options->readsPath);
 
-    writeAfgOverlaps(overlaps, "overlaps.afg");
+    std::vector<Overlap*> notContained;
+    filterContainedOverlaps(notContained, overlaps);
 
     for (const auto& it : overlaps) delete it;
 

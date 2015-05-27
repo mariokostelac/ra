@@ -38,6 +38,8 @@ public:
         return innie_;
     }
 
+    Overlap* clone() const;
+
     void print() const;
 
 private:
@@ -52,3 +54,9 @@ private:
 // path is used to cache the ReadIndex
 void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path);
+
+void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+    bool view = true);
+
+void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+    bool view = true);

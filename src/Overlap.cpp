@@ -175,6 +175,11 @@ Overlap::Overlap(const Read* a, const Read* b, int aHang, int bHang, bool innie)
     a_(a), b_(b), aHang_(aHang), bHang_(bHang), innie_(innie) {
 }
 
+Overlap* Overlap::clone() const {
+
+    return new Overlap(a_, b_, aHang_, bHang_, innie_);
+}
+
 void Overlap::print() const {
 
     if (aHang_ < 0) printf("%s", std::string(abs(aHang_), ' ').c_str());
@@ -212,8 +217,58 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
     overlapReadsPart(dst, reads, 0, minOverlapLen, threadLen, path, ".nra");
     overlapReadsPart(dst, reads, 1, minOverlapLen, threadLen, path, ".rra");
 
-    fprintf(stderr, "[Overlap][overlaps] number of overlaps = %zu\n", dst.size());
+    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", dst.size());
 
     timer.stop();
     timer.print("Overlap", "overlaps");
+}
+
+void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps, bool view) {
+
+    Timer timer;
+    timer.start();
+
+    std::set<int> contained;
+
+    for (const auto& it : overlaps) {
+        // A    --------->
+        // B -----------------
+        if (it->getAHang() <= 0 && it->getBHang() >= 0) {
+            // readA is contained
+            contained.insert(it->getReadA()->getId());
+            continue;
+        }
+
+        // A ---------------->
+        // B      ------
+        if (it->getAHang() >= 0 && it->getBHang() <= 0) {
+            // readB is contained
+            contained.insert(it->getReadB()->getId());
+        }
+    }
+
+    for (const auto& it : overlaps) {
+        if (contained.count(it->getReadA()->getId()) > 0) continue;
+        if (contained.count(it->getReadB()->getId()) > 0) continue;
+
+        dst.push_back(view ? it : it->clone());
+    }
+
+    fprintf(stderr, "[Overlap][filter contained]: %.2lf%%\n",
+        (1 - dst.size() / (double) overlaps.size()) * 100);
+
+    timer.stop();
+    timer.print("Overlap", "filter contained");
+}
+
+void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps, bool view) {
+
+    Timer timer;
+    timer.start();
+
+    fprintf(stderr, "[Overlap][filter contained]: %.2lf%%\n",
+        (1 - dst.size() / (double) overlaps.size()) * 100);
+
+    timer.stop();
+    timer.print("Overlap", "filter transitive");
 }
