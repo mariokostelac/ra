@@ -79,45 +79,15 @@ size_t ReadIndex::numberOfOccurrences(const char* pattern, int m) const {
     if (pattern == NULL || m <= 0) return 0;
 
     size_t num = 0;
-    int f = 0;
 
-    for (const auto& it : fragments_) {
+    for (size_t f = 0; f < fragments_.size(); ++f) {
 
-        int i, j, c = 0;
-        bool found = false;
+        int i, j;
+        findInterval(&i, &j, f, pattern, m);
 
-        const std::string& str = it->getString();
-        int start = 1 + 6 * fragmentSizes_[f++];
+        if (i == -1 && j == -1) continue;
 
-        it->intervalSubInterval(&i, &j, start, it->getLength() - 1, pattern[c]);
-
-        while (i != -1 && j != -1 && c < m) {
-            found = true;
-
-            if (i != j) {
-                int l = it->intervalLcpLen(i, j);
-                int min = l < m ? l : m;
-
-                found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
-                    pattern, c, min - 1);
-
-                c = min;
-                if (c == m) break;
-
-                it->intervalSubInterval(&i, &j, i, j, pattern[c]);
-
-            } else {
-                found = it->getSuffix(i) + m > (int) str.size() ? false :
-                    equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
-                    pattern, c, m - 1);
-
-                c = m;
-            }
-
-            if (!found) break;
-        }
-
-        num += found ? j - i + 1 : 0;
+        num += j - i + 1;
     }
 
     return num;
@@ -128,51 +98,25 @@ void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
     if (read == NULL) return;
 
     std::string pattern = "";
+
     pattern += S_DELIMITER;
     pattern += read->getSequence();
     pattern += E_DELIMITER;
 
     int m = pattern.size();
 
-    int f = 0;
+    for (size_t f = 0; f < fragments_.size(); ++f) {
 
-    for (const auto& it : fragments_) {
+        int i, j;
+        findInterval(&i, &j, f, pattern.c_str(), m);
 
-        int i, j, c = 0;
-        bool found = false;
+        if (i == -1 && j == -1) continue;
 
-        const std::string& str = it->getString();
+        const EnhancedSuffixArray* esa = fragments_[f];
+        const std::string& str = esa->getString();
 
-        it->intervalSubInterval(&i, &j, 1 + 5 * fragmentSizes_[f++], it->getLength() - 1, pattern[c]);
-
-        while (i != -1 && j != -1 && c < m) {
-            found = true;
-
-            if (i != j) {
-                int l = it->intervalLcpLen(i, j);
-                int min = l < m ? l : m;
-
-                found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
-                    pattern.c_str(), c, min - 1);
-
-                c = min;
-                if (c == m) break;
-
-                it->intervalSubInterval(&i, &j, i, j, pattern[c]);
-
-            } else {
-                found = it->getSuffix(i) + m > (int) str.size() ? false :
-                    equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
-                    pattern.c_str(), c, m - 1);
-
-                c = m;
-            }
-
-            if (!found) break;
-        }
-
-        for (int e = i; e <= j; ++e) {
-            dst.push_back(*((int32_t*) (str.c_str() + it->getSuffix(e) + m)));
+        for (int k = i; k <= j; ++k) {
+            dst.push_back(*((int32_t*) (str.c_str() + esa->getSuffix(k) + m)));
         }
     }
 }
@@ -194,7 +138,7 @@ void ReadIndex::readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, c
 
         const std::string& str = it->getString();
 
-        it->intervalSubInterval(&i, &j, 1 + 6 * fragmentSizes_[f++], it->getLength() - 1, pattern[c]);
+        it->intervalSubInterval(&i, &j, 1 + 5 * fragmentSizes_[f++], it->getLength() - 1, pattern[c]);
 
         while (i != -1 && j != -1 && c < m) {
 
@@ -359,6 +303,55 @@ ReadIndex* ReadIndex::load(const char* path) {
     timer.print("RI", "cached construction");
 
     return rindex;
+}
+
+void ReadIndex::findInterval(int* s, int* e, int fragment, const char* pattern, int m) const {
+
+    *s = -1;
+    *e = -1;
+
+    if (pattern == NULL || m <= 0) return;
+
+    const auto& esa = fragments_[fragment];
+
+    int i, j, c = 0;
+    bool found = false;
+
+    const std::string& str = esa->getString();
+    int start = 1 + 5 * fragmentSizes_[fragment];
+
+    esa->intervalSubInterval(&i, &j, start, esa->getLength() - 1, pattern[c]);
+
+    while (i != -1 && j != -1 && c < m) {
+        found = true;
+
+        if (i != j) {
+            int l = esa->intervalLcpLen(i, j);
+            int min = l < m ? l : m;
+
+            found = equalSubstr(str.c_str(), esa->getSuffix(i) + c, esa->getSuffix(i) + min - 1,
+                pattern, c, min - 1);
+
+            c = min;
+            if (c == m) break;
+
+            esa->intervalSubInterval(&i, &j, i, j, pattern[c]);
+
+        } else {
+            found = esa->getSuffix(i) + m > (int) str.size() ? false :
+                equalSubstr(str.c_str(), esa->getSuffix(i) + c, esa->getSuffix(i) + m - 1,
+                pattern, c, m - 1);
+
+            c = m;
+        }
+
+        if (!found) break;
+    }
+
+    if (found) {
+        *s = i;
+        *e = j;
+    }
 }
 
 void ReadIndex::updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads) {

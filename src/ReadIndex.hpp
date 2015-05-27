@@ -40,6 +40,8 @@ private:
 
     ReadIndex() {}
 
+    void findInterval(int* s, int* e, int fragment, const char* pattern, int m) const;
+
     void updateFragment(int fragment, int start, int end, const std::vector<Read*>& reads);
 
     int n_;
