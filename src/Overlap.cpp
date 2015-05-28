@@ -19,16 +19,6 @@ static bool compareMatches(const std::pair<int, int>& left, const std::pair<int,
     return left.first < right.first || (left.first == right.first && left.second > right.second);
 }
 
-static bool compareOverlaps(const Overlap* left, const Overlap* right) {
-
-    if (left->getA() < right->getA()) return true;
-    if (left->getA() == right->getA()) {
-        if (left->getB() < right->getB()) return true;
-        if (left->getB() == right->getB() && left->length() > right->length()) return true;
-    }
-    return false;
-}
-
 // pick all matches of type
 // types:
 //     0 - id different from i (normal x normal)
@@ -71,33 +61,6 @@ static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair
 
     matches.clear();
 }
-
-// pick all matches with id Greater Than i
-// normal x reverseComplement & reverseComplement x normal overlaps
-/*static void pickMatchesGT(std::vector<Overlap*>& dst, std::vector<std::pair<int, int>>& matches,
-    int i, const std::vector<Read*>& reads, int rk) {
-
-    if (matches.size() == 0) return;
-
-    std::sort(matches.begin(), matches.end(), compareMatches);
-
-    for (int j = 0; j < (int) matches.size(); ++j) {
-
-        if ((j > 0 && matches[j].first == matches[j - 1].first) || matches[j].first <= i) continue;
-
-        int aHang = reads[matches[j].first]->getLength() - matches[j].second;
-        int bHang = reads[i]->getLength() - matches[j].second;
-
-        if (rk == 1) { // normal x rk
-            dst.push_back(new Overlap(reads[i], reads[matches[j].first], -1 * aHang, -1 * bHang, true));
-
-        } else { // rk x normal
-            dst.push_back(new Overlap(reads[matches[j].first], reads[i], aHang, bHang, true));
-        }
-    }
-
-    matches.clear();
-}*/
 
 static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
 
@@ -290,30 +253,10 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     std::vector<std::thread>().swap(threads);
 
-    std::vector<Overlap*> overlaps;
+    overlapReadsPart(dst, reads, 0, minOverlapLen, threadLen, path, ".nra");
+    overlapReadsPart(dst, reads, 1, minOverlapLen, threadLen, path, ".rra");
 
-    overlapReadsPart(overlaps, reads, 0, minOverlapLen, threadLen, path, ".nra");
-    overlapReadsPart(overlaps, reads, 1, minOverlapLen, threadLen, path, ".rra");
-
-    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", overlaps.size());
-
-    std::sort(overlaps.begin(), overlaps.end(), compareOverlaps);
-
-    std::vector<Overlap*> duplicates;
-
-    for (size_t i = 0; i < overlaps.size(); ++i) {
-
-        if (i > 0 && overlaps[i]->getA() == overlaps[i - 1]->getA() && overlaps[i]->getB() == overlaps[i - 1]->getB()) {
-            duplicates.push_back(overlaps[i]);
-            continue;
-        }
-
-        dst.push_back(overlaps[i]);
-    }
-
-    for (const auto& it : duplicates) delete it;
-
-    fprintf(stderr, "[Overlap][overlaps]: number of unique overlaps = %zu\n", dst.size());
+    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", dst.size());
 
     timer.stop();
     timer.print("Overlap", "overlaps");
@@ -397,13 +340,27 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
             }
 
             if (it1->first == it2->first) {
-                if (overlap->isTransitive(it1->second, it2->second)) {
-                    transitive = true;
-                    break;
-                }
+                // there can be multiple overlaps for a pair of reads
 
-                ++it1;
-                ++it2;
+                int id = it1->first;
+
+                auto temp = it2;
+
+                while (!transitive && it1 != v1.end() && it1->first == id) {
+
+                    it2 = temp;
+
+                    while (!transitive && it2 != v2.end() && it2->first == id) {
+
+                        if (overlap->isTransitive(it1->second, it2->second)) {
+                            transitive = true;
+                        }
+
+                        ++it2;
+                    }
+
+                    ++it1;
+                }
 
             } else if (it1->first < it2->first) {
                 ++it1;
