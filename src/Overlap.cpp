@@ -19,36 +19,54 @@ static bool compareMatches(const std::pair<int, int>& left, const std::pair<int,
     return left.first < right.first || (left.first == right.first && left.second > right.second);
 }
 
-// pick all matches with id different than i
-// normal x normal overlaps
-static void pickMatches(std::vector<Overlap*>& dst, std::vector<std::pair<int, int>>& matches,
-    int i, const std::vector<Read*>& reads) {
+static bool compareOverlaps(const Overlap* left, const Overlap* right) {
+
+    if (left->getA() < right->getA()) return true;
+    if (left->getA() == right->getA()) {
+        if (left->getB() < right->getB()) return true;
+        if (left->getB() == right->getB() && left->length() > right->length()) return true;
+    }
+    return false;
+}
+
+// pick all matches of type
+// types:
+//     0 - id different from i (normal x normal)
+//     1 - id greater than i (normal x reverse complement)
+//     2 - id less than i (reverse complement x normal)
+static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
+    int type, const std::vector<Read*>& reads) {
 
     if (matches.size() == 0) return;
 
     std::sort(matches.begin(), matches.end(), compareMatches);
 
-    if (matches[0].first != i) {
-        dst.push_back(new Overlap(
-            reads[i],
-            reads[matches[0].first],
-            -1 * (reads[matches[0].first]->getLength() - matches[0].second),
-            -1 * (reads[i]->getLength() - matches[0].second),
-            false
-        ));
-    }
+    for (int j = 0; j < (int) matches.size(); ++j) {
 
-    for (int j = 1; j < (int) matches.size(); ++j) {
+        if (j > 0 && matches[j].first == matches[j - 1].first) continue;
 
-        if (matches[j].first == matches[j - 1].first || matches[j].first == i) continue;
+        switch (type) {
+            case 0:
+                if (matches[j].first == i) continue;
+                break;
+            case 1:
+                if (matches[j].first <= i) continue;
+                break;
+            case 2:
+            default:
+                if (matches[j].first >= i) continue;
+                break;
+        }
 
-        dst.push_back(new Overlap(
-            reads[i],
-            reads[matches[j].first],
-            -1 * (reads[matches[j].first]->getLength() - matches[j].second),
-            -1 * (reads[i]->getLength() - matches[j].second),
-            false
-        ));
+        int aHang = reads[matches[j].first]->getLength() - matches[j].second;
+        int bHang = reads[i]->getLength() - matches[j].second;
+
+        if (i < matches[j].first) {
+            dst.push_back(new Overlap(reads[i], reads[matches[j].first], -1 * aHang, -1 * bHang, type != 0));
+
+        } else {
+            dst.push_back(new Overlap(reads[matches[j].first], reads[i], aHang, bHang, type != 0));
+        }
     }
 
     matches.clear();
@@ -56,61 +74,30 @@ static void pickMatches(std::vector<Overlap*>& dst, std::vector<std::pair<int, i
 
 // pick all matches with id Greater Than i
 // normal x reverseComplement & reverseComplement x normal overlaps
-static void pickMatchesGT(std::vector<Overlap*>& dst, std::vector<std::pair<int, int>>& matches,
+/*static void pickMatchesGT(std::vector<Overlap*>& dst, std::vector<std::pair<int, int>>& matches,
     int i, const std::vector<Read*>& reads, int rk) {
 
     if (matches.size() == 0) return;
 
     std::sort(matches.begin(), matches.end(), compareMatches);
 
-    if (matches[0].first > i) {
+    for (int j = 0; j < (int) matches.size(); ++j) {
+
+        if ((j > 0 && matches[j].first == matches[j - 1].first) || matches[j].first <= i) continue;
+
+        int aHang = reads[matches[j].first]->getLength() - matches[j].second;
+        int bHang = reads[i]->getLength() - matches[j].second;
 
         if (rk == 1) { // normal x rk
-            dst.push_back(new Overlap(
-                reads[i],
-                reads[matches[0].first],
-                -1 * (reads[matches[0].first]->getLength() - matches[0].second),
-                -1 * (reads[i]->getLength() - matches[0].second),
-                true
-            ));
+            dst.push_back(new Overlap(reads[i], reads[matches[j].first], -1 * aHang, -1 * bHang, true));
 
         } else { // rk x normal
-            dst.push_back(new Overlap(
-                reads[matches[0].first],
-                reads[i],
-                reads[i]->getLength() - matches[0].second,
-                reads[matches[0].first]->getLength() - matches[0].second,
-                true
-            ));
-        }
-    }
-
-    for (int j = 1; j < (int) matches.size(); ++j) {
-
-        if (matches[j].first == matches[j - 1].first || matches[j].first <= i) continue;
-
-        if (rk == 1) { // normal x rk
-            dst.push_back(new Overlap(
-                reads[i],
-                reads[matches[j].first],
-                -1 * (reads[matches[j].first]->getLength() - matches[j].second),
-                -1 * (reads[i]->getLength() - matches[j].second),
-                true
-            ));
-
-        } else { // rk x normal
-            dst.push_back(new Overlap(
-                reads[matches[j].first],
-                reads[i],
-                reads[i]->getLength() - matches[j].second,
-                reads[matches[j].first]->getLength() - matches[j].second,
-                true
-            ));
+            dst.push_back(new Overlap(reads[matches[j].first], reads[i], aHang, bHang, true));
         }
     }
 
     matches.clear();
-}
+}*/
 
 static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
 
@@ -127,12 +114,14 @@ static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Rea
     for (int i = start; i < end; ++i) {
 
         if (rk == 0) {
+            // normal x normal
             rindex->readPrefixSuffixMatches(matches, reads[i], 0, minOverlapLen);
-            pickMatches(dst, matches, i, reads);
+            pickMatches(dst, i, matches, 0, reads);
         }
 
+        // normal x reverse complement | reverse complement x normal
         rindex->readPrefixSuffixMatches(matches, reads[i], rk == 0, minOverlapLen);
-        pickMatchesGT(dst, matches, i, reads, rk);
+        pickMatches(dst, i, matches, rk == 0 ? 2 : 1, reads);
     }
 }
 
@@ -301,10 +290,30 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     std::vector<std::thread>().swap(threads);
 
-    overlapReadsPart(dst, reads, 0, minOverlapLen, threadLen, path, ".nra");
-    overlapReadsPart(dst, reads, 1, minOverlapLen, threadLen, path, ".rra");
+    std::vector<Overlap*> overlaps;
 
-    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", dst.size());
+    overlapReadsPart(overlaps, reads, 0, minOverlapLen, threadLen, path, ".nra");
+    overlapReadsPart(overlaps, reads, 1, minOverlapLen, threadLen, path, ".rra");
+
+    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", overlaps.size());
+
+    std::sort(overlaps.begin(), overlaps.end(), compareOverlaps);
+
+    std::vector<Overlap*> duplicates;
+
+    for (size_t i = 0; i < overlaps.size(); ++i) {
+
+        if (i > 0 && overlaps[i]->getA() == overlaps[i - 1]->getA() && overlaps[i]->getB() == overlaps[i - 1]->getB()) {
+            duplicates.push_back(overlaps[i]);
+            continue;
+        }
+
+        dst.push_back(overlaps[i]);
+    }
+
+    for (const auto& it : duplicates) delete it;
+
+    fprintf(stderr, "[Overlap][overlaps]: number of unique overlaps = %zu\n", dst.size());
 
     timer.stop();
     timer.print("Overlap", "overlaps");
@@ -353,7 +362,7 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     Timer timer;
     timer.start();
 
-    std::map<int, std::list<std::pair<int, Overlap*>>> edges;
+    std::map<int, std::vector<std::pair<int, Overlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
         edges[overlap->getA()].emplace_back(overlap->getB(), overlap);
@@ -361,7 +370,7 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     }
 
     for (auto& edge : edges) {
-        edge.second.sort();
+        std::sort(edge.second.begin(), edge.second.end());
     }
 
     // iterate through all (x,y), (x,z), (y,z) to remove (if transitive) (x,y)

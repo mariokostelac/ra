@@ -21,7 +21,6 @@
 #include <vector>
 #include <stack>
 #include <map>
-#include <list>
 #include <set>
 
 #include "Utils.hpp"
