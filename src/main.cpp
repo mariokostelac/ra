@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     filterContainedOverlaps(notContained, overlaps);
 
     std::vector<Overlap*> notTransitive;
-    filterTransitiveOverlaps(notTransitive, notContained);
+    filterTransitiveOverlaps(notTransitive, notContained, options->threadLen);
 
     for (const auto& it : overlaps) delete it;
 

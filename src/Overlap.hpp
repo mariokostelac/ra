@@ -104,4 +104,4 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
     bool view = true);
 
 void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
-    bool view = true);
+    int threadLen, bool view = true);

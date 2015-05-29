@@ -88,6 +88,68 @@ static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Rea
     }
 }
 
+static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Overlap*>& overlaps,
+    const std::map<int, std::vector<std::pair<int, Overlap*>>>& edges, size_t start, size_t end) {
+
+    for (size_t i = start; i < end; ++i) {
+
+        const Overlap* overlap = overlaps[i];
+
+        const auto& v1 = edges.at(overlap->getA());
+        const auto& v2 = edges.at(overlap->getB());
+
+        auto it1 = v1.begin();
+        auto it2 = v2.begin();
+
+        bool transitive = false;
+
+        while (!transitive && it1 != v1.end() && it2 != v2.end()) {
+
+            if (it1->first == overlap->getA() || it1->first == overlap->getB()) {
+                ++it1;
+                continue;
+            }
+
+            if (it2->first == overlap->getA() || it2->first == overlap->getB()) {
+                ++it2;
+                continue;
+            }
+
+            if (it1->first == it2->first) {
+                // there can be multiple overlaps for a pair of reads
+
+                int id = it1->first;
+
+                auto temp = it2;
+
+                while (!transitive && it1 != v1.end() && it1->first == id) {
+
+                    it2 = temp;
+
+                    while (!transitive && it2 != v2.end() && it2->first == id) {
+
+                        if (overlap->isTransitive(it1->second, it2->second)) {
+                            transitive = true;
+                        }
+
+                        ++it2;
+                    }
+
+                    ++it1;
+                }
+
+            } else if (it1->first < it2->first) {
+                ++it1;
+
+            } else {
+                ++it2;
+            }
+        }
+
+        dst[i] = transitive;
+    }
+}
+
 static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, int threadLen, const char* path, const char* ext) {
 
@@ -262,19 +324,26 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
     timer.print("Overlap", "overlaps");
 }
 
-void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps, bool view) {
+void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+    bool view) {
 
     Timer timer;
     timer.start();
 
-    std::set<int> contained;
+    int maxId = -1;
+
+    for (const auto& overlap : overlaps) {
+        maxId = std::max(std::max(overlap->getA(), overlap->getB()), maxId);
+    }
+
+    std::vector<bool> contained(maxId + 1, false);
 
     for (const auto& overlap : overlaps) {
         // A    --------->
         // B -----------------
         if (overlap->getAHang() <= 0 && overlap->getBHang() >= 0) {
             // readA is contained
-            contained.insert(overlap->getA());
+            contained[overlap->getA()] = true;
             continue;
         }
 
@@ -282,13 +351,12 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         // B      ------
         if (overlap->getAHang() >= 0 && overlap->getBHang() <= 0) {
             // readB is contained
-            contained.insert(overlap->getB());
+            contained[overlap->getB()] = true;
         }
     }
 
     for (const auto& overlap : overlaps) {
-        if (contained.count(overlap->getA()) > 0) continue;
-        if (contained.count(overlap->getB()) > 0) continue;
+        if (contained[overlap->getA()] || contained[overlap->getB()]) continue;
 
         dst.push_back(view ? overlap : overlap->clone());
     }
@@ -300,7 +368,8 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
     timer.print("Overlap", "filter contained");
 }
 
-void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps, bool view) {
+void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+    int threadLen, bool view) {
 
     Timer timer;
     timer.start();
@@ -316,8 +385,28 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
         std::sort(edge.second.begin(), edge.second.end());
     }
 
+    size_t taskLen = std::ceil((double) overlaps.size() / threadLen);
+    size_t start = 0;
+    size_t end = taskLen;
+
+    std::vector<std::thread> threads;
+
+    std::vector<bool> transitive(overlaps.size(), false);
+
+    for (int i = 0; i < threadLen; ++i) {
+        threads.emplace_back(threadFilterTransitive, std::ref(transitive), std::ref(overlaps),
+            std::ref(edges), start, end);
+
+        start = end;
+        end = std::min(end + taskLen, overlaps.size());
+    }
+
+    for (auto& it : threads) {
+        it.join();
+    }
+
     // iterate through all (x,y), (x,z), (y,z) to remove (if transitive) (x,y)
-    for (const auto& overlap : overlaps) {
+    /*for (const auto& overlap : overlaps) {
 
         const auto& v1 = edges[overlap->getA()];
         const auto& v2 = edges[overlap->getB()];
@@ -372,6 +461,14 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
 
         if (!transitive) {
             dst.push_back(view ? overlap : overlap->clone());
+        }
+    }
+    */
+
+    for (size_t i = 0; i < overlaps.size(); ++i) {
+
+        if (!transitive[i]) {
+            dst.push_back(view ? overlaps[i] : overlaps[i]->clone());
         }
     }
 
