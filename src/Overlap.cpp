@@ -15,8 +15,15 @@ static inline bool doubleEq(double x, double y, double eps) {
     return y <= x + eps && x <= y + eps;
 }
 
+static bool compareOverlaps(const Overlap* left, const Overlap* right) {
+    if (left->getA() != right->getA()) return left->getA() < right->getA();
+    if (left->getB() != right->getB()) return left->getB() < right->getB();
+    return left->length() > right->length();
+}
+
 static bool compareMatches(const std::pair<int, int>& left, const std::pair<int, int>& right) {
-    return left.first < right.first || (left.first == right.first && left.second > right.second);
+    if (left.first != right.first) return left.first < right.first;
+    return left.second > right.second;
 }
 
 // pick all matches of type
@@ -315,10 +322,32 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     std::vector<std::thread>().swap(threads);
 
-    overlapReadsPart(dst, reads, 0, minOverlapLen, threadLen, path, ".nra");
-    overlapReadsPart(dst, reads, 1, minOverlapLen, threadLen, path, ".rra");
+    std::vector<Overlap*> overlaps;
 
-    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", dst.size());
+    overlapReadsPart(overlaps, reads, 0, minOverlapLen, threadLen, path, ".nra");
+    overlapReadsPart(overlaps, reads, 1, minOverlapLen, threadLen, path, ".rra");
+
+    fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", overlaps.size());
+
+    std::sort(overlaps.begin(), overlaps.end(), compareOverlaps);
+
+    std::vector<Overlap*> duplicates;
+
+    for (size_t i = 0; i < overlaps.size(); ++i) {
+
+        if (i > 0 && overlaps[i]->getA() == overlaps[i - 1]->getA() &&
+            overlaps[i]->getB() == overlaps[i - 1]->getB()) {
+
+            duplicates.emplace_back(overlaps[i]);
+            continue;
+        }
+
+        dst.emplace_back(overlaps[i]);
+    }
+
+    for (const auto& duplicate : duplicates) delete duplicate;
+
+    fprintf(stderr, "[Overlap][overlaps]: number of unique overlaps = %zu\n", dst.size());
 
     timer.stop();
     timer.print("Overlap", "overlaps");
@@ -404,66 +433,6 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     for (auto& it : threads) {
         it.join();
     }
-
-    // iterate through all (x,y), (x,z), (y,z) to remove (if transitive) (x,y)
-    /*for (const auto& overlap : overlaps) {
-
-        const auto& v1 = edges[overlap->getA()];
-        const auto& v2 = edges[overlap->getB()];
-
-        auto it1 = v1.begin();
-        auto it2 = v2.begin();
-
-        bool transitive = false;
-
-        while (!transitive && it1 != v1.end() && it2 != v2.end()) {
-
-            if (it1->first == overlap->getA() || it1->first == overlap->getB()) {
-                ++it1;
-                continue;
-            }
-
-            if (it2->first == overlap->getA() || it2->first == overlap->getB()) {
-                ++it2;
-                continue;
-            }
-
-            if (it1->first == it2->first) {
-                // there can be multiple overlaps for a pair of reads
-
-                int id = it1->first;
-
-                auto temp = it2;
-
-                while (!transitive && it1 != v1.end() && it1->first == id) {
-
-                    it2 = temp;
-
-                    while (!transitive && it2 != v2.end() && it2->first == id) {
-
-                        if (overlap->isTransitive(it1->second, it2->second)) {
-                            transitive = true;
-                        }
-
-                        ++it2;
-                    }
-
-                    ++it1;
-                }
-
-            } else if (it1->first < it2->first) {
-                ++it1;
-
-            } else {
-                ++it2;
-            }
-        }
-
-        if (!transitive) {
-            dst.push_back(view ? overlap : overlap->clone());
-        }
-    }
-    */
 
     for (size_t i = 0; i < overlaps.size(); ++i) {
 

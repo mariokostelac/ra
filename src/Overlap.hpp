@@ -69,11 +69,11 @@ public:
     }
 
     // checks whether the start of read is contained in overlap
-    // - respects direction of read!
+    // - respects direction of read (important for reverse complements)!
     bool isUsingPrefix(int readId) const;
 
     // checks whether the end of read is contained in overlap
-    // - respects direction of read!
+    // - respects direction of read (important for reverse complements)!
     bool isUsingSuffix(int readId) const;
 
     // checks whether this (o1) is transitive considering overlaps o2 and o3
