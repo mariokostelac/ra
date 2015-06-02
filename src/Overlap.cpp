@@ -18,7 +18,7 @@ static inline bool doubleEq(double x, double y, double eps) {
 static bool compareOverlaps(const Overlap* left, const Overlap* right) {
     if (left->getA() != right->getA()) return left->getA() < right->getA();
     if (left->getB() != right->getB()) return left->getB() < right->getB();
-    return left->length() > right->length();
+    return left->getLength() > right->getLength();
 }
 
 static bool compareMatches(const std::pair<int, int>& left, const std::pair<int, int>& right) {
@@ -59,10 +59,12 @@ static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair
         int bHang = reads[i]->getLength() - matches[j].second;
 
         if (i < matches[j].first) {
-            dst.push_back(new Overlap(reads[i], reads[matches[j].first], -1 * aHang, -1 * bHang, type != 0));
+            dst.push_back(new Overlap(i, matches[j].first, matches[j].second,
+                -1 * aHang, -1 * bHang, type != 0));
 
         } else {
-            dst.push_back(new Overlap(reads[matches[j].first], reads[i], aHang, bHang, type != 0));
+            dst.push_back(new Overlap(matches[j].first, i, matches[j].second,
+                aHang, bHang, type != 0));
         }
     }
 
@@ -123,27 +125,13 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Ove
             }
 
             if (it1->first == it2->first) {
-                // there can be multiple overlaps for a pair of reads
 
-                int id = it1->first;
-
-                auto temp = it2;
-
-                while (!transitive && it1 != v1.end() && it1->first == id) {
-
-                    it2 = temp;
-
-                    while (!transitive && it2 != v2.end() && it2->first == id) {
-
-                        if (overlap->isTransitive(it1->second, it2->second)) {
-                            transitive = true;
-                        }
-
-                        ++it2;
-                    }
-
-                    ++it1;
+                if (overlap->isTransitive(it1->second, it2->second)) {
+                    transitive = true;
                 }
+
+                ++it1;
+                ++it2;
 
             } else if (it1->first < it2->first) {
                 ++it1;
@@ -199,16 +187,16 @@ static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*
     delete rindex;
 }
 
-Overlap::Overlap(const Read* a, const Read* b, int aHang, int bHang, bool innie) :
-    a_(a), b_(b), aHang_(aHang), bHang_(bHang), innie_(innie) {
+Overlap::Overlap(int a, int b, int length, int aHang, int bHang, bool innie) :
+    a_(a), b_(b), length_(length), aHang_(aHang), bHang_(bHang), innie_(innie) {
 }
 
 bool Overlap::isUsingPrefix(int readId) const {
 
-    if (readId == a_->getId()) {
+    if (readId == a_) {
         if (aHang_ <= 0) return true;
 
-    } else if (readId == b_->getId()) {
+    } else if (readId == b_) {
         if (innie_ == false && aHang_ >= 0) return true;
         if (innie_ == true && bHang_ <= 0) return true;
     }
@@ -218,10 +206,10 @@ bool Overlap::isUsingPrefix(int readId) const {
 
 bool Overlap::isUsingSuffix(int readId) const {
 
-    if (readId == a_->getId()) {
+    if (readId == a_) {
         if (bHang_ >= 0) return true;
 
-    } else if (readId == b_->getId()) {
+    } else if (readId == b_) {
         if (innie_ == false && bHang_ <= 0) return true;
         if (innie_ == true && aHang_ >= 0) return true;
     }
@@ -244,57 +232,30 @@ bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
     if (!doubleEq(
             o2->hang(a) + o3->hang(c),
             o1->hang(a),
-            EPSILON * o1->length() + ALPHA)) {
+            EPSILON * o1->getLength() + ALPHA)) {
         return false;
     }
 
     if (!doubleEq(
             o2->hang(c) + o3->hang(b),
             o1->hang(b),
-            EPSILON * o1->length() + ALPHA)) {
+            EPSILON * o1->getLength() + ALPHA)) {
         return false;
     }
 
     return true;
 }
 
-int Overlap::length() const {
-
-    int len = a_->getLength();
-
-    if (aHang_ > 0) len -= aHang_;
-    if (bHang_ < 0) len += bHang_;
-
-    return len;
-}
-
 int Overlap::hang(int readId) const {
 
-    if (readId == a_->getId()) return aHang_;
-    if (readId == b_->getId()) return bHang_;
-    return -1;
+    if (readId == a_) return aHang_;
+    if (readId == b_) return bHang_;
+
+    ASSERT(false, "Overlap", "wrong read id");
 }
 
 Overlap* Overlap::clone() const {
-    return new Overlap(a_, b_, aHang_, bHang_, innie_);
-}
-
-void Overlap::print() const {
-
-    printf("Overlap [%d:%d], Len = %d, aHang = %d, bHang = %d, innie = %d\n",
-        a_->getId(), b_->getId(), length(), aHang_, bHang_, innie_);
-
-    if (aHang_ < 0) {
-        printf("%s", std::string(abs(aHang_), ' ').c_str());
-    }
-
-    printf("%s\n", a_->getSequence().c_str());
-
-    if (aHang_ > 0) {
-        printf("%s", std::string(aHang_, ' ').c_str());
-    }
-
-    printf("%s\n\n", (innie_ ? b_->getReverseComplement() : b_->getSequence()).c_str());
+    return new Overlap(a_, b_, length_, aHang_, bHang_, innie_);
 }
 
 void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
@@ -333,6 +294,8 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     std::vector<Overlap*> duplicates;
 
+    dst.reserve(overlaps.size());
+
     for (size_t i = 0; i < overlaps.size(); ++i) {
 
         if (i > 0 && overlaps[i]->getA() == overlaps[i - 1]->getA() &&
@@ -359,7 +322,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
     Timer timer;
     timer.start();
 
-    int maxId = -1;
+    int maxId = 0;
 
     for (const auto& overlap : overlaps) {
         maxId = std::max(std::max(overlap->getA(), overlap->getB()), maxId);
