@@ -69,6 +69,11 @@ void Vertex::markEdges() {
     }
 }
 
+bool Vertex::isTip() const {
+    if (edgesB_.size() == 0 || edgesE_.size() == 0) return true;
+    return false;
+}
+
 void Vertex::addEdge(Edge* edge) {
 
     ++numEdges_;
@@ -158,17 +163,29 @@ void StringGraph::trim(int threshold) {
         }
 
         // check if tip
-        if (vertex->getEdgesB().size() == 0 || vertex->getEdgesE().size() == 0) {
+        if (vertex->isTip()) {
 
             const auto& edges = vertex->getEdgesB().size() == 0 ? vertex->getEdgesE() :
                 vertex->getEdgesB();
 
             for (const auto& edge : edges) {
 
-                const auto& vertexPair = edge->oppositeVertex(vertex->getId());
+                // check if opposite vertex has other edges similar as this one
 
-                // rule to avoid deleting start and end vertices
-                if (vertexPair->getNumEdges() > 2) {
+                const auto& opposite = edge->oppositeVertex(vertex->getId());
+
+                const auto& oppositeEdges = edge->getOverlap()->isUsingSuffix(opposite->getId()) ?
+                    opposite->getEdgesE() : opposite->getEdgesB();
+
+                size_t notMarked = 0;
+
+                for (const auto& oedge : oppositeEdges) {
+                    if (!oedge->isMarked() && !oedge->oppositeVertex(opposite->getId())->isTip()) {
+                        ++notMarked;
+                    }
+                }
+
+                if (notMarked > 1) {
                     vertex->mark();
                     vertex->markEdges();
                     ++tipsNum;

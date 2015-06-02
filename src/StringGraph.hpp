@@ -112,6 +112,8 @@ public:
         return marked_;
     }
 
+    bool isTip() const;
+
     void addEdge(Edge* edge);
 
     void markEdges();
