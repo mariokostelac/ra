@@ -4,6 +4,7 @@
 #include "IO.hpp"
 #include "Preprocess.hpp"
 #include "Overlap.hpp"
+#include "StringGraph.hpp"
 
 int main(int argc, char* argv[]) {
 
@@ -27,6 +28,16 @@ int main(int argc, char* argv[]) {
 
     std::vector<Overlap*> notTransitive;
     filterTransitiveOverlaps(notTransitive, notContained, options->threadLen);
+
+    StringGraph graph(reads, notTransitive);
+
+    graph.trim();
+
+    std::vector<Overlap*> trimmed;
+    graph.extractOverlaps(trimmed);
+
+    writeAfgOverlaps(notTransitive, "notTransitive.afg");
+    writeAfgOverlaps(trimmed, "trimmed.afg");
 
     for (const auto& it : overlaps) delete it;
 
