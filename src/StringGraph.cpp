@@ -56,20 +56,7 @@ Vertex::Vertex(const Read* read, const StringGraph* graph) :
     read_(read), graph_(graph), numEdges_(0), marked_(false) {
 }
 
-void Vertex::markEdges() {
-
-    for (const auto& edge : edgesE_) {
-        edge->mark();
-        edge->opposite_->mark();
-    }
-
-    for (const auto& edge : edgesB_) {
-        edge->mark();
-        edge->opposite_->mark();
-    }
-}
-
-bool Vertex::isTip() const {
+bool Vertex::isTipCandidate() const {
     if (edgesB_.size() == 0 || edgesE_.size() == 0) return true;
     return false;
 }
@@ -83,12 +70,40 @@ void Vertex::addEdge(Edge* edge) {
     } else {
         edgesB_.emplace_back(edge);
     }
+}
 
-    /*if (edge->getDirection() == Edge::Direction::A_TO_B) {
-        edgesDirA_.emplace_back(edge);
-    } else {
-        edgesDirB_.emplace_back(edge);
-    }*/
+void Vertex::markEdges() {
+
+    for (const auto& edge : edgesE_) {
+        edge->mark();
+        edge->opposite_->mark();
+    }
+
+    for (const auto& edge : edgesB_) {
+        edge->mark();
+        edge->opposite_->mark();
+    }
+}
+
+void Vertex::removeMarkedEdges() {
+
+    for (auto edge = edgesE_.begin(); edge != edgesE_.end();) {
+
+        if ((*edge)->isMarked()) {
+            edge = edgesE_.erase(edge);
+        } else {
+            ++edge;
+        }
+    }
+
+    for (auto edge = edgesB_.begin(); edge != edgesB_.end();) {
+
+        if ((*edge)->isMarked()) {
+            edge = edgesB_.erase(edge);
+        } else {
+            ++edge;
+        }
+    }
 }
 
 //*****************************************************************************
@@ -163,7 +178,7 @@ void StringGraph::trim(int threshold) {
         }
 
         // check if tip
-        if (vertex->isTip()) {
+        if (vertex->isTipCandidate()) {
 
             const auto& edges = vertex->getEdgesB().size() == 0 ? vertex->getEdgesE() :
                 vertex->getEdgesB();
@@ -177,20 +192,27 @@ void StringGraph::trim(int threshold) {
                 const auto& oppositeEdges = edge->getOverlap()->isUsingSuffix(opposite->getId()) ?
                     opposite->getEdgesE() : opposite->getEdgesB();
 
-                size_t notMarked = 0;
+                bool isTip = false;
 
                 for (const auto& oedge : oppositeEdges) {
-                    if (!oedge->isMarked() && !oedge->oppositeVertex(opposite->getId())->isTip()) {
-                        ++notMarked;
+                    if (!oedge->isMarked() && !oedge->oppositeVertex(opposite->getId())->isTipCandidate()) {
+                        isTip = true;
+                        break;
                     }
                 }
 
-                if (notMarked > 1) {
+                if (isTip) {
                     vertex->mark();
                     vertex->markEdges();
                     ++tipsNum;
 
                     break;
+                }
+            }
+
+            if (vertex->isMarked()) {
+                for (const auto& edge : edges) {
+                    que_.push_back(edge->oppositeVertex(vertex->getId())->getId());
                 }
             }
         }
@@ -209,23 +231,27 @@ void StringGraph::trim(int threshold) {
 
 void StringGraph::extractOverlaps(std::vector<Overlap*>& dst, bool view) const {
 
-    std::vector<bool> duplicates(overlaps_->size() * 2, false);
-
     dst.reserve(edges_.size() / 2);
 
     for (const auto& edge : edges_) {
 
-        if (duplicates[edge->getId()]) continue;
+        if (edge->getId() % 2 == 1) continue;
 
         dst.push_back(view ? (*overlaps_)[edge->getId() / 2] :
             (*overlaps_)[edge->getId() / 2]->clone());
-
-        duplicates[edge->opposite_->getId()] = true;
     }
 }
 
 void StringGraph::deleteMarked() {
 
+    // remove edge pairs from vertices in que
+    for (const auto& id : que_) {
+        vertices_[verticesDict_[id]]->removeMarkedEdges();
+    }
+
+    que_.clear();
+
+    // delete vertices
     std::vector<Vertex*> verticesNew;
     std::map<int, int> verticesDictNew;
 
@@ -243,6 +269,7 @@ void StringGraph::deleteMarked() {
     verticesDict_.swap(verticesDictNew);
     vertices_.swap(verticesNew);
 
+    // delete edges
     std::vector<Edge*> edgesNew;
 
     for (const auto& edge : edges_) {

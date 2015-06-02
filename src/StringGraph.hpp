@@ -88,21 +88,13 @@ public:
         return numEdges_;
     }
 
-    const std::vector<Edge*>& getEdgesB() const {
+    const std::list<Edge*>& getEdgesB() const {
         return edgesB_;
     }
 
-    const std::vector<Edge*>& getEdgesE() const {
+    const std::list<Edge*>& getEdgesE() const {
         return edgesE_;
     }
-
-    /*const std::vector<Edge*>& getEdgesDirA() const {
-        return edgesDirA_;
-    }
-
-    const std::vector<Edge*>& getEdgesDirB() const {
-        return edgesDirB_;
-    }*/
 
     void mark() {
         marked_ = true;
@@ -112,11 +104,13 @@ public:
         return marked_;
     }
 
-    bool isTip() const;
+    bool isTipCandidate() const;
 
     void addEdge(Edge* edge);
 
     void markEdges();
+
+    void removeMarkedEdges();
 
 private:
 
@@ -125,10 +119,8 @@ private:
     size_t numEdges_;
     bool marked_;
 
-    std::vector<Edge*> edgesB_;
-    std::vector<Edge*> edgesE_;
-    // std::vector<Edge*> edgesDirA_; // A to B
-    // std::vector<Edge*> edgesDirB_; // B to A
+    std::list<Edge*> edgesB_;
+    std::list<Edge*> edgesE_;
 };
 
 class StringGraph {
@@ -157,4 +149,6 @@ private:
     std::vector<Vertex*> vertices_;
     std::vector<Edge*> edges_;
     std::map<int, int> verticesDict_;
+
+    std::vector<int> que_;
 };
