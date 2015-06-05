@@ -79,11 +79,11 @@ private:
 class Vertex {
 public:
 
-    Vertex(const Read* read, const StringGraph* graph);
+    Vertex(int id, const Read* read, const StringGraph* graph);
     ~Vertex() {};
 
     int getId() const {
-        return read_->getId();
+        return id_;
     }
 
     int getLength() const {
@@ -124,6 +124,7 @@ public:
 
 private:
 
+    int id_;
     const Read* read_;
     const StringGraph* graph_;
     bool marked_;

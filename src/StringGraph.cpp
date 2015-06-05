@@ -97,8 +97,8 @@ const Vertex* Edge::oppositeVertex(int id) const {
 //*****************************************************************************
 // Vertex
 
-Vertex::Vertex(const Read* read, const StringGraph* graph) :
-    read_(read), graph_(graph), marked_(false) {
+Vertex::Vertex(int id, const Read* read, const StringGraph* graph) :
+    id_(id), read_(read), graph_(graph), marked_(false) {
 }
 
 bool Vertex::isTipCandidate() const {
@@ -166,8 +166,9 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
     vertices_.reserve(reads.size());
 
     for (const auto& read : reads) {
-        verticesDict_[read->getId()] = vertices_.size();
-        vertices_.emplace_back(new Vertex(read, this));
+        size_t id = vertices_.size();
+        verticesDict_[id] = id;
+        vertices_.emplace_back(new Vertex(id, read, this));
     }
 
     edges_.reserve(overlaps.size() * 2);
@@ -426,7 +427,8 @@ void StringGraph::extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const V
     std::vector<const StringGraphNode*> junctureNodes;
 
     for (const auto& node : nodes) {
-        junctureNodes.emplace_back(node->findInBranch(junctureNode));
+        const auto& temp = node->findInBranch(junctureNode);
+        if (temp != nullptr) junctureNodes.emplace_back(temp);
     }
 
     nodes.clear();
