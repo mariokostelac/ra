@@ -4,8 +4,8 @@
 * Created on: May 14, 2015
 *     Author: rvaser
 *
-* Filtering of contained and transitive overlaps was rewritten from:
-*     https://github.com/mariokostelac/assembly-tools
+* Filtering of contained and transitive overlaps was rewritten and modified from:
+*     Github: https://github.com/mariokostelac/assembly-tools
 *
 * Overlap types:
 *     (found at sourceforge.net/p/amos/mailman/message/19965222/)
@@ -102,7 +102,7 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
     int threadLen, const char* path);
 
 void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
-    bool view = true);
+    std::vector<Read*>& reads, bool view = true);
 
 void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     int threadLen, bool view = true);

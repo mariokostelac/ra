@@ -35,6 +35,14 @@ public:
         return reverseComplement_;
     }
 
+    double getCoverage() const {
+        return coverage_;
+    }
+
+    void addCoverage(double value) {
+        coverage_ += value;
+    }
+
     Read* clone() const;
 
     void correctBase(int idx, int c);
@@ -48,4 +56,5 @@ private:
     std::string sequence_;
     int length_;
     std::string reverseComplement_;
+    double coverage_;
 };

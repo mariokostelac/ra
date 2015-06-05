@@ -28,6 +28,7 @@ Read::Read(int id, const std::string& name, const std::string& sequence) {
     ASSERT(sequence_.size() > 0, "Read", "invalid data");
 
     length_ = sequence_.size();
+    coverage_ = 1.0;
 }
 
 Read* Read::clone() const {

@@ -394,7 +394,7 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
     timer.print("Preproc", "error correction");
 }
 
-void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads, bool view) {
+void filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view) {
 
     Timer timer;
     timer.start();
@@ -409,6 +409,8 @@ void filterReads(std::vector<Read*>& dst, const std::vector<Read*>& reads, bool 
         if (duplicates[i] == true) continue;
 
         rindex->readDuplicates(equals, reads[i]);
+
+        reads[i]->addCoverage(equals.size() - 1);
 
         for (size_t j = 0; j < equals.size(); ++j) {
             duplicates[equals[j]] = true;

@@ -317,7 +317,7 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 }
 
 void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
-    bool view) {
+    std::vector<Read*>& reads, bool view) {
 
     Timer timer;
     timer.start();
@@ -336,6 +336,10 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         if (overlap->getAHang() <= 0 && overlap->getBHang() >= 0) {
             // readA is contained
             contained[overlap->getA()] = true;
+
+            reads[overlap->getB()]->addCoverage(reads[overlap->getA()]->getLength() /
+                (double) reads[overlap->getB()]->getLength());
+
             continue;
         }
 
@@ -344,6 +348,9 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         if (overlap->getAHang() >= 0 && overlap->getBHang() <= 0) {
             // readB is contained
             contained[overlap->getB()] = true;
+
+            reads[overlap->getA()]->addCoverage(reads[overlap->getB()]->getLength() /
+                (double) reads[overlap->getA()]->getLength());
         }
     }
 
