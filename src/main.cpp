@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     overlapReads(overlaps, filteredReads, options->minOverlapLen, options->threadLen, options->readsPath);
 
     std::vector<Overlap*> notContained;
-    filterContainedOverlaps(notContained, overlaps);
+    filterContainedOverlaps(notContained, overlaps, reads);
 
     std::vector<Overlap*> notTransitive;
     filterTransitiveOverlaps(notTransitive, notContained, options->threadLen);
@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
     StringGraph graph(reads, notTransitive);
 
     graph.trim();
+    graph.popBubbles();
 
     std::vector<Overlap*> trimmed;
     graph.extractOverlaps(trimmed);

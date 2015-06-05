@@ -20,6 +20,7 @@
 #include <thread>
 #include <vector>
 #include <stack>
+#include <deque>
 #include <list>
 #include <map>
 #include <set>

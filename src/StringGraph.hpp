@@ -4,8 +4,8 @@
 * Created on: May 30, 2015
 *     Author: rvaser
 *
-* Code was rewritten from:
-*     https://github.com/mariokostelac/croler (private repository)
+* Code was rewritten and modified from:
+*     Github: https://github.com/mariokostelac/croler (private repository)
 */
 
 #pragma once
@@ -14,8 +14,12 @@
 #include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
+//#include "edlib/edlib.h"
+
 class Vertex;
 class StringGraph;
+class StringGraphWalk;
+class StringGraphNode;
 
 class Edge {
 public:
@@ -53,6 +57,8 @@ public:
         return marked_;
     }
 
+    void label(std::string& dst) const;
+
     const Vertex* oppositeVertex(int id) const;
 
     friend class Vertex;
@@ -84,8 +90,12 @@ public:
         return read_->getLength();
     }
 
-    size_t getNumEdges() const {
-        return numEdges_;
+    const std::string& getSequence() const {
+        return read_->getSequence();
+    }
+
+    const std::string& getReverseComplement() const {
+        return read_->getReverseComplement();
     }
 
     const std::list<Edge*>& getEdgesB() const {
@@ -116,7 +126,6 @@ private:
 
     const Read* read_;
     const StringGraph* graph_;
-    size_t numEdges_;
     bool marked_;
 
     std::list<Edge*> edgesB_;
@@ -142,6 +151,16 @@ public:
 
 private:
 
+    static const size_t MAX_NODES = 500;
+    static const int MAX_DISTANCE = 1000;
+
+    void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir);
+
+    const StringGraphNode* bubbleJuncture(StringGraphNode* rootNode) const;
+
+    void extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root,
+        const StringGraphNode* junctureNode) const;
+
     void deleteMarked();
 
     const std::vector<Overlap*>* overlaps_;
@@ -150,5 +169,74 @@ private:
     std::vector<Edge*> edges_;
     std::map<int, int> verticesDict_;
 
-    std::vector<int> que_;
+    // helper for edge removal (contains indices of vertices which have marked edges)
+    std::vector<int> marked_;
+
+    // queues for bubble popping
+    std::deque<StringGraphNode*> openedQueue_;
+    std::deque<StringGraphNode*> closedQueue_;
+    // helper for bubble popping
+    std::vector<StringGraphNode*> nodes_;
+};
+
+class StringGraphWalk {
+public:
+
+    StringGraphWalk(const Vertex* start);
+    ~StringGraphWalk() {};
+
+    const std::vector<const Edge*>& getEdges() const {
+        return edges_;
+    }
+
+    void addEdge(const Edge* edge);
+
+    void extractSequence(std::string& dst) const;
+
+    bool containsVertex(int id) const;
+
+private:
+
+    const Vertex* start_;
+    std::vector<const Edge*> edges_;
+    std::set<int> visited_; // visited vertices
+};
+
+// BFS wrapper for Vertex
+class StringGraphNode {
+public:
+
+    StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, StringGraphNode* parent,
+        int dir, int distance);
+    ~StringGraphNode() {};
+
+    const Vertex* getVertex() const {
+        return vertex_;
+    }
+
+    const Edge* getEdgeFromParent() const {
+        return edgeFromParent_;
+    }
+
+    const StringGraphNode* getParent() const {
+        return parent_;
+    }
+
+    int getDistance() const {
+        return distance_;
+    }
+
+    size_t expand(std::deque<StringGraphNode*>& queue);
+
+    bool isInBranch(const StringGraphNode* node) const;
+
+    const StringGraphNode* findInBranch(const StringGraphNode* node) const;
+
+private:
+
+    const Vertex* vertex_;
+    const Edge* edgeFromParent_;
+    StringGraphNode* parent_;
+    int direction_;
+    int distance_;
 };
