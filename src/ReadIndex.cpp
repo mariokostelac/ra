@@ -24,6 +24,17 @@ static bool equalSubstr(const char* str1, int s1, int e1, const char* str2, int 
     return true;
 }
 
+static int findChar(char c, const char* str, int s, int e) {
+
+    for (int i = s; i < e; ++i) {
+        if (str[i] == c) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     ASSERT(reads.size() > 0, "RI", "invalid number of input reads");
@@ -134,55 +145,78 @@ void ReadIndex::readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, c
     for (const auto& it : fragments_) {
 
         int i, j, c = 0;
-        bool found = false;
 
         const std::string& str = it->getString();
 
         it->intervalSubInterval(&i, &j, 1 + 5 * fragmentSizes_[f++], it->getLength() - 1, pattern[c]);
 
-        while (i != -1 && j != -1 && c < m) {
+        while (i != -1 && j != -1) {
 
             if (i != j) {
                 int l = it->intervalLcpLen(i, j);
-                int min = l < m ? l : m;
+                int del = findChar(E_DELIMITER, str.c_str(), it->getSuffix(i) + c + 1, it->getSuffix(i) + l);
 
-                found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
-                    pattern.c_str(), c, min - 1);
+                if (del == -1) {
+                    int min = l < m ? l : m;
 
-                if (!found) break;
-                c = min;
+                    bool found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + min - 1,
+                        pattern.c_str(), c, min - 1);
 
-                if (c == m) {
-                    for (int o = i ; o <= j; ++o) {
-                        if (it->getSuffix(o) + m < it->getLength() && str[it->getSuffix(o) + m] == E_DELIMITER) {
-                            dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + m + 1)), m);
+                    if (!found) break;
+                    c = min;
+
+                    if (c == m) {
+                        for (int o = i ; o <= j; ++o) {
+                            if (it->getSuffix(o) + m < it->getLength() && str[it->getSuffix(o) + m] == E_DELIMITER) {
+                                dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + m + 1)), m);
+                            }
+                        }
+                        break;
+
+                    } else {
+                        int b, d;
+                        it->intervalSubInterval(&b, &d, i, j, E_DELIMITER);
+
+                        if (b != -1 && d != -1 && min >= minOverlapLen) {
+                            for (int o = b; o <= d; ++o) {
+                                dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + min + 1)), min);
+                            }
                         }
                     }
-                    break;
+
+                    it->intervalSubInterval(&i, &j, i, j, pattern[c]);
 
                 } else {
-                    int b, d;
-                    it->intervalSubInterval(&b, &d, i, j, E_DELIMITER);
+                    del -= it->getSuffix(i); // len to delimeter
+                    if (del > m) break;
 
-                    if (b != -1 && d != -1 && min >= minOverlapLen) {
-                        for (int o = b; o <= d; ++o) {
-                            dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + min + 1)), min);
+                    bool found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + del - 1,
+                        pattern.c_str(), c, del - 1);
+
+                    if (found) {
+                        for (int o = i; o <= j; ++o) {
+                            dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(o) + del + 1)), del);
                         }
                     }
-                }
 
-                it->intervalSubInterval(&i, &j, i, j, pattern[c]);
+                    break;
+                }
 
             } else {
-                if (it->getSuffix(i) + m > it->getLength() - 1) break;
+                int del = findChar(E_DELIMITER, str.c_str(), it->getSuffix(i) + c + 1, it->getLength());
+                if (del == -1) break;
 
-                if (equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + m - 1,
-                    pattern.c_str(), c, m - 1) && str[it->getSuffix(i) + m] == E_DELIMITER) {
+                del -= it->getSuffix(i); // len to delimeter
+                if (del > m) break;
 
-                    dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(i) + m + 1)), m);
+                bool found = equalSubstr(str.c_str(), it->getSuffix(i) + c, it->getSuffix(i) + del - 1,
+                    pattern.c_str(), c, del - 1);
+
+                if (found) {
+                    dst.emplace_back(*((int32_t*) (str.c_str() + it->getSuffix(i) + del + 1)), del);
                 }
 
-                c = m;
+                break;
             }
         }
     }

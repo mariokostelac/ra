@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     std::vector<Overlap*> notTransitive;
     filterTransitiveOverlaps(notTransitive, notContained, options->threadLen);
 
-    StringGraph graph(reads, notTransitive);
+    StringGraph graph(filteredReads, notTransitive);
 
     graph.trim();
     graph.popBubbles();
