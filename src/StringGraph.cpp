@@ -417,16 +417,8 @@ void StringGraph::simplify() {
         }
 
         // bubble popping
-        numVerticesTemp = 0;
-        size_t numEdgesTemp = 0;
-        while (numVerticesTemp != vertices_.size() || numEdgesTemp != edges_.size()) {
-
-            numVerticesTemp = vertices_.size();
-            numEdgesTemp = edges_.size();
-
-            ++numBubbleRounds;
-            popBubbles();
-        }
+        ++numBubbleRounds;
+        popBubbles();
     }
 
     fprintf(stderr, "[SG][simplification]: number of trimming rounds = %zu\n", numTrimmingRounds);
@@ -625,13 +617,10 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
     std::vector<std::string> sequences;
 
-    size_t j = 0;
     for (const auto& walk : walks) {
 
         const Vertex* root = walk->getEdges().front()->getA();
         const Vertex* juncture = walk->getEdges().back()->getB();
-
-        if (j++ == selectedWalk) printf("!! ");
 
         std::string sequence;
         walk->extractSequence(sequence);
@@ -676,9 +665,17 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
             const auto& edges = walks[i]->getEdges();
 
-            // needed for walks which consist of only 1 edge
-            const Vertex* root = edges.front()->getA();
-            vertices_[verticesDict_.at(root->getId())]->markEdge(edges.front()->getId());
+            // needed for walks which consist of only 1 edge ("trasitive" walks)
+            if (edges.size() == 1) {
+
+                const Vertex* start = edges.front()->getA();
+                const Vertex* end = edges.front()->getB();
+
+                vertices_[verticesDict_.at(start->getId())]->markEdge(edges.front()->getId());
+
+                marked_.emplace_back(start->getId());
+                marked_.emplace_back(end->getId());
+            }
 
             for (size_t e = 0; e < edges.size() - 1; ++e) {
 
@@ -701,8 +698,6 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
             }
         }
     }
-
-    printf("popped = %d\n\n", popped);
 
     return popped;
 }
@@ -779,12 +774,8 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 
     int prevType = getType(edges_.front(), edges_.front()->getA()->getId());
 
-    printf("%d ", start_->getId());
-
     // add edge labels
     for (const auto& edge : edges_) {
-
-        printf("-> %d ", edge->getB()->getId());
 
         int type = getType(edge, edge->getA()->getId());
 
@@ -801,7 +792,6 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 
         prevType = getType(edge, edge->getB()->getId()) ^ invert;
     }
-    printf("\n");
 
     if (prefix) dst = std::string(dst.rbegin(), dst.rend());
 }
