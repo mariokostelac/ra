@@ -124,6 +124,8 @@ public:
 
     void addEdge(Edge* edge);
 
+    void markEdge(int id);
+
     void markEdges();
 
     void removeMarkedEdges();
@@ -216,8 +218,8 @@ private:
 class StringGraphNode {
 public:
 
-    StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, StringGraphNode* parent,
-        int dir, int distance);
+    StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent,
+        const StringGraphNode* parent, int dir, int distance);
     ~StringGraphNode() {};
 
     const Vertex* getVertex() const {
@@ -246,7 +248,7 @@ private:
 
     const Vertex* vertex_;
     const Edge* edgeFromParent_;
-    StringGraphNode* parent_;
+    const StringGraphNode* parent_;
     int direction_;
     int distance_;
 };

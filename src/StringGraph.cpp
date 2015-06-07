@@ -169,6 +169,25 @@ void Vertex::addEdge(Edge* edge) {
     }
 }
 
+void Vertex::markEdge(int id) {
+
+    for (const auto& edge : edgesE_) {
+        if (edge->getId() == id) {
+            edge->mark();
+            edge->opposite_->mark();
+            return;
+        }
+    }
+
+    for (const auto& edge : edgesB_) {
+        if (edge->getId() == id) {
+            edge->mark();
+            edge->opposite_->mark();
+            return;
+        }
+    }
+}
+
 void Vertex::markEdges() {
 
     for (const auto& edge : edgesE_) {
@@ -560,10 +579,13 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
     std::vector<std::string> sequences;
 
+    size_t j = 0;
     for (const auto& walk : walks) {
 
         const Vertex* root = walk->getEdges().front()->getA();
         const Vertex* juncture = walk->getEdges().back()->getB();
+
+        if (j++ == selectedWalk) printf("!! ");
 
         std::string sequence;
         walk->extractSequence(sequence);
@@ -605,11 +627,20 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
             popped = true;
 
             // mark walk for removal
+
             const auto& edges = walks[i]->getEdges();
+
+            // needed for walks which consist of only 1 edge
+            const Vertex* root = edges.front()->getA();
+            vertices_[verticesDict_.at(root->getId())]->markEdge(edges.front()->getId());
 
             for (size_t e = 0; e < edges.size() - 1; ++e) {
 
                 Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getB()->getId())];
+
+                if (walks[selectedWalk]->containsVertex(vertex->getId())) {
+                    continue;
+                }
 
                 vertex->mark();
                 vertex->markEdges();
@@ -624,6 +655,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
             }
         }
     }
+
+    printf("popped = %d\n\n", popped);
 
     return popped;
 }
@@ -733,7 +766,7 @@ bool StringGraphWalk::containsVertex(int id) const {
 
 // StringGraphNode
 
-StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, StringGraphNode* parent, int dir, int distance) :
+StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, const StringGraphNode* parent, int dir, int distance) :
     vertex_(vertex), edgeFromParent_(edgeFromParent), parent_(parent), direction_(dir) {
 
     if (parent_ == nullptr) {
