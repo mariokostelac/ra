@@ -32,18 +32,12 @@ int main(int argc, char* argv[]) {
 
     StringGraph graph(filteredReads, notTransitive);
 
-    graph.trim();
-
-    std::vector<Overlap*> trimmed;
-    graph.extractOverlaps(trimmed);
-
-    graph.popBubbles();
+    graph.simplify();
 
     std::vector<Overlap*> final;
     graph.extractOverlaps(final);
 
     writeAfgOverlaps(notTransitive, "notTransitive.afg");
-    writeAfgOverlaps(trimmed, "trimmed.afg");
     writeAfgOverlaps(final, "final.afg");
 
     for (const auto& it : overlaps) delete it;

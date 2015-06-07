@@ -390,6 +390,52 @@ void StringGraph::popBubbles() {
     timer.print("SG", "bubble popping");
 }
 
+void StringGraph::simplify() {
+
+    Timer timer;
+    timer.start();
+
+    size_t numTrimmingRounds = 0;
+    size_t numBubbleRounds = 0;
+
+    size_t numVertices = 0;
+    size_t numEdges = 0;
+
+    while (numVertices != vertices_.size() || numEdges != edges_.size()) {
+
+        numVertices = vertices_.size();
+        numEdges = edges_.size();
+
+        // trimming
+        size_t numVerticesTemp = 0;
+        while (numVerticesTemp != vertices_.size()) {
+
+            numVerticesTemp = vertices_.size();
+
+            ++numTrimmingRounds;
+            trim();
+        }
+
+        // bubble popping
+        numVerticesTemp = 0;
+        size_t numEdgesTemp = 0;
+        while (numVerticesTemp != vertices_.size() || numEdgesTemp != edges_.size()) {
+
+            numVerticesTemp = vertices_.size();
+            numEdgesTemp = edges_.size();
+
+            ++numBubbleRounds;
+            popBubbles();
+        }
+    }
+
+    fprintf(stderr, "[SG][simplification]: number of trimming rounds = %zu\n", numTrimmingRounds);
+    fprintf(stderr, "[SG][simplification]: number of bubble popping rounds = %zu\n", numBubbleRounds);
+
+    timer.stop();
+    timer.print("SG", "simplification");
+}
+
 void StringGraph::extractOverlaps(std::vector<Overlap*>& dst, bool view) const {
 
     dst.reserve(edges_.size() / 2);

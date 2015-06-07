@@ -160,6 +160,9 @@ public:
 
     void popBubbles();
 
+    // uses both trimming and bubble popping until no changes happen
+    void simplify();
+
     void extractOverlaps(std::vector<Overlap*>& dst, bool view = true) const;
 
 private:
