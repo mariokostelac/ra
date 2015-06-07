@@ -5,6 +5,7 @@
 #include "Preprocess.hpp"
 #include "Overlap.hpp"
 #include "StringGraph.hpp"
+#include "EditDistance.hpp"
 
 int main(int argc, char* argv[]) {
 
@@ -32,13 +33,18 @@ int main(int argc, char* argv[]) {
     StringGraph graph(filteredReads, notTransitive);
 
     graph.trim();
-    graph.popBubbles();
 
     std::vector<Overlap*> trimmed;
     graph.extractOverlaps(trimmed);
 
+    graph.popBubbles();
+
+    std::vector<Overlap*> final;
+    graph.extractOverlaps(final);
+
     writeAfgOverlaps(notTransitive, "notTransitive.afg");
     writeAfgOverlaps(trimmed, "trimmed.afg");
+    writeAfgOverlaps(final, "final.afg");
 
     for (const auto& it : overlaps) delete it;
 

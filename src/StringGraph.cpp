@@ -7,10 +7,14 @@
 
 #include "StringGraph.hpp"
 
+static const size_t MAX_NODES = 500;
+static const int MAX_DISTANCE = 1000;
+static const double MAX_DIFFERENCE = 0.1;
+
 //*****************************************************************************
 // Edge
 
-bool compareEdges(const Edge* left, const Edge* right) {
+/*bool compareEdges(const Edge* left, const Edge* right) {
 
     if (left->getA()->getId() != right->getA()->getId()) {
         return left->getA()->getId() < right->getA()->getId();
@@ -21,7 +25,7 @@ bool compareEdges(const Edge* left, const Edge* right) {
     }
 
     return false;
-}
+}*/
 
 Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph) {
 
@@ -82,6 +86,38 @@ void Edge::label(std::string& dst) const {
     }
 }
 
+void Edge::rkLabel(std::string& dst) const {
+
+    std::string label;
+    this->label(label);
+
+    dst = "";
+
+    for (int i = label.size() - 1; i >= 0; --i) {
+
+        char c = label[i];
+
+        switch (c) {
+            case 'A':
+                c = 'T';
+                break;
+            case 'T':
+                c = 'A';
+                break;
+            case 'C':
+                c = 'G';
+                break;
+            case 'G':
+                c = 'C';
+                break;
+            default:
+                break;
+        }
+
+        dst += c;
+    }
+}
+
 const Vertex* Edge::oppositeVertex(int id) const {
 
     if (id == a_->getId()) return b_;
@@ -104,6 +140,24 @@ Vertex::Vertex(int id, const Read* read, const StringGraph* graph) :
 bool Vertex::isTipCandidate() const {
     if (edgesB_.size() == 0 || edgesE_.size() == 0) return true;
     return false;
+}
+
+bool Vertex::isBubbleRootCandidate(int direction) const {
+
+    size_t unmarked = 0;
+
+    if (direction == 0) {
+        for (const auto& edge : edgesB_) {
+            if (!edge->isMarked()) ++unmarked;
+        }
+    }
+    else if (direction == 1) {
+        for (const auto& edge : edgesE_) {
+            if (!edge->isMarked()) ++unmarked;
+        }
+    }
+
+    return unmarked > 1;
 }
 
 void Vertex::addEdge(Edge* edge) {
@@ -188,7 +242,7 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
         edgeB->opposite_ = edgeA;
     }
 
-    std::sort(edges_.begin(), edges_.end(), compareEdges);
+    // std::sort(edges_.begin(), edges_.end(), compareEdges);
 
     timer.stop();
     timer.print("SG", "construction");
@@ -256,7 +310,7 @@ void StringGraph::trim(int threshold) {
 
             if (vertex->isMarked()) {
                 for (const auto& edge : edges) {
-                    marked_.push_back(edge->oppositeVertex(vertex->getId())->getId());
+                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
                 }
             }
         }
@@ -278,11 +332,7 @@ void StringGraph::popBubbles() {
     Timer timer;
     timer.start();
 
-    size_t bubblesDir1 = 0;
-    size_t bubblesDir2 = 0;
-    size_t walksNum = 0;
-
-    // size_t bubblesPoppedNum = 0;
+    size_t bubblesPoppedNum = 0;
 
     for (const auto& vertex : vertices_) {
 
@@ -290,27 +340,32 @@ void StringGraph::popBubbles() {
             continue;
         }
 
-        std::vector<StringGraphWalk*> walks;
-        findBubbleWalks(walks, vertex, 0);
+        for (int direction = 0; direction <= 1; ++direction) {
 
-        size_t temp = walks.size();
+            if (!vertex->isBubbleRootCandidate(direction)) {
+                continue;
+            }
 
-        findBubbleWalks(walks, vertex, 1);
+            std::vector<StringGraphWalk*> walks;
+            findBubbleWalks(walks, vertex, direction);
 
-        bubblesDir1 += temp != 0 ? 1 : 0;
-        bubblesDir2 += walks.size() - temp != 0 ? 1 : 0;
+            if (walks.size() == 0) {
+                continue;
+            }
 
-        walksNum += walks.size();
+            if (popBubble(walks, direction)) {
+                ++bubblesPoppedNum;
+            }
 
-        for (const auto& walk : walks) delete walk;
+            for (const auto& walk : walks) delete walk;
+        }
     }
 
-    //if (bubblesPoppedNum > 0) {
-    //    deleteMarked();
-    //}
+    if (bubblesPoppedNum > 0) {
+        deleteMarked();
+    }
 
-    fprintf(stderr, "[SG][bubble popping]: found %zu walks\n", walksNum);
-    fprintf(stderr, "[SG][bubble popping]: found ( %zu , %zu ) bubbles\n", bubblesDir1, bubblesDir2);
+    fprintf(stderr, "[SG][bubble popping]: popped %zu bubbles\n", bubblesPoppedNum);
 
     timer.stop();
     timer.print("SG", "bubble popping");
@@ -341,6 +396,8 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
     openedQueue_.emplace_back(rootNode);
     nodes_.emplace_back(rootNode);
 
+    std::vector<StringGraphWalk*> walks;
+
     while (!openedQueue_.empty()) {
 
         if (nodes_.size() > MAX_NODES) {
@@ -368,27 +425,50 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
         nodes_.insert(nodes_.end(), openedQueue_.begin(), openedQueue_.end());
 
         const StringGraphNode* junctureNode = bubbleJuncture(rootNode);
+
         if (junctureNode != nullptr) {
-
-            //fprintf(stderr, "[SG][Bubble popping]: found bubble(s) between %d and %d\n",
-            //    root->getId(), junctureNode->getVertex()->getId());
-
-            extractBubbleWalks(dst, root, junctureNode);
+            extractBubbleWalks(walks, root, junctureNode);
             break;
         }
     }
 
     for (const auto& it : nodes_) delete it;
 
-    if (dst.size() < 2) {
-
-        for (const auto& it : dst) delete it;
-        std::vector<StringGraphWalk*>().swap(dst);
-
+    if (walks.size() < 2) {
+        for (const auto& walk : walks) delete walk;
         return;
     }
 
-    // check the orientation of last vertices of all walks (might be different due to innie overlaps)
+    // check the orientation of juncture vertex overlap of all walks
+    // (might be different due to innie overlaps)
+
+    std::vector<StringGraphWalk*> walks0;
+    std::vector<StringGraphWalk*> walks1;
+
+    for (size_t i = 0; i < walks.size(); ++i) {
+
+        const Edge* lastEdge = walks[i]->getEdges().back();
+
+        if (lastEdge->getOverlap()->isUsingSuffix(lastEdge->getB()->getId())) {
+            walks1.emplace_back(walks[i]);
+        } else {
+            walks0.emplace_back(walks[i]);
+        }
+    }
+
+    if (walks0.size() > 1) {
+        for (const auto& walk : walks0) dst.emplace_back(walk);
+        for (const auto& walk : walks1) delete walk;
+
+    } else if (walks1.size() > 1) {
+        for (const auto& walk : walks1) dst.emplace_back(walk);
+        for (const auto& walk : walks0) delete walk;
+
+    } else {
+        for (const auto& walk : walks) delete walk;
+    }
+
+    // maybe add restriction for walks so they don't have any external overlaps
 }
 
 const StringGraphNode* StringGraph::bubbleJuncture(StringGraphNode* rootNode) const {
@@ -403,13 +483,13 @@ const StringGraphNode* StringGraph::bubbleJuncture(StringGraphNode* rootNode) co
             continue;
         }
 
-        size_t branches = 0;
+        size_t walks = 0;
 
         for (const auto& node : nodes) {
-            if (candidateNode->isInBranch(node)) ++branches;
+            if (candidateNode->isInWalk(node)) ++walks;
         }
 
-        if (branches > 1) {
+        if (walks > 1) {
             return candidateNode;
         }
     }
@@ -427,7 +507,7 @@ void StringGraph::extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const V
     std::vector<const StringGraphNode*> junctureNodes;
 
     for (const auto& node : nodes) {
-        const auto& temp = node->findInBranch(junctureNode);
+        const auto& temp = junctureNode->findInWalk(node);
         if (temp != nullptr) junctureNodes.emplace_back(temp);
     }
 
@@ -449,6 +529,103 @@ void StringGraph::extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const V
             dst.back()->addEdge(*it);
         }
     }
+}
+
+bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direction) {
+
+    size_t selectedWalk;
+    double selectedCoverage = 0;
+
+    int overlapStart = std::numeric_limits<int>::max();
+    int overlapEnd = std::numeric_limits<int>::max();
+
+    size_t i = 0;
+    for (const auto& walk : walks) {
+
+        double coverage = 0;
+        for (const auto& edge : walk->getEdges()) {
+            coverage += edge->getB()->getCoverage();
+        }
+
+        if (coverage > selectedCoverage) {
+            selectedWalk = i;
+            selectedCoverage = coverage;
+        }
+
+        overlapStart = std::min(overlapStart, walk->getEdges().front()->getOverlap()->getLength());
+        overlapEnd = std::min(overlapEnd, walk->getEdges().back()->getOverlap()->getLength());
+
+        ++i;
+    }
+
+    std::vector<std::string> sequences;
+
+    for (const auto& walk : walks) {
+
+        const Vertex* root = walk->getEdges().front()->getA();
+        const Vertex* juncture = walk->getEdges().back()->getB();
+
+        std::string sequence;
+        walk->extractSequence(sequence);
+
+        int start, end;
+
+        if (direction == 0) {
+            // start     --------
+            // end   -------
+            // full  ------------
+            // out      ------
+            start = juncture->getLength() - overlapEnd;
+            end = sequence.size() - (root->getLength() - overlapStart);
+
+        } else {
+            // start --------
+            // end        -------
+            // full  ------------
+            // out      ------
+            start = root->getLength() - overlapStart;
+            end = sequence.size() - (juncture->getLength() - overlapEnd);
+        }
+
+        sequences.emplace_back(end > start ? sequence.substr(start, end - start) : std::string());
+    }
+
+    bool popped = false;
+
+    for (size_t i = 0; i < sequences.size(); ++i) {
+
+        if (i == selectedWalk) {
+            continue;
+        }
+
+        int distance = editDistance(sequences[i], sequences[selectedWalk]);
+
+        if (distance / (double) sequences[selectedWalk].size() < MAX_DIFFERENCE) {
+
+            popped = true;
+
+            // mark walk for removal
+            const auto& edges = walks[i]->getEdges();
+
+            for (size_t e = 0; e < edges.size() - 1; ++e) {
+
+                Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getB()->getId())];
+
+                vertex->mark();
+                vertex->markEdges();
+
+                for (const auto& edge : vertex->getEdgesB()) {
+                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
+                }
+
+                for (const auto& edge : vertex->getEdgesE()) {
+                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
+                }
+            }
+        }
+    }
+
+    return popped;
 }
 
 void StringGraph::deleteMarked() {
@@ -514,14 +691,38 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
     dst = prefix ? std::string(start_->getSequence().rbegin(), start_->getSequence().rend()) :
         std::string(start_->getSequence());
 
+    // types: 0 - normal, 1 - reverse complement
+    auto getType = [](const Edge* edge, int id) -> int {
+        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->isInnie()) return 0;
+        return 1;
+    };
+
+    int prevType = getType(edges_.front(), edges_.front()->getA()->getId());
+
+    printf("%d ", start_->getId());
+
     // add edge labels
     for (const auto& edge : edges_) {
 
+        printf("-> %d ", edge->getB()->getId());
+
+        int type = getType(edge, edge->getA()->getId());
+
+        bool invert = type == prevType ? false : true;
+
         std::string label;
-        edge->label(label);
+        if (invert) {
+            edge->rkLabel(label);
+        } else {
+            edge->label(label);
+        }
 
         dst += prefix ? std::string(label.rbegin(), label.rend()) : label;
+
+        prevType = getType(edge, edge->getB()->getId()) ^ invert;
     }
+    printf("\n");
 
     if (prefix) dst = std::string(dst.rbegin(), dst.rend());
 }
@@ -548,6 +749,10 @@ size_t StringGraphNode::expand(std::deque<StringGraphNode*>& queue) {
 
     for (const auto& edge : edges) {
 
+        if (edge->isMarked()) {
+            continue;
+        }
+
         std::string label;
         edge->label(label);
 
@@ -559,18 +764,18 @@ size_t StringGraphNode::expand(std::deque<StringGraphNode*>& queue) {
     return edges.size();
 }
 
-bool StringGraphNode::isInBranch(const StringGraphNode* node) const {
+bool StringGraphNode::isInWalk(const StringGraphNode* node) const {
 
     if (node == nullptr) return false;
     if (node->getVertex()->getId() == this->getVertex()->getId() && node->getParent() != nullptr) return true;
-    return this->isInBranch(node->getParent());
+    return this->isInWalk(node->getParent());
 }
 
-const StringGraphNode* StringGraphNode::findInBranch(const StringGraphNode* node) const {
+const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) const {
 
     if (node == nullptr) return nullptr;
     if (node->getVertex()->getId() == this->getVertex()->getId()) return node;
-    return this->findInBranch(node->getParent());
+    return this->findInWalk(node->getParent());
 }
 
 //*****************************************************************************

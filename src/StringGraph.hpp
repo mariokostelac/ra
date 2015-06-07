@@ -12,9 +12,8 @@
 
 #include "Read.hpp"
 #include "Overlap.hpp"
+#include "EditDistance.hpp"
 #include "CommonHeaders.hpp"
-
-//#include "edlib/edlib.h"
 
 class Vertex;
 class StringGraph;
@@ -58,6 +57,7 @@ public:
     }
 
     void label(std::string& dst) const;
+    void rkLabel(std::string& dst) const;
 
     const Vertex* oppositeVertex(int id) const;
 
@@ -98,6 +98,10 @@ public:
         return read_->getReverseComplement();
     }
 
+    double getCoverage() const {
+        return read_->getCoverage();
+    }
+
     const std::list<Edge*>& getEdgesB() const {
         return edgesB_;
     }
@@ -115,6 +119,8 @@ public:
     }
 
     bool isTipCandidate() const;
+
+    bool isBubbleRootCandidate(int direction) const;
 
     void addEdge(Edge* edge);
 
@@ -143,6 +149,10 @@ public:
         return vertices_[verticesDict_.at(id)];
     }
 
+    size_t getNumVertices() const {
+        return vertices_.size();
+    }
+
     // minimal length of a vertex (read) to avoid trimming
     void trim(int threshold = 100000);
 
@@ -152,15 +162,14 @@ public:
 
 private:
 
-    static const size_t MAX_NODES = 500;
-    static const int MAX_DISTANCE = 1000;
-
     void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir);
 
     const StringGraphNode* bubbleJuncture(StringGraphNode* rootNode) const;
 
     void extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root,
         const StringGraphNode* junctureNode) const;
+
+    bool popBubble(const std::vector<StringGraphWalk*> walks, int direction);
 
     void deleteMarked();
 
@@ -229,9 +238,9 @@ public:
 
     size_t expand(std::deque<StringGraphNode*>& queue);
 
-    bool isInBranch(const StringGraphNode* node) const;
+    bool isInWalk(const StringGraphNode* node) const;
 
-    const StringGraphNode* findInBranch(const StringGraphNode* node) const;
+    const StringGraphNode* findInWalk(const StringGraphNode* node) const;
 
 private:
 
