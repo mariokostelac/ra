@@ -7,9 +7,9 @@
 
 #include "StringGraph.hpp"
 
-static const size_t MAX_NODES = 500;
-static const int MAX_DISTANCE = 1000;
-static const double MAX_DIFFERENCE = 0.1;
+static const size_t MAX_NODES = 750;
+static const int MAX_DISTANCE = 2500;
+static const double MAX_DIFFERENCE = 0.05;
 
 //*****************************************************************************
 // Edge
