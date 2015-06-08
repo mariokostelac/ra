@@ -125,7 +125,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
             if (buffer[i] == '>') {
 
                 if (createRead) {
-                    reads.push_back(new Read(idx++, name, sequence));
+                    reads.push_back(new Read(idx++, name, sequence, "", 1.0));
                 }
 
                 name.clear();
@@ -149,7 +149,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
         }
     }
 
-    reads.push_back(new Read(idx, name, sequence));
+    reads.push_back(new Read(idx, name, sequence, "", 1.0));
 
     delete[] buffer;
     fclose(f);
@@ -181,7 +181,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         switch (i % 4) {
             case 0:
                 if (i != 0) {
-                    reads.push_back(new Read(idx++, name, sequence));
+                    reads.push_back(new Read(idx++, name, sequence, quality, 1.0));
                 }
 
                 name = line.substr(1, line.size() - 1);
@@ -201,7 +201,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         ++i;
     }
 
-    reads.push_back(new Read(idx, name, sequence));
+    reads.push_back(new Read(idx, name, sequence, quality, 1.0));
 
     f.close();
 
@@ -211,6 +211,80 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
 
 void readAfgReads(std::vector<Read*>& reads, const char* path) {
 
+    Timer timer;
+    timer.start();
+
+    ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
+
+    std::ifstream f(path);
+    AMOS::Reader* reader = new AMOS::Reader(f);
+
+    while (reader->has_next()) {
+
+        Read* read = nullptr;
+
+        if (reader->next(&read)) {
+            reads.emplace_back(read);
+        }
+    }
+
+    delete reader;
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg input");
+}
+
+void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    std::ofstream f(path);
+
+    for (const auto& read : reads) {
+        f << "{RED" << std::endl;
+        f << "clr:0," << read->getLength() << std::endl;
+        f << "eid:" << read->getName() << std::endl;
+        f << "iid:" << read->getId() << std::endl;
+        f << "qlt:" << read->getQuality() << std::endl;
+        f << "." << std::endl;
+        f << "seq:" << read->getSequence() << std::endl;
+        f << "." << std::endl;
+        f << "cvg:" << read->getCoverage() << std::endl;
+        f << "}" << std::endl;
+    }
+
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg output");
+}
+
+void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
+
+    std::ifstream f(path);
+    AMOS::Reader* reader = new AMOS::Reader(f);
+
+    while (reader->has_next()) {
+
+        Overlap* overlap = nullptr;
+
+        if (reader->next(&overlap)) {
+            overlaps.emplace_back(overlap);
+        }
+    }
+
+    delete reader;
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg input");
 }
 
 void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
@@ -220,13 +294,13 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
 
     std::ofstream f(path);
 
-    for (const auto& it : overlaps) {
+    for (const auto& overlap : overlaps) {
         f << "{OVL" << std::endl;
-        f << "adj:" << (it->isInnie() ? "I" : "N") << std::endl;
-        f << "rds:" << it->getA() << "," << it->getB() << std::endl;
-        f << "scr:" << it->getLength() << std::endl;
-        f << "ahg:" << it->getAHang() << std::endl;
-        f << "bhg:" << it->getBHang() << std::endl;
+        f << "adj:" << (overlap->isInnie() ? "I" : "N") << std::endl;
+        f << "rds:" << overlap->getA() << "," << overlap->getB() << std::endl;
+        f << "scr:" << overlap->getLength() << std::endl;
+        f << "ahg:" << overlap->getAHang() << std::endl;
+        f << "bhg:" << overlap->getBHang() << std::endl;
         f << "}" << std::endl;
     }
 

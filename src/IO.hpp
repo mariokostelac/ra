@@ -11,6 +11,8 @@
 #include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
+#include "afgreader/reader.h"
+
 class Options {
 public:
 
@@ -38,6 +40,10 @@ void readFastaReads(std::vector<Read*>& reads, const char* path);
 void readFastqReads(std::vector<Read*>& reads, const char* path);
 
 void readAfgReads(std::vector<Read*>& reads, const char* path);
+
+void writeAfgReads(const std::vector<Read*>& reads, const char* path);
+
+void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path);
 
 void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
 

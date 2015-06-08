@@ -12,7 +12,7 @@
 class Read {
 public:
 
-    Read(int id, const std::string& name, const std::string& sequence);
+    Read(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage);
     ~Read() {};
 
     int getId() const {
@@ -27,8 +27,12 @@ public:
         return sequence_;
     }
 
-    int getLength() const {
-        return length_;
+    size_t getLength() const {
+        return sequence_.size();
+    }
+
+    const std::string& getQuality() const {
+        return quality_;
     }
 
     const std::string& getReverseComplement() const {
@@ -54,7 +58,7 @@ private:
     int id_;
     std::string name_;
     std::string sequence_;
-    int length_;
-    std::string reverseComplement_;
+    std::string quality_;
     double coverage_;
+    std::string reverseComplement_;
 };
