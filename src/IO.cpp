@@ -224,6 +224,7 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
         f << "{OVL" << std::endl;
         f << "adj:" << (it->isInnie() ? "I" : "N") << std::endl;
         f << "rds:" << it->getA() << "," << it->getB() << std::endl;
+        f << "scr:" << it->getLength() << std::endl;
         f << "ahg:" << it->getAHang() << std::endl;
         f << "bhg:" << it->getBHang() << std::endl;
         f << "}" << std::endl;
