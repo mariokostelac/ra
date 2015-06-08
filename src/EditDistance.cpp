@@ -34,6 +34,9 @@ static unsigned char toUnsignedChar(char c) {
 
 extern int editDistance(const std::string& queryStr, const std::string& targetStr) {
 
+    if (queryStr.size() == 0) return targetStr.size();
+    if (targetStr.size() == 0) return queryStr.size();
+
     unsigned char* query = new unsigned char[queryStr.size()];
     int queryLength = queryStr.size();
 
