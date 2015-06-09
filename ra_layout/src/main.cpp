@@ -6,6 +6,7 @@
 const struct option options[] = {
     {"reads", required_argument, 0, 'i'},
     {"overlaps", required_argument, 0, 'j'},
+    {"threads", required_argument, 0, 't'},
     {"contigs-out", required_argument, 0, 'c'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
@@ -18,11 +19,13 @@ int main(int argc, char* argv[]) {
     char* readsPath = nullptr;
     char* overlapsPath = nullptr;
 
+    int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
+
     char* contigsOut = nullptr;
 
     while (1) {
 
-        char argument = getopt_long(argc, argv, "i:j:h", options, nullptr);
+        char argument = getopt_long(argc, argv, "i:j:t:h", options, nullptr);
 
         if (argument == -1) {
             break;
@@ -34,6 +37,9 @@ int main(int argc, char* argv[]) {
             break;
         case 'j':
             overlapsPath = optarg;
+            break;
+        case 't':
+            threadLen = atoi(optarg);
             break;
         case 'c':
             contigsOut = optarg;
@@ -49,6 +55,8 @@ int main(int argc, char* argv[]) {
 
     std::vector<Read*> reads;
     readAfgReads(reads, readsPath);
+
+    createReverseComplements(reads, threadLen);
 
     std::vector<Overlap*> overlaps;
     readAfgOverlaps(overlaps, overlapsPath);
