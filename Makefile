@@ -1,6 +1,6 @@
 
 CORE = ra
-MODULES = ra_overlap ra_layout ra_consensus
+MODULES = ra_correct ra_overlap ra_layout ra_consensus to_afg
 
 INC_DIR = include/$(CORE)
 LIB_DIR = lib
