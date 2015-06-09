@@ -240,9 +240,8 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
     vertices_.reserve(reads.size());
 
     for (const auto& read : reads) {
-        size_t id = vertices_.size();
-        verticesDict_[id] = id;
-        vertices_.emplace_back(new Vertex(id, read, this));
+        verticesDict_[read->getId()] = vertices_.size();
+        vertices_.emplace_back(new Vertex(read->getId(), read, this));
     }
 
     edges_.reserve(overlaps.size() * 2);

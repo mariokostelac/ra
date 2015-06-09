@@ -87,6 +87,9 @@ public:
 
     Overlap* clone() const;
 
+    // updates overlap ids to match read->getId()
+    friend void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads);
+
 private:
 
     int a_;
@@ -101,6 +104,7 @@ private:
 void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path);
 
+// updates coverage of reads
 void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     std::vector<Read*>& reads, bool view = true);
 

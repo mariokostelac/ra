@@ -153,7 +153,7 @@ static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*
 
     ReadIndex* rindex = ReadIndex::load(cache.c_str());
 
-    if (rindex == NULL) {
+    if (rindex == nullptr) {
         rindex = new ReadIndex(reads, rk);
         rindex->store(cache.c_str());
     }
@@ -416,4 +416,12 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
 
     timer.stop();
     timer.print("Overlap", "filter transitive");
+}
+
+void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads) {
+
+    for (const auto& overlap : overlaps) {
+        overlap->a_ = reads[overlap->a_]->getId();
+        overlap->b_ = reads[overlap->b_]->getId();
+    }
 }
