@@ -13,92 +13,8 @@
 
 static FILE* fileSafeOpen(const char* path, const char* mode) {
     FILE* f = fopen(path, mode);
-    ASSERT(f != NULL, "IO", "cannot open file %s with mode %s", path, mode);
+    ASSERT(f != nullptr, "IO", "cannot open file %s with mode %s", path, mode);
     return f;
-}
-
-const struct option Options::options_[] = {
-    {"reads", required_argument, 0, 'i'},
-    {"threads", required_argument, 0, 't'},
-    {"kmer", required_argument, 0, 'k'},
-    {"threshold", required_argument, 0, 'c'},
-    {"min-overlap-length", required_argument, 0, 'o'},
-    {"help", no_argument, 0, 'h'},
-    {0, 0, 0, 0}
-};
-
-Options::Options(const char* readsPath, int threadLen, int k, int c, int minOverlapLen) :
-    readsPath(readsPath), threadLen(threadLen), k(k), c(c), minOverlapLen(minOverlapLen) {
-}
-
-Options* Options::parseOptions(int argc, char** argv) {
-
-    char* readsPath = NULL;
-    int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
-    int k = -1;
-    int c = -1;
-    int minOverlapLen = 5;
-
-    while (1) {
-
-        char argument = getopt_long(argc, argv, "i:t:o:h", options_, NULL);
-
-        if (argument == -1) {
-            break;
-        }
-
-        switch (argument) {
-        case 'i':
-            readsPath = optarg;
-            break;
-        case 't':
-            threadLen = atoi(optarg);
-            break;
-        case 'k':
-            k = atoi(optarg);
-            break;
-        case 'c':
-            c = atoi(optarg);
-            break;
-        case 'o':
-            minOverlapLen = atoi(optarg);
-            break;
-        default:
-            help();
-            return NULL;
-        }
-    }
-
-    ASSERT(readsPath, "IO", "missing option -i (reads file)");
-    ASSERT(threadLen > 0, "IO", "invalid thread number");
-    ASSERT(minOverlapLen > 0, "IO", "invalid minimal overlap length");
-
-    return new Options(readsPath, threadLen, k, c, minOverlapLen);
-}
-
-void Options::help() {
-
-    printf(
-    "usage: ra -i <read file> [arguments ...]\n"
-    "\n"
-    "arguments:\n"
-    "    -i, --reads <file>\n"
-    "        (required)\n"
-    "        input fasta/fastq reads file\n"
-    "    -t, --threads <int>\n"
-    "        default: approx. number of processors/cores\n"
-    "        number of threads used\n"
-    "    --kmer <int>\n"
-    "        default: based on dataset\n"
-    "        length of k-mers used in error correction\n"
-    "    --threshold <int>\n"
-    "        default: based on dataset\n"
-    "        minimal number of occurrences for a k-mer to not be erroneous\n"
-    "    -o, --min-overlap-length <int>\n"
-    "        default: 5\n"
-    "        minimal length of exact overlap between two reads\n"
-    "    -h, -help\n"
-    "        prints out the help\n");
 }
 
 void readFastaReads(std::vector<Read*>& reads, const char* path) {
@@ -242,22 +158,26 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
     Timer timer;
     timer.start();
 
-    std::ofstream f(path);
+    std::ofstream file;
+
+    if (path != nullptr) file.open(path, std::ios::out);
+
+    std::ostream& out = path == nullptr ? std::cout : file;
 
     for (const auto& read : reads) {
-        f << "{RED" << std::endl;
-        f << "clr:0," << read->getLength() << std::endl;
-        f << "eid:" << read->getName() << std::endl;
-        f << "iid:" << read->getId() << std::endl;
-        f << "qlt:" << read->getQuality() << std::endl;
-        f << "." << std::endl;
-        f << "seq:" << read->getSequence() << std::endl;
-        f << "." << std::endl;
-        f << "cvg:" << read->getCoverage() << std::endl;
-        f << "}" << std::endl;
+        out << "{RED" << std::endl;
+        out << "clr:0," << read->getLength() << std::endl;
+        out << "eid:" << read->getName() << std::endl;
+        out << "iid:" << read->getId() << std::endl;
+        out << "qlt:" << read->getQuality() << std::endl;
+        out << "." << std::endl;
+        out << "seq:" << read->getSequence() << std::endl;
+        out << "." << std::endl;
+        out << "cvg:" << read->getCoverage() << std::endl;
+        out << "}" << std::endl;
     }
 
-    f.close();
+    if (path != nullptr) file.close();
 
     timer.stop();
     timer.print("IO", "afg output");
@@ -294,19 +214,23 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
     Timer timer;
     timer.start();
 
-    std::ofstream f(path);
+    std::ofstream file;
+
+    if (path != nullptr) file.open(path, std::ios::out);
+
+    std::ostream& out = path == nullptr ? std::cout : file;
 
     for (const auto& overlap : overlaps) {
-        f << "{OVL" << std::endl;
-        f << "adj:" << (overlap->isInnie() ? "I" : "N") << std::endl;
-        f << "rds:" << overlap->getA() << "," << overlap->getB() << std::endl;
-        f << "scr:" << overlap->getLength() << std::endl;
-        f << "ahg:" << overlap->getAHang() << std::endl;
-        f << "bhg:" << overlap->getBHang() << std::endl;
-        f << "}" << std::endl;
+        out << "{OVL" << std::endl;
+        out << "adj:" << (overlap->isInnie() ? "I" : "N") << std::endl;
+        out << "rds:" << overlap->getA() << "," << overlap->getB() << std::endl;
+        out << "scr:" << overlap->getLength() << std::endl;
+        out << "ahg:" << overlap->getAHang() << std::endl;
+        out << "bhg:" << overlap->getBHang() << std::endl;
+        out << "}" << std::endl;
     }
 
-    f.close();
+    if (path != nullptr) file.close();
 
     timer.stop();
     timer.print("IO", "afg output");
