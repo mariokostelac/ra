@@ -12,6 +12,13 @@ static bool isValidChar(char c) {
     return false;
 }
 
+static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
+
+    for (int i = start; i < end; ++i) {
+        reads[i]->createReverseComplement();
+    }
+}
+
 Read::Read(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage) {
 
     ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
@@ -71,5 +78,25 @@ void Read::createReverseComplement() {
         }
 
         reverseComplement_ += c;
+    }
+}
+
+void createReverseComplements(std::vector<Read*>& reads, int threadLen) {
+
+    int taskLen = std::ceil((double) reads.size() / threadLen);
+    int start = 0;
+    int end = taskLen;
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < threadLen; ++i) {
+        threads.emplace_back(threadCreateReverseComplements, std::ref(reads), start, end);
+
+        start = end;
+        end = std::min(end + taskLen, (int) reads.size());
+    }
+
+    for (auto& it : threads) {
+        it.join();
     }
 }

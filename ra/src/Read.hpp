@@ -62,3 +62,5 @@ private:
     double coverage_;
     std::string reverseComplement_;
 };
+
+void createReverseComplements(std::vector<Read*>& reads, int threadLen);

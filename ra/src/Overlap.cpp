@@ -71,13 +71,6 @@ static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair
     matches.clear();
 }
 
-static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
-
-    for (int i = start; i < end; ++i) {
-        reads[i]->createReverseComplement();
-    }
-}
-
 static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, const ReadIndex* rindex, int start, int end) {
 
@@ -263,25 +256,6 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     Timer timer;
     timer.start();
-
-    int taskLen = std::ceil((double) reads.size() / threadLen);
-    int start = 0;
-    int end = taskLen;
-
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(threadCreateReverseComplements, std::ref(reads), start, end);
-
-        start = end;
-        end = std::min(end + taskLen, (int) reads.size());
-    }
-
-    for (auto& it : threads) {
-        it.join();
-    }
-
-    std::vector<std::thread>().swap(threads);
 
     std::vector<Overlap*> overlaps;
 
