@@ -44,6 +44,6 @@ private:
 
 // error correction of reads based on k-mer frequencies
 // - path is used to cache the ReadIndex
-void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path);
+bool correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path);
 
-void filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view = true);
+bool filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view = true);

@@ -122,7 +122,7 @@ static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const Re
 
     *c = -1;
 
-    srand(time(NULL));
+    srand(time(nullptr));
 
     std::set<int> samplesIdx;
     std::vector<Read*> samples;
@@ -330,7 +330,7 @@ void KmerDistribution::toCountVector(std::vector<int>& dst, int max) const {
     }
 }
 
-void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
+bool correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const char* path) {
 
     Timer timer;
     timer.start();
@@ -340,7 +340,7 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
 
     ReadIndex* rindex = ReadIndex::load(cache.c_str());
 
-    if (rindex == NULL) {
+    if (rindex == nullptr) {
         rindex = new ReadIndex(reads, 0);
         rindex->store(cache.c_str());
     }
@@ -358,7 +358,7 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
         fprintf(stderr, "[Preproc]: learning of correction parameters failed\n");
 
         delete rindex;
-        return;
+        return false;
     }
 
     fprintf(stderr, "[Preproc][error correction]: using k = %d, c = %d\n", k, c);
@@ -392,9 +392,11 @@ void correctReads(std::vector<Read*>& reads, int k, int c, int threadLen, const 
 
     timer.stop();
     timer.print("Preproc", "error correction");
+
+    return readsCorrectedTotal == 0 ? false : true;
 }
 
-void filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view) {
+bool filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view) {
 
     Timer timer;
     timer.start();
@@ -428,4 +430,6 @@ void filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view) 
 
     timer.stop();
     timer.print("Preproc", "filtering");
+
+    return dst.size() == reads.size() ? false : true;
 }
