@@ -5,6 +5,7 @@
 *     Author: rvaser
 */
 
+#include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
 static const size_t MAX_NODES = 750;

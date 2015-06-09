@@ -12,7 +12,6 @@
 
 #include "Read.hpp"
 #include "Overlap.hpp"
-#include "EditDistance.hpp"
 #include "CommonHeaders.hpp"
 
 class Vertex;

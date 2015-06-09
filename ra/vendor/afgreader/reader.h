@@ -2,8 +2,8 @@
 #ifndef _AMOS_READER_H
 #define _AMOS_READER_H
 
-#include "../Read.hpp"
-#include "../Overlap.hpp"
+#include "../../src/Read.hpp"
+#include "../../src/Overlap.hpp"
 
 #include <cstdio>
 #include <vector>

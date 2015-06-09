@@ -11,8 +11,6 @@
 #include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
-#include "afgreader/reader.h"
-
 class Options {
 public:
 

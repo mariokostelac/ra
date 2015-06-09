@@ -5,6 +5,8 @@
 *     Author: rvaser
 */
 
+#include "../vendor/afgreader/reader.h"
+
 #include "IO.hpp"
 
 #define BUFFER_SIZE 4096

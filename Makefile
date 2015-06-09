@@ -1,34 +1,29 @@
-CP = g++
-LD = g++
 
-NAME = ra
+CORE = ra
+MODULES = ra_overlap ra_layout ra_consensus
 
-OBJ_DIR = obj
-SRC_DIR = src
+INC_DIR = include/$(CORE)
+LIB_DIR = lib
+BIN_DIR = bin
 
-CP_FLAGS = -std=c++0x -O3 -Wall
-LD_FLAGS = -pthread
+all: TARGETS=install
+clean: TARGETS=remove clean
+install: TARGETS=install
 
-SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
-OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
-DEP = $(OBJ:.o=.d)
+all: $(CORE) $(MODULES)
 
-EXC = $(NAME)
+clean: $(CORE) $(MODULES)
+	@echo [RM] removing
+	@rm $(INC_DIR) $(LIB_DIR) $(BIN_DIR) -rf
 
-all: $(EXC)
+install: $(CORE) $(MODULES)
 
-$(EXC): $(OBJ)
-	@echo [LD] $@
-	@mkdir -p $(dir $@)
-	@$(LD) -o $@ $^ $(LD_FLAGS)
+$(CORE):
+	@echo [CORE] $@
+	@$(MAKE) -s -C $@ $(TARGETS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo [CP] $<
-	@mkdir -p $(dir $@)
-	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
+$(MODULES): $(CORE)
+	@echo [MOD] $@
+	@$(MAKE) -s -C $@ $(TARGETS)
 
-clean:
-	@echo [RM] cleaning
-	@rm $(OBJ_DIR) $(EXC) -rf
-
--include $(DEP)
+.PHONY: $(CORE) $(MODULES)

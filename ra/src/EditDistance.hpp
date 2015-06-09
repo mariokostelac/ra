@@ -9,7 +9,8 @@
 
 #pragma once
 
-#include "edlib/edlib.h"
 #include "CommonHeaders.hpp"
+
+#include "../vendor/edlib/edlib.h"
 
 extern int32_t editDistance(const std::string& query, const std::string& target);
