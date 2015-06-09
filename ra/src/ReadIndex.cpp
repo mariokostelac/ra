@@ -87,7 +87,7 @@ ReadIndex::~ReadIndex() {
 
 size_t ReadIndex::numberOfOccurrences(const char* pattern, int m) const {
 
-    if (pattern == NULL || m <= 0) return 0;
+    if (pattern == nullptr || m <= 0) return 0;
 
     size_t num = 0;
 
@@ -106,7 +106,7 @@ size_t ReadIndex::numberOfOccurrences(const char* pattern, int m) const {
 
 void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
 
-    if (read == NULL) return;
+    if (read == nullptr) return;
 
     std::string pattern = "";
 
@@ -135,7 +135,7 @@ void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
 void ReadIndex::readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, const Read* read,
     int rk, int minOverlapLen) const {
 
-    if (read == NULL) return;
+    if (read == nullptr) return;
 
     const std::string& pattern = rk == 0 ? read->getSequence() : read->getReverseComplement();
     int m = pattern.size();
@@ -321,7 +321,7 @@ void ReadIndex::store(const char* path) const {
 
 ReadIndex* ReadIndex::load(const char* path) {
 
-    if (!fileExists(path)) return NULL;
+    if (!fileExists(path)) return nullptr;
 
     Timer timer;
     timer.start();
@@ -344,7 +344,7 @@ void ReadIndex::findInterval(int* s, int* e, int fragment, const char* pattern, 
     *s = -1;
     *e = -1;
 
-    if (pattern == NULL || m <= 0) return;
+    if (pattern == nullptr || m <= 0) return;
 
     const auto& esa = fragments_[fragment];
 
