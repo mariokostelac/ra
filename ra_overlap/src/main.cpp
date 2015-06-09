@@ -65,6 +65,8 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> filtered;
     filterReads(filtered, reads);
 
+    createReverseComplements(filtered, threadLen);
+
     std::vector<Overlap*> overlaps;
     overlapReads(overlaps, filtered, minOverlapLen, threadLen, readsPath);
 
@@ -98,7 +100,7 @@ static void help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
-    "    -o, --min-overlap-length <int>\n"
+    "    -m, --min-overlap-length <int>\n"
     "        default: 5\n"
     "        minimal length of exact overlap between two reads\n"
     "    --reads-out <file>\n"
