@@ -704,7 +704,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
 void StringGraph::deleteMarked() {
 
-    // remove marked edges which aare marked due to deletion of their opposite edges
+    // remove marked edges which are marked due to deletion of their opposite edges
     for (const auto& id : marked_) {
         vertices_[verticesDict_[id]]->removeMarkedEdges();
     }

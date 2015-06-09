@@ -83,7 +83,7 @@ static void help() {
     "    -k, --kmer <int>\n"
     "        default: based on dataset\n"
     "        length of k-mers used in error correction\n"
-    "   -c, --threshold <int>\n"
+    "    -c, --threshold <int>\n"
     "        default: based on dataset\n"
     "        minimal number of occurrences for a k-mer to not be erroneous\n"
     "    -o, --out <file>\n"
