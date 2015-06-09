@@ -16,7 +16,7 @@ Timer::Timer() :
 
 void Timer::start() {
 
-    gettimeofday(&timeval_, NULL);
+    gettimeofday(&timeval_, nullptr);
     paused_ = 0;
 }
 
@@ -25,7 +25,7 @@ void Timer::stop() {
     if (paused_) return;
 
     timeval stop;
-    gettimeofday(&stop, NULL);
+    gettimeofday(&stop, nullptr);
 
     time_ += ((stop.tv_sec - timeval_.tv_sec) * 1000000L + stop.tv_usec) - timeval_.tv_usec;
     paused_ = 1;
@@ -33,7 +33,7 @@ void Timer::stop() {
 
 void Timer::reset() {
 
-    gettimeofday(&timeval_, NULL);
+    gettimeofday(&timeval_, nullptr);
     time_ = 0;
     paused_ = 0;
 }

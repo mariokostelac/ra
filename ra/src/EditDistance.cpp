@@ -57,10 +57,10 @@ extern int editDistance(const std::string& queryStr, const std::string& targetSt
     bool findStartLocations = false;
     bool findAlignment = false;
     int score = 0;
-    int* endLocations = NULL; // dummy
-    int* startLocations = NULL; // dummy
+    int* endLocations = nullptr; // dummy
+    int* startLocations = nullptr; // dummy
     int numLocations = 0; // dummy;
-    unsigned char* alignemnt = NULL; // dummy
+    unsigned char* alignemnt = nullptr; // dummy
     int alignmentLength = 0; // dummy;
 
     edlibCalcEditDistance(query, queryLength, target, targetLength, alphabetLength,
