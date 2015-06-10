@@ -8,25 +8,13 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
+static const int READ_LEN_THRESHOLD = 100000;
 static const size_t MAX_NODES = 750;
 static const int MAX_DISTANCE = 2500;
-static const double MAX_DIFFERENCE = 0.05;
+static const double MAX_DIFFERENCE = 0.1;
 
 //*****************************************************************************
 // Edge
-
-/*bool compareEdges(const Edge* left, const Edge* right) {
-
-    if (left->getA()->getId() != right->getA()->getId()) {
-        return left->getA()->getId() < right->getA()->getId();
-    }
-
-    if (left->getB()->getId() != right->getB()->getId()) {
-        return left->getB()->getId() < right->getB()->getId();
-    }
-
-    return false;
-}*/
 
 Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph) {
 
@@ -261,8 +249,6 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
         edgeB->opposite_ = edgeA;
     }
 
-    // std::sort(edges_.begin(), edges_.end(), compareEdges);
-
     timer.stop();
     timer.print("SG", "construction");
 }
@@ -273,7 +259,7 @@ StringGraph::~StringGraph() {
     for (const auto& edge : edges_) delete edge;
 }
 
-void StringGraph::trim(int threshold) {
+void StringGraph::trim() {
 
     Timer timer;
     timer.start();
@@ -283,7 +269,7 @@ void StringGraph::trim(int threshold) {
 
     for (const auto& vertex : vertices_) {
 
-        if (vertex->getLength() > threshold) {
+        if (vertex->getLength() > READ_LEN_THRESHOLD) {
             continue;
         }
 
@@ -440,6 +426,65 @@ void StringGraph::extractOverlaps(std::vector<Overlap*>& dst, bool view) const {
             (*overlaps_)[edge->getId() / 2]->clone());
     }
 }
+
+void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) const {
+
+    int maxId = 0;
+
+    for (const auto& vertex : vertices_) {
+        maxId = std::max(vertex->getId(), maxId);
+    }
+
+    std::vector<bool> used(maxId + 1, false);
+
+    for (const auto& vertex : vertices_) {
+
+        if (used[vertex->getId()] == true) {
+            continue;
+        }
+
+        std::vector<int> expanded;
+        expanded.emplace_back(vertex->getId());
+
+        std::set<int> componentVertices;
+        componentVertices.insert(vertex->getId());
+
+        while (expanded.size() != 0) {
+
+            std::vector<int> newExpanded;
+
+            for (const auto& id : expanded) {
+
+                const auto& eVertex = this->getVertex(id);
+
+                for (const auto& edge : eVertex->getEdgesB()) {
+                    auto pair = componentVertices.insert(edge->getB()->getId());
+
+                    if (pair.second == true) {
+                        newExpanded.emplace_back(edge->getB()->getId());
+                    }
+                }
+
+                for (const auto& edge : eVertex->getEdgesE()) {
+                    auto pair = componentVertices.insert(edge->getB()->getId());
+
+                    if (pair.second == true) {
+                        newExpanded.emplace_back(edge->getB()->getId());
+                    }
+                }
+            }
+
+            expanded.swap(newExpanded);
+        }
+
+        for (const auto& id : componentVertices) {
+            used[id] = true;
+        }
+
+        dst.emplace_back(new StringGraphComponent(componentVertices, this));
+    }
+}
+
 
 void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
 
@@ -845,6 +890,24 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
     if (node == nullptr) return nullptr;
     if (node->getVertex()->getId() == this->getVertex()->getId()) return node;
     return this->findInWalk(node->getParent());
+}
+
+// StringGraphComponent
+
+StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph) :
+    vertices_(), graph_(graph) {
+
+    for (const auto& id : vertexIds) {
+        vertices_.emplace_back(graph->getVertex(id));
+    }
+}
+
+void StringGraphComponent::print() {
+
+    for (const auto& vertex : vertices_) {
+        printf("%d ", vertex->getId());
+    }
+    printf("\n");
 }
 
 //*****************************************************************************

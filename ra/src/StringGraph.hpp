@@ -18,6 +18,7 @@ class Vertex;
 class StringGraph;
 class StringGraphWalk;
 class StringGraphNode;
+class StringGraphComponent;
 
 class Edge {
 public:
@@ -155,7 +156,7 @@ public:
     }
 
     // minimal length of a vertex (read) to avoid trimming
-    void trim(int threshold = 100000);
+    void trim();
 
     void popBubbles();
 
@@ -163,6 +164,8 @@ public:
     void simplify();
 
     void extractOverlaps(std::vector<Overlap*>& dst, bool view = true) const;
+
+    void extractComponents(std::vector<StringGraphComponent*>& dst) const;
 
 private:
 
@@ -253,4 +256,19 @@ private:
     const StringGraphNode* parent_;
     int direction_;
     int distance_;
+};
+
+// Connected component of the string graph
+class StringGraphComponent {
+public:
+
+    StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
+    ~StringGraphComponent() {}
+
+    void print();
+
+private:
+
+    std::list<const Vertex*> vertices_;
+    const StringGraph* graph_;
 };
