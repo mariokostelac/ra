@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Contig.hpp"
 #include "CommonHeaders.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"

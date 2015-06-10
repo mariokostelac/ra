@@ -12,6 +12,7 @@
 
 #include "Read.hpp"
 #include "Overlap.hpp"
+#include "Contig.hpp"
 #include "CommonHeaders.hpp"
 
 class Vertex;
@@ -263,12 +264,17 @@ class StringGraphComponent {
 public:
 
     StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
-    ~StringGraphComponent() {}
+    ~StringGraphComponent();
 
-    void print();
+    const Contig* getContig() {
+        return contig_;
+    }
 
 private:
 
+    void extractContig();
+
     std::list<const Vertex*> vertices_;
     const StringGraph* graph_;
+    Contig* contig_;
 };

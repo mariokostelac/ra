@@ -17,8 +17,8 @@ L_CMD = $(addprefix -L, )
 CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
-API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp EnhancedSuffixArray.hpp IO.hpp Overlap.hpp \
-	    Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp StringGraph.hpp Utils.hpp)
+API = $(addprefix $(SRC_DIR)/, Contig.hpp CommonHeaders.hpp EnhancedSuffixArray.hpp IO.hpp \
+	    Overlap.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp StringGraph.hpp Utils.hpp)
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
 VND = $(shell find $(VND_DIR) -type f -regex ".*\.cpp")

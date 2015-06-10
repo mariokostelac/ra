@@ -485,7 +485,6 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     }
 }
 
-
 void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
 
     openedQueue_.clear();
@@ -704,8 +703,6 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
         if (distance / (double) sequences[selectedWalk].size() < MAX_DIFFERENCE) {
 
-            popped = true;
-
             // mark walk for removal
 
             const auto& edges = walks[i]->getEdges();
@@ -740,6 +737,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
                 for (const auto& edge : vertex->getEdgesE()) {
                     marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
                 }
+
+                popped = true;
             }
         }
     }
@@ -900,14 +899,29 @@ StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const 
     for (const auto& id : vertexIds) {
         vertices_.emplace_back(graph->getVertex(id));
     }
+
+    extractContig();
 }
 
-void StringGraphComponent::print() {
+StringGraphComponent::~StringGraphComponent() {
+    delete contig_;
+}
+
+void StringGraphComponent::extractContig() {
+
+    std::vector<const Vertex*> startCandidates;
 
     for (const auto& vertex : vertices_) {
+
+        if (vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0) {
+            startCandidates.emplace_back(vertex);
+        }
+    }
+
+    for (const auto& vertex : startCandidates) {
         printf("%d ", vertex->getId());
     }
-    printf("\n");
+    printf("\n\n");
 }
 
 //*****************************************************************************
