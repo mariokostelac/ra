@@ -65,6 +65,13 @@ int main(int argc, char* argv[]) {
 
     graph->simplify();
 
+    std::vector<StringGraphComponent*> components;
+    graph->extractComponents(components);
+
+    for (const auto& component : components) {
+        delete component;
+    }
+
     std::vector<Overlap*> finalized;
     graph->extractOverlaps(finalized);
 

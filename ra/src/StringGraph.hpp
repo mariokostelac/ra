@@ -269,7 +269,7 @@ public:
     StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
     ~StringGraphComponent();
 
-    const Contig* getContig() {
+    const StringGraphWalk* getContig() {
         return contig_;
     }
 
@@ -277,7 +277,7 @@ private:
 
     void extractContig();
 
-    std::list<const Vertex*> vertices_;
+    std::vector<const Vertex*> vertices_;
     const StringGraph* graph_;
-    Contig* contig_;
+    StringGraphWalk* contig_;
 };

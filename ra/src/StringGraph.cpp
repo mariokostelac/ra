@@ -918,12 +918,17 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 
 // StringGraphComponent
 
-static double getCoverageRecursive(const Vertex* vertex, int direction, std::set<int>& visited, int level, int maxLevel) {
+static double coverageRecursive(const Vertex* vertex, int direction, std::vector<int>& visited, int level, int maxLevel) {
 
     if (level > maxLevel) return 0;
-    if (visited.count(vertex->getId()) > 0) return 0;
 
-    visited.insert(vertex->getId());
+    for (const auto& id : visited) {
+        if (vertex->getId() == id) {
+            return 0;
+        }
+    }
+
+    visited.push_back(vertex->getId());
 
     double coverage = vertex->getCoverage();
 
@@ -932,18 +937,73 @@ static double getCoverageRecursive(const Vertex* vertex, int direction, std::set
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        coverage += getCoverageRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
+        coverage += coverageRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, level, maxLevel);
 
     } else {
 
+        double maxCoverage = 0;
+
         for (const auto& edge : edges) {
-            coverage += getCoverageRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
-                (direction ^ 1) : direction, visited, level + 1, maxLevel);
+            maxCoverage = std::max(maxCoverage, coverageRecursive(edge->getB(),
+                edge->getOverlap()->isInnie() ? (direction ^ 1) : direction, visited,
+                level + 1, maxLevel));
         }
+
+        coverage += maxCoverage;
     }
 
+    visited.pop_back();
+
     return coverage;
+}
+
+static void expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
+
+    const Vertex* vertex = start;
+
+    std::set<int> visitedVertices;
+
+    while (true) {
+
+        if (visitedVertices.count(vertex->getId()) > 0) {
+            break;
+        }
+
+        visitedVertices.insert(vertex->getId());
+
+        const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
+
+        if (edges.size() == 0) {
+            break;
+        }
+
+        const Edge* selectedEdge = edges.front();
+        double selectedCoverage = 0;
+
+        if (edges.size() > 1) {
+
+            for (const auto& edge : edges) {
+
+                const Vertex* next = edge->getB();
+                std::vector<int> visited;
+
+                double coverage = coverageRecursive(next, direction, visited, 0, 10);
+
+                if (coverage > selectedCoverage) {
+                    selectedEdge = edge;
+                    selectedCoverage = coverage;
+                }
+            }
+        }
+
+        dst.emplace_back(selectedEdge);
+        vertex = selectedEdge->getB();
+
+        if (selectedEdge->getOverlap()->isInnie()) {
+            direction ^= 1;
+        }
+    }
 }
 
 StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph) :
@@ -965,22 +1025,17 @@ StringGraphComponent::~StringGraphComponent() {
 void StringGraphComponent::extractContig() {
 
     // find candidate start vertices
-    std::vector<const Vertex*> startCandidates;
+    std::vector<std::pair<const Vertex*, int>> startCandidates;
 
-    int direction;
-    for (direction = 0; direction <= 1; ++direction) {
+    for (int direction = 0; direction <= 1; ++direction) {
 
         for (const auto& vertex : vertices_) {
 
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                startCandidates.emplace_back(vertex);
+                startCandidates.emplace_back(vertex, direction);
             }
-        }
-
-        if (startCandidates.size() > 0) {
-            break;
         }
     }
 
@@ -991,18 +1046,37 @@ void StringGraphComponent::extractContig() {
     if (startCandidates.size() > 1) {
         for (size_t i = 0; i < startCandidates.size(); ++i) {
 
-            std::set<int> visited;
-            double coverage = getCoverageRecursive(startCandidates[i], direction, visited, 0, 0);
+            std::vector<int> visited;
+            double coverage = coverageRecursive(startCandidates[i].first,
+                startCandidates[i].second, visited, 0, 0);
 
             if (coverage > selectedCoverage) {
                 selectedVertex = i;
                 selectedCoverage = coverage;
             }
 
-            printf("Candidate %d - Coverage %lf\n", startCandidates[i]->getId(), coverage);
+            printf("Candidate %d - Coverage %lf\n", startCandidates[i].first->getId(), coverage);
         }
     }
     printf("\n");
+
+    const Vertex* start = startCandidates[selectedVertex].first;
+    int direction = startCandidates[selectedVertex].second;
+
+    std::vector<const Edge*> edges;
+    expandVertex(edges, start, direction);
+
+    contig_ = new StringGraphWalk(start);
+
+    for (const auto& edge : edges) {
+        contig_->addEdge(edge);
+    }
+
+    printf("%d -> ", start->getId());
+    for (const auto& edge : contig_->getEdges()) {
+        printf("%d -> ", edge->getB()->getId());
+    }
+    printf("\n\n");
 }
 
 //*****************************************************************************
