@@ -213,11 +213,14 @@ public:
 
     bool containsVertex(int id) const;
 
+    bool containsEdge(int id) const;
+
 private:
 
     const Vertex* start_;
     std::vector<const Edge*> edges_;
-    std::set<int> visited_; // visited vertices
+    std::set<int> visitedVertices_;
+    std::set<int> visitedEdges_;
 };
 
 // BFS wrapper for Vertex
