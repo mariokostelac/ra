@@ -11,7 +11,7 @@
 static const int READ_LEN_THRESHOLD = 100000;
 static const size_t MAX_NODES = 750;
 static const int MAX_DISTANCE = 2500;
-static const double MAX_DIFFERENCE = 0.1;
+static const double MAX_DIFFERENCE = 0.05;
 
 //*****************************************************************************
 // Edge
@@ -403,8 +403,15 @@ void StringGraph::simplify() {
         }
 
         // bubble popping
+        numVerticesTemp = vertices_.size();
+        size_t numEdgesTemp = edges_.size();
+
         ++numBubbleRounds;
         popBubbles();
+
+        if (numVerticesTemp == vertices_.size() && numEdgesTemp == edges_.size()) {
+            break;
+        }
     }
 
     fprintf(stderr, "[SG][simplification]: number of trimming rounds = %zu\n", numTrimmingRounds);
@@ -727,10 +734,12 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
                     if (!walks[selectedWalk]->containsEdge(edges[e]->getId())) {
 
-                        vertex->markEdge(edges[e]->getId());
+                        Vertex* opposite = vertices_[verticesDict_.at(edges[e]->getA()->getId())];
+
+                        opposite->markEdge(edges[e]->getId());
 
                         marked_.emplace_back(vertex->getId());
-                        marked_.emplace_back(edges[e]->oppositeVertex(vertex->getId())->getId());
+                        marked_.emplace_back(opposite->getId());
 
                         popped = true;
                     }
