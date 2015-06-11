@@ -831,11 +831,18 @@ void StringGraphWalk::addEdge(const Edge* edge) {
 
 void StringGraphWalk::extractSequence(std::string& dst) const {
 
-    bool prefix = !edges_.empty() && edges_.front()->getOverlap()->isUsingPrefix(start_->getId());
+    if (edges_.empty()) {
+        dst = std::string(start_->getSequence());
+        return;
+    }
+
+    bool isRk = edges_.front()->getOverlap()->isInnie() && edges_.front()->getOverlap()->getB() == start_->getId();
+    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ isRk;
+
+    std::string startSequence = std::string(isRk ? start_->getReverseComplement() : start_->getSequence());
 
     // add start vertex
-    dst = prefix ? std::string(start_->getSequence().rbegin(), start_->getSequence().rend()) :
-        std::string(start_->getSequence());
+    dst = appendToPrefix ? std::string(startSequence.rbegin(), startSequence.rend()) : startSequence;
 
     // types: 0 - normal, 1 - reverse complement
     auto getType = [](const Edge* edge, int id) -> int {
@@ -860,12 +867,12 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
             edge->label(label);
         }
 
-        dst += prefix ? std::string(label.rbegin(), label.rend()) : label;
+        dst += appendToPrefix ? std::string(label.rbegin(), label.rend()) : label;
 
         prevType = getType(edge, edge->getB()->getId()) ^ invert;
     }
 
-    if (prefix) dst = std::string(dst.rbegin(), dst.rend());
+    if (appendToPrefix) dst = std::string(dst.rbegin(), dst.rend());
 }
 
 bool StringGraphWalk::containsVertex(int id) const {
