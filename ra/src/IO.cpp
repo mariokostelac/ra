@@ -243,7 +243,46 @@ void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
 
     ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
 
+    std::ifstream f(path);
+    std::string line;
 
+    while (std::getline(f, line)) {
+        if (line.empty()) continue;
+
+        if (std::strncmp(line.c_str(), "{LAY", 4) == 0) {
+            // found contig;
+            bool end = true;
+            Contig* contig = new Contig();
+
+            int lo, hi, off, id, type;
+
+            while (std::getline(f, line)) {
+
+                if (std::strncmp(line.c_str(), "{TLE", 4) == 0) {
+                    end = false;
+                    // skip
+                } else if (sscanf(line.c_str(), "clr:%d, %d", &lo, &hi) == 2) {
+                    // skip
+                } else if (sscanf(line.c_str(), "off:%d", &off) == 1) {
+                    // skip
+                } else if (sscanf(line.c_str(), "src:%d", &id) == 1) {
+                    // skip
+                } else if (sscanf(line.c_str(), "rvc:%d", &type) == 1) {
+                    // skip
+                } else if (std::strncmp(line.c_str(), "}", 1) == 0) {
+                    if (end == true) {
+                        break;
+                    }
+                    end = true;
+                    contig->addPart(Contig::Part(id, type, off, lo, hi));
+                }
+            }
+
+            contigs.emplace_back(contig);
+        }
+    }
+
+    f.close();
 
     timer.stop();
     timer.print("IO", "afg input");

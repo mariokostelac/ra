@@ -293,11 +293,16 @@ public:
     // read id, type: normal 0 - rk 1, offset, lo, hi
     typedef std::tuple<int, int, int, int, int> Part;
 
+    Contig() {}
     Contig(const StringGraphWalk* walk);
     ~Contig() {}
 
     const std::vector<Part>& getParts() {
         return parts_;
+    }
+
+    void addPart(const Part& part) {
+        parts_.emplace_back(part);
     }
 
 private:
