@@ -1,10 +1,14 @@
 /*
+* ra.hpp
+*
+* Created on: Jun 9, 2015
+*     Author: rvaser
+*
 @brief ra project wrapper header
 */
 
 #pragma once
 
-#include "Contig.hpp"
 #include "CommonHeaders.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"

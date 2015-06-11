@@ -9,6 +9,7 @@
 
 #include "Read.hpp"
 #include "Overlap.hpp"
+#include "StringGraph.hpp"
 #include "CommonHeaders.hpp"
 
 void readFastaReads(std::vector<Read*>& reads, const char* path);
@@ -22,6 +23,10 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path);
 void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path);
 
 void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
+
+void readAfgContigs(std::vector<Contig*>& contigs, const char* path);
+
+void writeAfgContigs(const std::vector<Contig*>& contigs, const char* path);
 
 bool fileExists(const char* path);
 

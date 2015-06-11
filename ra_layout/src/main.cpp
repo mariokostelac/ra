@@ -65,17 +65,14 @@ int main(int argc, char* argv[]) {
 
     graph->simplify();
 
-    std::vector<StringGraphComponent*> components;
-    graph->extractComponents(components);
+    std::vector<Contig*> contigs;
+    graph->extractContigs(contigs);
 
-    for (const auto& component : components) {
-        delete component;
+    writeAfgContigs(contigs, contigsOut == nullptr ? "layout.afg" : contigsOut);
+
+    for (const auto& contig : contigs) {
+        delete contig;
     }
-
-    std::vector<Overlap*> finalized;
-    graph->extractOverlaps(finalized);
-
-    writeAfgOverlaps(finalized, contigsOut == nullptr ? "layout.afg" : contigsOut);
 
     delete graph;
 

@@ -12,14 +12,15 @@
 
 #include "Read.hpp"
 #include "Overlap.hpp"
-#include "Contig.hpp"
 #include "CommonHeaders.hpp"
 
+class Edge;
 class Vertex;
 class StringGraph;
 class StringGraphWalk;
 class StringGraphNode;
 class StringGraphComponent;
+class Contig;
 
 class Edge {
 public:
@@ -168,6 +169,8 @@ public:
 
     void extractComponents(std::vector<StringGraphComponent*>& dst) const;
 
+    void extractContigs(std::vector<Contig*>& dst) const;
+
 private:
 
     void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir);
@@ -202,6 +205,10 @@ public:
 
     StringGraphWalk(const Vertex* start);
     ~StringGraphWalk() {};
+
+    const Vertex* getStart() const {
+        return start_;
+    }
 
     const std::vector<const Edge*>& getEdges() const {
         return edges_;
@@ -269,15 +276,31 @@ public:
     StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
     ~StringGraphComponent();
 
-    const StringGraphWalk* getContig() {
-        return contig_;
+    Contig* createContig() const;
+
+private:
+
+    void extractLongestWalk();
+
+    std::vector<const Vertex*> vertices_;
+    const StringGraph* graph_;
+    StringGraphWalk* walk_;
+};
+
+class Contig {
+public:
+
+    // read id, type: normal 0 - rk 1, offset, lo, hi
+    typedef std::tuple<int, int, int, int, int> Part;
+
+    Contig(const StringGraphWalk* walk);
+    ~Contig() {}
+
+    const std::vector<Part>& getParts() {
+        return parts_;
     }
 
 private:
 
-    void extractContig();
-
-    std::vector<const Vertex*> vertices_;
-    const StringGraph* graph_;
-    StringGraphWalk* contig_;
+    std::vector<Part> parts_;
 };

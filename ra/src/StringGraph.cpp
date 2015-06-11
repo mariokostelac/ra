@@ -443,6 +443,9 @@ void StringGraph::extractOverlaps(std::vector<Overlap*>& dst, bool view) const {
 
 void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) const {
 
+    Timer timer;
+    timer.start();
+
     int maxId = 0;
 
     for (const auto& vertex : vertices_) {
@@ -497,6 +500,36 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
 
         dst.emplace_back(new StringGraphComponent(componentVertices, this));
     }
+
+    fprintf(stderr, "[SG][component extraction]: number of components = %zu\n", dst.size());
+
+    timer.stop();
+    timer.print("SG", "component extraction");
+}
+
+void StringGraph::extractContigs(std::vector<Contig*>& dst) const {
+
+    Timer timer;
+    timer.start();
+
+    std::vector<StringGraphComponent*> components;
+    this->extractComponents(components);
+
+    for (const auto& component : components) {
+
+        Contig* contig = component->createContig();
+
+        if (contig != nullptr) {
+            dst.emplace_back(contig);
+        }
+
+        delete component;
+    }
+
+    fprintf(stderr, "[SG][contig extraction]: number of contigs = %zu\n", dst.size());
+
+    timer.stop();
+    timer.print("SG", "contig extraction");
 }
 
 void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
@@ -677,7 +710,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
     for (const auto& walk : walks) {
 
-        const Vertex* root = walk->getEdges().front()->getA();
+        const Vertex* root = walk->getStart();
         const Vertex* juncture = walk->getEdges().back()->getB();
 
         std::string sequence;
@@ -836,14 +869,6 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
         return;
     }
 
-    bool isRk = edges_.front()->getOverlap()->isInnie() && edges_.front()->getOverlap()->getB() == start_->getId();
-    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ isRk;
-
-    std::string startSequence = std::string(isRk ? start_->getReverseComplement() : start_->getSequence());
-
-    // add start vertex
-    dst = appendToPrefix ? std::string(startSequence.rbegin(), startSequence.rend()) : startSequence;
-
     // types: 0 - normal, 1 - reverse complement
     auto getType = [](const Edge* edge, int id) -> int {
         if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
@@ -851,7 +876,16 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
         return 1;
     };
 
-    int prevType = getType(edges_.front(), edges_.front()->getA()->getId());
+    int startType = getType(edges_.front(), start_->getId());
+
+    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ startType;
+
+    std::string startSequence = std::string(startType ? start_->getReverseComplement() : start_->getSequence());
+
+    // add start vertex
+    dst = appendToPrefix ? std::string(startSequence.rbegin(), startSequence.rend()) : startSequence;
+
+    int prevType = startType;
 
     // add edge labels
     for (const auto& edge : edges_) {
@@ -959,6 +993,7 @@ static double coverageRecursive(const Vertex* vertex, int direction, std::vector
         double maxCoverage = 0;
 
         for (const auto& edge : edges) {
+
             maxCoverage = std::max(maxCoverage, coverageRecursive(edge->getB(),
                 edge->getOverlap()->isInnie() ? (direction ^ 1) : direction, visited,
                 level + 1, maxLevel));
@@ -1003,6 +1038,11 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
             for (const auto& edge : edges) {
 
                 const Vertex* next = edge->getB();
+
+                if (visitedVertices.count(next->getId()) > 0) {
+                    continue;
+                }
+
                 std::vector<int> visited;
 
                 double coverage = coverageRecursive(next, direction, visited, 0, MAX_BRANCHES);
@@ -1032,16 +1072,16 @@ StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const 
         vertices_.emplace_back(graph->getVertex(id));
     }
 
-    contig_ = nullptr;
+    walk_ = nullptr;
 
-    extractContig();
+    extractLongestWalk();
 }
 
 StringGraphComponent::~StringGraphComponent() {
-    delete contig_;
+    delete walk_;
 }
 
-void StringGraphComponent::extractContig() {
+void StringGraphComponent::extractLongestWalk() {
 
     typedef std::tuple<const Vertex*, int, double> Candidate;
 
@@ -1083,9 +1123,7 @@ void StringGraphComponent::extractContig() {
         std::vector<const Edge*> edges;
         double coverage = expandVertex(edges, start, direction);
 
-        printf("%d: %lf\n", start->getId(), coverage);
-
-        if (coverage > selectedCoverage) {
+        if (coverage >= selectedCoverage) {
 
             selectedCoverage = coverage;
 
@@ -1098,13 +1136,59 @@ void StringGraphComponent::extractContig() {
         }
     }
 
-    contig_ = selectedContig;
+    walk_ = selectedContig;
+}
 
-    printf("%d -> ", contig_->getEdges().front()->getA()->getId());
-    for (const auto& edge : contig_->getEdges()) {
-        printf("%d -> ", edge->getB()->getId());
+// Contig
+
+Contig::Contig(const StringGraphWalk* walk) {
+
+    auto getType = [](const Edge* edge, int id) -> int {
+        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->isInnie()) return 0;
+        return 1;
+    };
+
+    const Vertex* start = walk->getStart();
+    const auto& edges = walk->getEdges();
+
+    int startType = getType(edges.front(), start->getId());
+    int offset = 0;
+
+    int direction = edges.front()->getOverlap()->isUsingSuffix(start->getId()) ^ startType;
+
+    int lo = direction ? 0 : start->getLength();
+    int hi = direction ? start->getLength() : 0;
+
+    parts_.emplace_back(start->getId(), startType, offset, lo, hi);
+
+    int prevType = startType;
+
+    for (const auto& edge : edges) {
+
+        const Vertex* a = edge->getA();
+        const Vertex* b = edge->getB();
+
+        int typeA = getType(edge, a->getId());
+        bool invert = typeA == prevType ? false : true;
+
+        int typeB = getType(edge, b->getId()) ^ invert;
+
+        offset += a->getLength() - edge->getOverlap()->getLength();
+
+        lo = direction ? 0 : b->getLength();
+        hi = direction ? b->getLength() : 0;
+
+        parts_.emplace_back(b->getId(), typeB, offset, lo, hi);
+
+        prevType = typeB;
     }
-    printf("\n\n");
+}
+
+// StringGraphComponent
+
+Contig* StringGraphComponent::createContig() const {
+    return new Contig(walk_);
 }
 
 //*****************************************************************************

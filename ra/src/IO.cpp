@@ -236,6 +236,53 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
     timer.print("IO", "afg output");
 }
 
+void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
+
+
+
+    timer.stop();
+    timer.print("IO", "afg input");
+}
+
+void writeAfgContigs(const std::vector<Contig*>& contigs, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    std::ofstream file;
+
+    if (path != nullptr) file.open(path, std::ios::out);
+
+    std::ostream& out = path == nullptr ? std::cout : file;
+
+    for (const auto& contig : contigs) {
+
+        out << "{LAY" << std::endl;
+
+        for (const auto& part : contig->getParts()) {
+
+            out << "{TLE" << std::endl;
+            out << "clr:" << std::get<3>(part) << "," << std::get<4>(part) << std::endl;
+            out << "off:" << std::get<2>(part) << std::endl;
+            out << "src:" << std::get<0>(part) << std::endl;
+            out << "rvc:" << std::get<1>(part) << std::endl;
+            out << "}" << std::endl;
+        }
+
+        out << "}" << std::endl;
+    }
+
+    if (path != nullptr) file.close();
+
+    timer.stop();
+    timer.print("IO", "afg output");
+}
+
 bool fileExists(const char* path) {
     struct stat buf;
     return stat(path, &buf) != -1;
