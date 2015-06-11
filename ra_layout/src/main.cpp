@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     std::vector<Contig*> contigs;
     graph->extractContigs(contigs);
 
-    writeAfgContigs(contigs, contigsOut == nullptr ? "layout.afg" : contigsOut);
+    writeAfgContigs(contigs, contigsOut == nullptr ? "contigs.afg" : contigsOut);
 
     for (const auto& contig : contigs) {
         delete contig;
@@ -99,6 +99,7 @@ static void help() {
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
     "    --contigsOut <file>\n"
+    "        default: contigs.afg\n"
     "        output afg contigs file\n"
     "    -h, -help\n"
     "        prints out the help\n");

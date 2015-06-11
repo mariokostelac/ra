@@ -297,7 +297,7 @@ public:
     Contig(const StringGraphWalk* walk);
     ~Contig() {}
 
-    const std::vector<Part>& getParts() {
+    const std::vector<Part>& getParts() const {
         return parts_;
     }
 

@@ -104,8 +104,10 @@ static void help() {
     "        default: 5\n"
     "        minimal length of exact overlap between two reads\n"
     "    --reads-out <file>\n"
+    "        default: reads.afg\n"
     "        output afg updated reads file\n"
     "    --overlaps-out <file>\n"
+    "        default: overlaps.afg\n"
     "        output afg overlaps file\n"
     "    -h, -help\n"
     "        prints out the help\n");

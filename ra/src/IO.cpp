@@ -278,6 +278,8 @@ void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
                 }
             }
 
+            ASSERT(contig->getParts().size() > 0, "IO", "invalid contig data");
+
             contigs.emplace_back(contig);
         }
     }

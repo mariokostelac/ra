@@ -4,7 +4,8 @@
 * Created on: Jun 07, 2015
 *     Author: rvaser
 *
-* Wrapper function for edlib
+* Wrapper function for edlib by @Martinsos
+*     Github: https://github.com/Martinsos/edlib
 */
 
 #pragma once
