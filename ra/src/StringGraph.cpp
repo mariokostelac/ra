@@ -1137,6 +1137,10 @@ void StringGraphComponent::extractLongestWalk() {
     }
 
     walk_ = selectedContig;
+
+    std::string seq;
+    walk_->extractSequence(seq);
+    printf("%s\n", seq.c_str());
 }
 
 // Contig

@@ -14,12 +14,12 @@ I_CMD = $(addprefix -I, $(SRC_DIR))
 I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, )
 
-CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall
+CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -g -Wall
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
 API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp EnhancedSuffixArray.hpp IO.hpp \
-	    Overlap.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp StringGraph.hpp \
-	    Utils.hpp)
+	    Overlap.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp \
+	    StringGraph.hpp Utils.hpp)
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
 VND = $(shell find $(VND_DIR) -type f -regex ".*\.cpp")

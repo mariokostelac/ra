@@ -14,6 +14,7 @@
 #include "IO.hpp"
 #include "Overlap.hpp"
 #include "Preprocess.hpp"
+#include "PartialOrderAlignment.hpp"
 #include "Read.hpp"
 #include "ReadIndex.hpp"
 #include "StringGraph.hpp"
