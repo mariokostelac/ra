@@ -8,10 +8,17 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
+// trimming params
 static const int READ_LEN_THRESHOLD = 100000;
+
+// BFS params in bubble popping
 static const size_t MAX_NODES = 750;
 static const int MAX_DISTANCE = 2500;
 static const double MAX_DIFFERENCE = 0.05;
+
+// contig extraction params
+static const size_t MAX_BRANCHES = 15;
+static const size_t MAX_START_NODES = 25;
 
 //*****************************************************************************
 // Edge
@@ -958,8 +965,9 @@ static double coverageRecursive(const Vertex* vertex, int direction, std::vector
     return coverage;
 }
 
-static void expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
+static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
 
+    double totalCoverage = 0;
     const Vertex* vertex = start;
 
     std::set<int> visitedVertices;
@@ -969,6 +977,8 @@ static void expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int
         if (visitedVertices.count(vertex->getId()) > 0) {
             break;
         }
+
+        totalCoverage += vertex->getCoverage();
 
         visitedVertices.insert(vertex->getId());
 
@@ -988,7 +998,7 @@ static void expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int
                 const Vertex* next = edge->getB();
                 std::vector<int> visited;
 
-                double coverage = coverageRecursive(next, direction, visited, 0, 10);
+                double coverage = coverageRecursive(next, direction, visited, 0, MAX_BRANCHES);
 
                 if (coverage > selectedCoverage) {
                     selectedEdge = edge;
@@ -1004,6 +1014,8 @@ static void expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int
             direction ^= 1;
         }
     }
+
+    return totalCoverage;
 }
 
 StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph) :
@@ -1024,8 +1036,10 @@ StringGraphComponent::~StringGraphComponent() {
 
 void StringGraphComponent::extractContig() {
 
-    // find candidate start vertices
-    std::vector<std::pair<const Vertex*, int>> startCandidates;
+    typedef std::tuple<const Vertex*, int, double> Candidate;
+
+    // pick n start vertices based on total coverage of their chains to first branch
+    std::vector<Candidate> startCandidates;
 
     for (int direction = 0; direction <= 1; ++direction) {
 
@@ -1034,45 +1048,52 @@ void StringGraphComponent::extractContig() {
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                startCandidates.emplace_back(vertex, direction);
+                std::vector<int> visited;
+
+                startCandidates.emplace_back(vertex, direction, coverageRecursive(vertex,
+                    direction, visited, 0, 0));
             }
         }
     }
 
-    // pick a start vertix based on total coverage of its chain to first branch
-    size_t selectedVertex = 0;
-    double selectedCoverage = 0;
+    std::sort(startCandidates.begin(), startCandidates.end(),
+        [](const Candidate& left, const Candidate& right) {
+            return std::get<2>(left) > std::get<2>(right);
+        }
+    );
 
-    if (startCandidates.size() > 1) {
-        for (size_t i = 0; i < startCandidates.size(); ++i) {
+    size_t n = std::min(MAX_START_NODES, startCandidates.size());
 
-            std::vector<int> visited;
-            double coverage = coverageRecursive(startCandidates[i].first,
-                startCandidates[i].second, visited, 0, 0);
+    // expand each of n candidates to a full chain and pick the best one (by coverage)
+    StringGraphWalk* selectedContig = nullptr;
+    int selectedCoverage = 0;
 
-            if (coverage > selectedCoverage) {
-                selectedVertex = i;
-                selectedCoverage = coverage;
+    for (size_t i = 0; i < n; ++i) {
+
+        const Vertex* start = std::get<0>(startCandidates[i]);
+        int direction = std::get<1>(startCandidates[i]);
+
+        std::vector<const Edge*> edges;
+        double coverage = expandVertex(edges, start, direction);
+
+        printf("%d: %lf\n", start->getId(), coverage);
+
+        if (coverage > selectedCoverage) {
+
+            selectedCoverage = coverage;
+
+            delete selectedContig;
+
+            selectedContig = new StringGraphWalk(start);
+            for (const auto& edge : edges) {
+                selectedContig->addEdge(edge);
             }
-
-            printf("Candidate %d - Coverage %lf\n", startCandidates[i].first->getId(), coverage);
         }
     }
-    printf("\n");
 
-    const Vertex* start = startCandidates[selectedVertex].first;
-    int direction = startCandidates[selectedVertex].second;
+    contig_ = selectedContig;
 
-    std::vector<const Edge*> edges;
-    expandVertex(edges, start, direction);
-
-    contig_ = new StringGraphWalk(start);
-
-    for (const auto& edge : edges) {
-        contig_->addEdge(edge);
-    }
-
-    printf("%d -> ", start->getId());
+    printf("%d -> ", contig_->getEdges().front()->getA()->getId());
     for (const auto& edge : contig_->getEdges()) {
         printf("%d -> ", edge->getB()->getId());
     }
