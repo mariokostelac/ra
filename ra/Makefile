@@ -14,7 +14,7 @@ I_CMD = $(addprefix -I, $(SRC_DIR))
 I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, )
 
-CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -g -Wall
+CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
 API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp EnhancedSuffixArray.hpp IO.hpp \
