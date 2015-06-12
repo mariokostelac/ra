@@ -153,6 +153,28 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "afg input");
 }
 
+void writeFastaReads(const std::vector<Read*>& reads, const char* path) {
+
+    Timer timer;
+    timer.start();
+
+    std::ofstream file;
+
+    if (path != nullptr) file.open(path, std::ios::out);
+
+    std::ostream& out = path == nullptr ? std::cout : file;
+
+    for (const auto& read : reads) {
+        out << ">" << read->getName() << std::endl;
+        out << read->getSequence() << std::endl;
+    }
+
+    if (path != nullptr) file.close();
+
+    timer.stop();
+    timer.print("IO", "fasta output");
+}
+
 void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
 
     Timer timer;
