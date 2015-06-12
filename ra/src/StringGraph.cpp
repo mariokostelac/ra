@@ -17,8 +17,8 @@ static const int MAX_DISTANCE = 2500;
 static const double MAX_DIFFERENCE = 0.05;
 
 // contig extraction params
-static const size_t MAX_BRANCHES = 15;
-static const size_t MAX_START_NODES = 25;
+static const size_t MAX_BRANCHES = 7;
+static const size_t MAX_START_NODES = 15;
 
 //*****************************************************************************
 // Edge
@@ -505,31 +505,6 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
 
     timer.stop();
     timer.print("SG", "component extraction");
-}
-
-void StringGraph::extractContigs(std::vector<Contig*>& dst) const {
-
-    Timer timer;
-    timer.start();
-
-    std::vector<StringGraphComponent*> components;
-    this->extractComponents(components);
-
-    for (const auto& component : components) {
-
-        Contig* contig = component->createContig();
-
-        if (contig != nullptr) {
-            dst.emplace_back(contig);
-        }
-
-        delete component;
-    }
-
-    fprintf(stderr, "[SG][contig extraction]: number of contigs = %zu\n", dst.size());
-
-    timer.stop();
-    timer.print("SG", "contig extraction");
 }
 
 void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
@@ -1073,12 +1048,16 @@ StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const 
     }
 
     walk_ = nullptr;
-
-    extractLongestWalk();
 }
 
 StringGraphComponent::~StringGraphComponent() {
     delete walk_;
+}
+
+void StringGraphComponent::extractSequence(std::string& dst) {
+
+    if (walk_ == nullptr) extractLongestWalk();
+    if (walk_ != nullptr) walk_->extractSequence(dst);
 }
 
 void StringGraphComponent::extractLongestWalk() {
@@ -1137,15 +1116,13 @@ void StringGraphComponent::extractLongestWalk() {
     }
 
     walk_ = selectedContig;
-
-    std::string seq;
-    walk_->extractSequence(seq);
-    printf("%s\n", seq.c_str());
 }
 
 // Contig
 
 Contig::Contig(const StringGraphWalk* walk) {
+
+    ASSERT(walk, "Contig", "invalid walk");
 
     auto getType = [](const Edge* edge, int id) -> int {
         if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
@@ -1191,8 +1168,11 @@ Contig::Contig(const StringGraphWalk* walk) {
 
 // StringGraphComponent
 
-Contig* StringGraphComponent::createContig() const {
-    return new Contig(walk_);
+Contig* StringGraphComponent::createContig() {
+
+    if (walk_ == nullptr) extractLongestWalk();
+    if (walk_ != nullptr) return new Contig(walk_);
+    return nullptr;
 }
 
 //*****************************************************************************

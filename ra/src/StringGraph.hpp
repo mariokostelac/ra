@@ -169,8 +169,6 @@ public:
 
     void extractComponents(std::vector<StringGraphComponent*>& dst) const;
 
-    void extractContigs(std::vector<Contig*>& dst) const;
-
 private:
 
     void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir);
@@ -276,7 +274,9 @@ public:
     StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
     ~StringGraphComponent();
 
-    Contig* createContig() const;
+    Contig* createContig();
+
+    void extractSequence(std::string& dst);
 
 private:
 
