@@ -68,11 +68,12 @@ int main(int argc, char* argv[]) {
         std::string consensusSeq = consensus(contig, reads);
 
         if (!consensusSeq.empty()) {
-            printf("%s\n", consensusSeq.c_str());
             transcripts.emplace_back(new Read(id, std::to_string(id), consensusSeq, "", 1));
             ++id;
         }
     }
+
+    writeFastaReads(transcripts, out == nullptr ? "transcripts.fasta" : out);
 
     for (const auto& it : transcripts) delete it;
 
