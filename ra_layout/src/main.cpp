@@ -65,14 +65,59 @@ int main(int argc, char* argv[]) {
 
     graph->simplify();
 
+    std::vector<StringGraphComponent*> components;
+    graph->extractComponents(components);
+
+    {
+        // extraction of transcripts is done in the consensus phase BUT as the
+        // overlapper is exact, it can be done in layout phase as well (for now
+        // its here for testing purposes)
+
+        std::vector<Read*> transcripts;
+        int id = 0;
+
+        for (const auto& component : components) {
+
+            std::string sequence;
+            component->extractSequence(sequence);
+
+            if (!sequence.empty()) {
+                transcripts.emplace_back(new Read(id, std::to_string(id), sequence, "", 1));
+                ++id;
+            }
+        }
+
+        writeFastaReads(transcripts, "transcripts.layout.fasta");
+
+        for (const auto& it : transcripts) delete it;
+    }
+
+    // extract contigs from all graph components
+
+    Timer timer;
+    timer.start();
+
     std::vector<Contig*> contigs;
-    graph->extractContigs(contigs);
+
+    for (const auto& component : components) {
+
+        Contig* contig = component->createContig();
+
+        if (contig != nullptr) {
+            contigs.emplace_back(contig);
+        }
+    }
+
+    fprintf(stderr, "[Layout][contig extraction]: number of contigs %zu\n", contigs.size());
+
+    timer.stop();
+    timer.print("Layout", "contig extraction");
 
     writeAfgContigs(contigs, contigsOut == nullptr ? "contigs.afg" : contigsOut);
 
-    for (const auto& contig : contigs) {
-        delete contig;
-    }
+    for (const auto& it : contigs) delete it;
+
+    for (const auto& it : components) delete it;
 
     delete graph;
 
