@@ -17,8 +17,8 @@ static const int MAX_DISTANCE = 2500;
 static const double MAX_DIFFERENCE = 0.05;
 
 // contig extraction params
-static const size_t MAX_BRANCHES = 7;
-static const size_t MAX_START_NODES = 15;
+static const size_t MAX_BRANCHES = 12;
+static const size_t MAX_START_NODES = 24;
 
 //*****************************************************************************
 // Edge
@@ -31,7 +31,6 @@ Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph)
     b_ = graph->getVertex(overlap->getA() == readId ? overlap->getB() : overlap->getA());
 
     overlap_ = overlap;
-    direction_ = overlap->getA() == readId ? Direction::A_TO_B : Direction::B_TO_A;
 
     graph_ = graph;
     marked_ = false;
@@ -941,50 +940,53 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 
 // StringGraphComponent
 
-static double coverageRecursive(const Vertex* vertex, int direction, std::vector<int>& visited, int level, int maxLevel) {
+static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& visited, int level, int maxLevel) {
 
-    if (level > maxLevel) return 0;
-
-    for (const auto& id : visited) {
-        if (vertex->getId() == id) {
-            return 0;
-        }
+    if (level > maxLevel || visited.count(vertex->getId()) > 0) {
+        return 0;
     }
 
-    visited.push_back(vertex->getId());
-
-    double coverage = vertex->getCoverage();
+    visited.insert(vertex->getId());
 
     const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
+
+    int length = 0;
 
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        coverage += coverageRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
+        length += edge->getB()->getLength() - edge->getOverlap()->getLength();
+        length += lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, level, maxLevel);
 
-    } else {
+    } else if (edges.size() > 1) {
 
-        double maxCoverage = 0;
+        int maxLength = 0;
+        const Edge* selectedEdge = edges.front();
 
         for (const auto& edge : edges) {
 
-            maxCoverage = std::max(maxCoverage, coverageRecursive(edge->getB(),
-                edge->getOverlap()->isInnie() ? (direction ^ 1) : direction, visited,
-                level + 1, maxLevel));
+            int len = lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+                direction, visited, level + 1, maxLevel);
+
+            if (len > maxLength) {
+                maxLength = len;
+                selectedEdge = edge;
+            }
         }
 
-        coverage += maxCoverage;
+        length += selectedEdge->getB()->getLength() - selectedEdge->getOverlap()->getLength();
+        length += maxLength;
     }
 
-    visited.pop_back();
+    visited.erase(vertex->getId());
 
-    return coverage;
+    return length;
 }
 
 static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
 
-    double totalCoverage = 0;
+    int totalLength = start->getLength();
     const Vertex* vertex = start;
 
     std::set<int> visitedVertices;
@@ -995,8 +997,6 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
             break;
         }
 
-        totalCoverage += vertex->getCoverage();
-
         visitedVertices.insert(vertex->getId());
 
         const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
@@ -1006,7 +1006,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         }
 
         const Edge* selectedEdge = edges.front();
-        double selectedCoverage = 0;
+        double selectedLength = 0;
 
         if (edges.size() > 1) {
 
@@ -1018,13 +1018,12 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
                     continue;
                 }
 
-                std::vector<int> visited;
+                int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (direction ^ 1) :
+                    direction, visitedVertices, 0, MAX_BRANCHES);
 
-                double coverage = coverageRecursive(next, direction, visited, 0, MAX_BRANCHES);
-
-                if (coverage > selectedCoverage) {
+                if (length > selectedLength) {
                     selectedEdge = edge;
-                    selectedCoverage = coverage;
+                    selectedLength = length;
                 }
             }
         }
@@ -1032,12 +1031,14 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         dst.emplace_back(selectedEdge);
         vertex = selectedEdge->getB();
 
+        totalLength += vertex->getLength() - selectedEdge->getOverlap()->getLength();
+
         if (selectedEdge->getOverlap()->isInnie()) {
             direction ^= 1;
         }
     }
 
-    return totalCoverage;
+    return totalLength;
 }
 
 StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph) :
@@ -1074,10 +1075,9 @@ void StringGraphComponent::extractLongestWalk() {
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                std::vector<int> visited;
-
-                startCandidates.emplace_back(vertex, direction, coverageRecursive(vertex,
-                    direction, visited, 0, 0));
+                std::set<int> visited;
+                startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
+                    visited, 0, 0));
             }
         }
     }
@@ -1092,7 +1092,7 @@ void StringGraphComponent::extractLongestWalk() {
 
     // expand each of n candidates to a full chain and pick the best one (by coverage)
     StringGraphWalk* selectedContig = nullptr;
-    int selectedCoverage = 0;
+    int selectedLength = 0;
 
     for (size_t i = 0; i < n; ++i) {
 
@@ -1100,11 +1100,13 @@ void StringGraphComponent::extractLongestWalk() {
         int direction = std::get<1>(startCandidates[i]);
 
         std::vector<const Edge*> edges;
-        double coverage = expandVertex(edges, start, direction);
+        int length = expandVertex(edges, start, direction);
 
-        if (coverage >= selectedCoverage) {
+        printf("(start, end, len) = %d, %d, %d\n", start->getId(), edges.back()->getB()->getId(), length);
 
-            selectedCoverage = coverage;
+        if (length > selectedLength) {
+
+            selectedLength = length;
 
             delete selectedContig;
 
@@ -1114,6 +1116,7 @@ void StringGraphComponent::extractLongestWalk() {
             }
         }
     }
+    printf("\n");
 
     walk_ = selectedContig;
 }

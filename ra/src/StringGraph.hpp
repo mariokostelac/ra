@@ -25,8 +25,6 @@ class Contig;
 class Edge {
 public:
 
-    enum Direction { A_TO_B, B_TO_A };
-
     Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph);
     ~Edge() {};
 
@@ -44,10 +42,6 @@ public:
 
     const Overlap* getOverlap() const {
         return overlap_;
-    }
-
-    const Direction& getDirection() const {
-        return direction_;
     }
 
     void mark() {
@@ -72,7 +66,6 @@ private:
     const Vertex* a_;
     const Vertex* b_;
     const Overlap* overlap_;
-    Direction direction_;
     Edge* opposite_;
     const StringGraph* graph_;
     bool marked_;
