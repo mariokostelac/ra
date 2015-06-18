@@ -143,8 +143,8 @@ static void help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
-    "    --contigs-out <file>\n"
-    "        default: contigs.afg\n"
+    "    -o --out <file>\n"
+    "        default: cout\n"
     "        output afg contigs file\n"
     "    -h, -help\n"
     "        prints out the help\n");

@@ -15,8 +15,8 @@
         --reads-out <file>
             default: reads.afg
             output afg updated reads file
-        --overlaps-out <file>
-            default: overlaps.afg
+        -o, --out <file>
+            default: cout
             output afg overlaps file
         -h, -help
             prints out the help

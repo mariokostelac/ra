@@ -12,8 +12,8 @@
         -t, --threads <int>
             default: approx. number of processors/cores
             number of threads used
-        --contigs-out <file>
-            default: contigs.afg
+        -o --out <file>
+            default: cout
             output afg contigs file
         -h, -help
             prints out the help

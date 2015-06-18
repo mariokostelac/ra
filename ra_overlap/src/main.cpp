@@ -106,8 +106,8 @@ static void help() {
     "    --reads-out <file>\n"
     "        default: reads.afg\n"
     "        output afg updated reads file\n"
-    "    --overlaps-out <file>\n"
-    "        default: overlaps.afg\n"
+    "    -o, --out <file>\n"
+    "        default: cout\n"
     "        output afg overlaps file\n"
     "    -h, -help\n"
     "        prints out the help\n");
