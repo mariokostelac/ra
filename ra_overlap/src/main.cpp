@@ -8,7 +8,7 @@ const struct option options[] = {
     {"min-overlap-length", required_argument, 0, 'm'},
     {"threads", required_argument, 0, 't'},
     {"reads-out", required_argument, 0, 'r'},
-    {"overlaps-out", required_argument, 0, 'o'},
+    {"out", required_argument, 0, 'o'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
 };
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
     while (1) {
 
-        char argument = getopt_long(argc, argv, "i:m:t:h", options, nullptr);
+        char argument = getopt_long(argc, argv, "i:m:t:o:h", options, nullptr);
 
         if (argument == -1) {
             break;
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
     updateOverlapIds(notTransitive, filtered);
 
-    writeAfgOverlaps(notTransitive, overlapsOut == nullptr ? "overlaps.afg" : overlapsOut);
+    writeAfgOverlaps(notTransitive, overlapsOut);
     writeAfgReads(reads, readsOut == nullptr ? "reads.afg" : readsOut);
 
     for (const auto& it : overlaps) delete it;
