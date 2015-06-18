@@ -1102,8 +1102,6 @@ void StringGraphComponent::extractLongestWalk() {
         std::vector<const Edge*> edges;
         int length = expandVertex(edges, start, direction);
 
-        printf("(start, end, len) = %d, %d, %d\n", start->getId(), edges.back()->getB()->getId(), length);
-
         if (length > selectedLength) {
 
             selectedLength = length;
@@ -1116,7 +1114,6 @@ void StringGraphComponent::extractLongestWalk() {
             }
         }
     }
-    printf("\n");
 
     walk_ = selectedContig;
 }
