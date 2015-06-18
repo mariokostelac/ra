@@ -7,7 +7,7 @@ const struct option options[] = {
     {"reads", required_argument, 0, 'i'},
     {"overlaps", required_argument, 0, 'j'},
     {"threads", required_argument, 0, 't'},
-    {"contigs-out", required_argument, 0, 'c'},
+    {"out", required_argument, 0, 'o'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}
 };
@@ -21,11 +21,11 @@ int main(int argc, char* argv[]) {
 
     int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
 
-    char* contigsOut = nullptr;
+    char* outPath = nullptr;
 
     while (1) {
 
-        char argument = getopt_long(argc, argv, "i:j:t:h", options, nullptr);
+        char argument = getopt_long(argc, argv, "i:j:t:o:h", options, nullptr);
 
         if (argument == -1) {
             break;
@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
         case 't':
             threadLen = atoi(optarg);
             break;
-        case 'c':
-            contigsOut = optarg;
+        case 'o':
+            outPath = optarg;
             break;
         default:
             help();
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     timer.stop();
     timer.print("Layout", "contig extraction");
 
-    writeAfgContigs(contigs, contigsOut == nullptr ? "contigs.afg" : contigsOut);
+    writeAfgContigs(contigs, outPath);
 
     for (const auto& it : contigs) delete it;
 
@@ -143,7 +143,7 @@ static void help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
-    "    --contigsOut <file>\n"
+    "    --contigs-out <file>\n"
     "        default: contigs.afg\n"
     "        output afg contigs file\n"
     "    -h, -help\n"
