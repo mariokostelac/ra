@@ -22,7 +22,7 @@ Running the 'make' command will create the bin folder where all executables will
 
 Currently supported modules are:
 
-1. ra - Module is the main static library and is used by other modules (doesn't provide any executable).
+1. [ra](ra/README.md) - Module is the main static library and is used by other modules (doesn't provide any executable).
 2. [ra_overlap](ra_overlap/README.md) - Module is used for finding all overlaps between input single end reads. It also removes contained and transitive overlaps.
 3. [ra_layout](ra_layout/README.md) - Module is used to create a string graph from input overlaps. It then simplifies it with trimming and bubble popping. At the end it extracts longest contigs from every graph component. As the current overlapper is exact, it also extracts whole transcripts (transcripts.layout.fasta) so that the consensus phase can be avoided for now.
 4. [ra_consensus](ra_consensus/README.md) - Module is used to build consensus sequences, it uses [CPPPOA](https://github.com/mculinovic/cpppoa) and outputs transcripts.
