@@ -203,7 +203,7 @@ namespace AMOS {
     int clr_lo, clr_hi, iid;
     char eid[2048];
     std::string seq, qlt;
-    double cvg;
+    double cvg = 1.0;
 
     // use buffer marks to create a read from buffer
     for (auto& mark: buff_marks) {
