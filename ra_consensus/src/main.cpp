@@ -21,11 +21,11 @@ int main(int argc, char* argv[]) {
 
     int threadLen = std::max(std::thread::hardware_concurrency(), 1U);
 
-    char* out = nullptr;
+    char* outPath = nullptr;
 
     while (1) {
 
-        char argument = getopt_long(argc, argv, "i:j:t:h", options, nullptr);
+        char argument = getopt_long(argc, argv, "i:j:t:o:h", options, nullptr);
 
         if (argument == -1) {
             break;
@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) {
         case 't':
             threadLen = atoi(optarg);
             break;
-        case 'c':
-            out = optarg;
+        case 'o':
+            outPath = optarg;
             break;
         default:
             help();
@@ -63,6 +63,9 @@ int main(int argc, char* argv[]) {
 
     std::vector<Read*> transcripts;
 
+    Timer timer;
+    timer.start();
+
     int id = 0;
     for (const auto& contig : contigs) {
         std::string consensusSeq = consensus(contig, reads);
@@ -73,7 +76,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    writeFastaReads(transcripts, out == nullptr ? "transcripts.fasta" : out);
+    timer.stop();
+    timer.print("Consensus", "poa");
+
+    writeFastaReads(transcripts, outPath);
 
     for (const auto& it : transcripts) delete it;
 
@@ -99,8 +105,8 @@ static void help() {
     "    -t, --threads <int>\n"
     "        default: approx. number of processors/cores\n"
     "        number of threads used\n"
-    "    --out <file>\n"
-    "        default: transcripts.fasta\n"
+    "    -o, --out <file>\n"
+    "        default: cout\n"
     "        output fasta transcripts file\n"
     "    -h, -help\n"
     "        prints out the help\n");
