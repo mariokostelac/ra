@@ -56,4 +56,4 @@ Consensus phase (optional for now):
 
 [1]: https://en.wikipedia.org/wiki/FASTA_format "FASTA"
 [2]: https://en.wikipedia.org/wiki/FASTQ_format "FASTQ"
-[3]: www.amos.sourceforge.net/wiki/index.php/Message_Types "afg"
+[3]: http://www.amos.sourceforge.net/wiki/index.php/Message_Types "afg"
