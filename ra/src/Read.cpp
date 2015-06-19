@@ -6,6 +6,7 @@
 */
 
 #include "Read.hpp"
+#include <cmath>
 
 static bool isValidChar(char c) {
     if ((c > 64 && c < 91) || (c > 96 && c < 123)) return true;

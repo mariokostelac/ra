@@ -7,6 +7,7 @@
 
 #include "ReadIndex.hpp"
 #include "Overlap.hpp"
+#include <cmath>
 
 const double EPSILON = 0.15;
 const double ALPHA = 3;

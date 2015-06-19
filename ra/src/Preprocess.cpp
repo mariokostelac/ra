@@ -8,6 +8,7 @@
 #include "IO.hpp"
 #include "ReadIndex.hpp"
 #include "Preprocess.hpp"
+#include <cmath>
 
 #define MIN_KMER 10
 #define MAX_KMER 50
