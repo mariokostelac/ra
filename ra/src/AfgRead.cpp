@@ -5,7 +5,7 @@
 *     Author: rvaser
 */
 
-#include "Read.hpp"
+#include "AfgRead.hpp"
 #include <cmath>
 
 static bool isValidChar(char c) {
@@ -13,14 +13,14 @@ static bool isValidChar(char c) {
     return false;
 }
 
-static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
+static void threadCreateReverseComplements(std::vector<AfgRead*>& reads, int start, int end) {
 
     for (int i = start; i < end; ++i) {
         reads[i]->createReverseComplement();
     }
 }
 
-Read::Read(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage) {
+AfgRead::AfgRead(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage) {
 
     ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
 
@@ -40,20 +40,20 @@ Read::Read(int id, const std::string& name, const std::string& sequence, const s
     reverseComplement_ = "";
 }
 
-Read* Read::clone() const {
+AfgRead* AfgRead::clone() const {
 
-    Read* copy = new Read(id_, name_, sequence_, quality_, coverage_);
+    AfgRead* copy = new AfgRead(id_, name_, sequence_, quality_, coverage_);
 
     if (!reverseComplement_.empty()) copy->createReverseComplement();
 
     return copy;
 }
 
-void Read::correctBase(int idx, int c) {
+void AfgRead::correctBase(int idx, int c) {
     sequence_[idx] = c;
 }
 
-void Read::createReverseComplement() {
+void AfgRead::createReverseComplement() {
 
     reverseComplement_.clear();
 
@@ -82,7 +82,7 @@ void Read::createReverseComplement() {
     }
 }
 
-void createReverseComplements(std::vector<Read*>& reads, int threadLen) {
+void createReverseComplements(std::vector<AfgRead*>& reads, int threadLen) {
 
     int taskLen = std::ceil((double) reads.size() / threadLen);
     int start = 0;

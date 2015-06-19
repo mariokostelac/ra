@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
             component->extractSequence(sequence);
 
             if (!sequence.empty()) {
-                transcripts.emplace_back(new Read(id, std::to_string(id), sequence, "", 1));
+                transcripts.emplace_back(new AfgRead(id, std::to_string(id), sequence, "", 1));
                 ++id;
             }
         }

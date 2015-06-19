@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
         std::string consensusSeq = consensus(contig, reads);
 
         if (!consensusSeq.empty()) {
-            transcripts.emplace_back(new Read(id, std::to_string(id), consensusSeq, "", 1));
+            transcripts.emplace_back(new AfgRead(id, std::to_string(id), consensusSeq, "", 1));
             ++id;
         }
     }

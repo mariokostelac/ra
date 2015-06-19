@@ -7,6 +7,7 @@
 
 #include "../vendor/afgreader/reader.h"
 
+#include "AfgRead.hpp"
 #include "IO.hpp"
 
 #define BUFFER_SIZE 4096
@@ -43,7 +44,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
             if (buffer[i] == '>') {
 
                 if (createRead) {
-                    reads.push_back(new Read(idx++, name, sequence, "", 1.0));
+                    reads.push_back(new AfgRead(idx++, name, sequence, "", 1.0));
                 }
 
                 name.clear();
@@ -67,7 +68,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
         }
     }
 
-    reads.push_back(new Read(idx, name, sequence, "", 1.0));
+    reads.push_back(new AfgRead(idx, name, sequence, "", 1.0));
 
     delete[] buffer;
     fclose(f);
@@ -99,7 +100,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         switch (i % 4) {
             case 0:
                 if (i != 0) {
-                    reads.push_back(new Read(idx++, name, sequence, quality, 1.0));
+                    reads.push_back(new AfgRead(idx++, name, sequence, quality, 1.0));
                 }
 
                 name = line.substr(1, line.size() - 1);
@@ -119,7 +120,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         ++i;
     }
 
-    reads.push_back(new Read(idx, name, sequence, quality, 1.0));
+    reads.push_back(new AfgRead(idx, name, sequence, quality, 1.0));
 
     f.close();
 

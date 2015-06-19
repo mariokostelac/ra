@@ -1,5 +1,5 @@
 /*
-* Read.hpp
+* AfgRead.hpp
 *
 * Created on: Apr 20, 2015
 *     Author: rvaser
@@ -12,55 +12,29 @@
 class Read {
 public:
 
-    Read(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage);
-    ~Read() {};
+    virtual ~Read(){};
 
-    int getId() const {
-        return id_;
-    }
+    virtual int getId() const = 0;
 
-    const std::string& getName() const {
-        return name_;
-    }
+    virtual const std::string& getName() const = 0;
 
-    const std::string& getSequence() const {
-        return sequence_;
-    }
+    virtual const std::string& getSequence() const = 0;
 
-    size_t getLength() const {
-        return sequence_.size();
-    }
+    virtual size_t getLength() const = 0;
 
-    const std::string& getQuality() const {
-        return quality_;
-    }
+    virtual const std::string& getQuality() const = 0;
 
-    const std::string& getReverseComplement() const {
-        return reverseComplement_;
-    }
+    virtual const std::string& getReverseComplement() const = 0;
 
-    double getCoverage() const {
-        return coverage_;
-    }
+    virtual double getCoverage() const = 0;
 
-    void addCoverage(double value) {
-        coverage_ += value;
-    }
+    virtual void addCoverage(double value) = 0;
 
-    Read* clone() const;
+    virtual Read* clone() const = 0;
 
-    void correctBase(int idx, int c);
+    virtual void correctBase(int idx, int c) = 0;
 
-    void createReverseComplement();
-
-private:
-
-    int id_;
-    std::string name_;
-    std::string sequence_;
-    std::string quality_;
-    double coverage_;
-    std::string reverseComplement_;
+    virtual void createReverseComplement() = 0;
 };
 
 void createReverseComplements(std::vector<Read*>& reads, int threadLen);

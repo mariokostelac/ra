@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "AfgRead.hpp"
 #include "CommonHeaders.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"

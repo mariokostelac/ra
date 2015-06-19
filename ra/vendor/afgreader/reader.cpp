@@ -237,7 +237,7 @@ namespace AMOS {
 
     buffer_clear();
 
-    *read = new Read(iid, std::string(eid), seq.substr(clr_lo, clr_hi - clr_lo), qlt, cvg);
+    *read = new AfgRead(iid, std::string(eid), seq.substr(clr_lo, clr_hi - clr_lo), qlt, cvg);
 
     return true;
   }
