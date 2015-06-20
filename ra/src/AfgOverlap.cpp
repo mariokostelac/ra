@@ -297,7 +297,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         // B      ------
         if (overlap->isUsingPrefix(b) && overlap->isUsingSuffix(b)) {
             // readB is contained
-            contained[overlap->getB()] = true;
+            contained[b] = true;
 
             reads[a]->addCoverage(reads[b]->getLength() / (double) reads[a]->getLength());
         }
