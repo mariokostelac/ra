@@ -89,10 +89,7 @@ public:
     // - respects direction of read (important for reverse complements)!
     bool isUsingSuffix(int readId) const;
 
-    // checks whether this (o1) is transitive considering overlaps o2 and o3
-    bool isTransitive(const Overlap* o2, const Overlap* o3) const;
-
-    int hang(int readId) const;
+    uint hangingLength(int readId) const;
 
     Overlap* clone() const;
 

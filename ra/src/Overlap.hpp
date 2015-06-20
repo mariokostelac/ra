@@ -72,9 +72,9 @@ public:
     virtual bool isUsingSuffix(int readId) const = 0;
 
     // checks whether this (o1) is transitive considering overlaps o2 and o3
-    virtual bool isTransitive(const Overlap* o2, const Overlap* o3) const = 0;
+    virtual bool isTransitive(const Overlap* o2, const Overlap* o3) const;
 
-    virtual int hang(int readId) const = 0;
+    virtual uint hangingLength(int readId) const = 0;
 
     virtual Overlap* clone() const = 0;
 };
@@ -91,3 +91,4 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     int threadLen, bool view = true);
 
 void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads);
+

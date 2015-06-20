@@ -8,13 +8,6 @@
 #include "ReadIndex.hpp"
 #include "AfgOverlap.hpp"
 
-const double EPSILON = 0.15;
-const double ALPHA = 3;
-
-static inline bool doubleEq(double x, double y, double eps) {
-    return y <= x + eps && x <= y + eps;
-}
-
 static bool compareOverlaps(const Overlap* left, const Overlap* right) {
     if (left->getA() != right->getA()) return left->getA() < right->getA();
     if (left->getB() != right->getB()) return left->getB() < right->getB();
@@ -210,39 +203,11 @@ bool AfgOverlap::isUsingSuffix(int readId) const {
     return false;
 }
 
-bool AfgOverlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
 
-    auto o1 = this;
+uint AfgOverlap::hangingLength(int readId) const {
 
-    int a = o1->getA();
-    int b = o1->getB();
-    int c = o2->getA() != a ? o2->getA() : o2->getB();
-
-    if (o2->isUsingSuffix(c) == o3->isUsingSuffix(c)) return false;
-    if (o1->isUsingSuffix(a) != o2->isUsingSuffix(a)) return false;
-    if (o1->isUsingSuffix(b) != o3->isUsingSuffix(b)) return false;
-
-    if (!doubleEq(
-            o2->hang(a) + o3->hang(c),
-            o1->hang(a),
-            EPSILON * o1->getLength() + ALPHA)) {
-        return false;
-    }
-
-    if (!doubleEq(
-            o2->hang(c) + o3->hang(b),
-            o1->hang(b),
-            EPSILON * o1->getLength() + ALPHA)) {
-        return false;
-    }
-
-    return true;
-}
-
-int AfgOverlap::hang(int readId) const {
-
-    if (readId == a_) return aHang_;
-    if (readId == b_) return bHang_;
+    if (readId == a_) return abs(aHang_);
+    if (readId == b_) return abs(bHang_);
 
     ASSERT(false, "Overlap", "wrong read id");
 }
