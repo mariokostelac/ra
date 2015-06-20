@@ -6,14 +6,13 @@
 */
 
 #include "AfgRead.hpp"
-#include <cmath>
 
 static bool isValidChar(char c) {
     if ((c > 64 && c < 91) || (c > 96 && c < 123)) return true;
     return false;
 }
 
-static void threadCreateReverseComplements(std::vector<AfgRead*>& reads, int start, int end) {
+static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
 
     for (int i = start; i < end; ++i) {
         reads[i]->createReverseComplement();
@@ -82,7 +81,7 @@ void AfgRead::createReverseComplement() {
     }
 }
 
-void createReverseComplements(std::vector<AfgRead*>& reads, int threadLen) {
+void createReverseComplements(std::vector<Read*>& reads, int threadLen) {
 
     int taskLen = std::ceil((double) reads.size() / threadLen);
     int start = 0;

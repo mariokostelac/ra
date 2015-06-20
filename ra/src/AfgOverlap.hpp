@@ -1,5 +1,5 @@
 /*
-* Overlap.hpp
+* AfgOverlap.hpp
 *
 * Created on: May 14, 2015
 *     Author: rvaser
@@ -39,55 +39,69 @@
 
 #pragma once
 
+#include "Overlap.hpp"
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
-class Overlap {
+class AfgOverlap: public Overlap {
 public:
 
-    virtual ~Overlap(){};
+    AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
+    ~AfgOverlap() {}
 
-    virtual int getA() const = 0;
+    int getA() const {
+        return a_;
+    }
 
-    virtual void setA(int a) = 0;
+    void setA(int a) {
+        a_ = a;
+    }
 
-    virtual int getB() const = 0;
+    int getB() const {
+        return b_;
+    }
 
-    virtual void setB(int b) = 0;
+    void setB(int b) {
+        b_ = b;
+    }
 
-    virtual int getLength() const = 0;
+    int getLength() const {
+        return length_;
+    }
 
-    virtual int getAHang() const = 0;
+    int getAHang() const {
+        return aHang_;
+    }
 
-    virtual int getBHang() const = 0;
+    int getBHang() const {
+        return bHang_;
+    }
 
-    virtual bool isInnie() const = 0;
+    bool isInnie() const {
+        return innie_;
+    }
 
     // checks whether the start of read is contained in overlap
     // - respects direction of read (important for reverse complements)!
-    virtual bool isUsingPrefix(int readId) const = 0;
+    bool isUsingPrefix(int readId) const;
 
     // checks whether the end of read is contained in overlap
     // - respects direction of read (important for reverse complements)!
-    virtual bool isUsingSuffix(int readId) const = 0;
+    bool isUsingSuffix(int readId) const;
 
     // checks whether this (o1) is transitive considering overlaps o2 and o3
-    virtual bool isTransitive(const Overlap* o2, const Overlap* o3) const = 0;
+    bool isTransitive(const Overlap* o2, const Overlap* o3) const;
 
-    virtual int hang(int readId) const = 0;
+    int hang(int readId) const;
 
-    virtual Overlap* clone() const = 0;
+    Overlap* clone() const;
+
+private:
+
+    int a_;
+    int b_;
+    int length_;
+    int aHang_;
+    int bHang_;
+    bool innie_;
 };
-
-// path is used to cache the ReadIndex
-void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
-    int threadLen, const char* path);
-
-// updates coverage of reads
-void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
-    std::vector<Read*>& reads, bool view = true);
-
-void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
-    int threadLen, bool view = true);
-
-void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads);

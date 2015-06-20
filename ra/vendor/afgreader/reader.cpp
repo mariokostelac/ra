@@ -282,7 +282,7 @@ namespace AMOS {
 
     buffer_clear();
 
-    *overlap = new Overlap(a_id, b_id, score, a_hang, b_hang, adjacency == 'I' ? true : false);
+    *overlap = new AfgOverlap(a_id, b_id, score, a_hang, b_hang, adjacency == 'I' ? true : false);
 
     return true;
   }

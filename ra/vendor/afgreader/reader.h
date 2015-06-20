@@ -3,7 +3,7 @@
 #define _AMOS_READER_H
 
 #include "../../src/AfgRead.hpp"
-#include "../../src/Overlap.hpp"
+#include "../../src/AfgOverlap.hpp"
 
 #include <cstdio>
 #include <vector>
