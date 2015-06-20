@@ -223,15 +223,15 @@ bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
     if (o1->isUsingSuffix(b) != o3->isUsingSuffix(b)) return false;
 
     if (!doubleEq(
-            o2->hang(a) + o3->hang(c),
-            o1->hang(a),
+            o2->hangingLength(a) + o3->hangingLength(c),
+            o1->hangingLength(a),
             EPSILON * o1->getLength() + ALPHA)) {
         return false;
     }
 
     if (!doubleEq(
-            o2->hang(c) + o3->hang(b),
-            o1->hang(b),
+            o2->hangingLength(c) + o3->hangingLength(b),
+            o1->hangingLength(b),
             EPSILON * o1->getLength() + ALPHA)) {
         return false;
     }
@@ -239,10 +239,10 @@ bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
     return true;
 }
 
-int Overlap::hang(int readId) const {
+uint Overlap::hangingLength(int readId) const {
 
-    if (readId == a_) return aHang_;
-    if (readId == b_) return bHang_;
+    if (readId == a_) return abs(aHang_);
+    if (readId == b_) return abs(bHang_);
 
     ASSERT(false, "Overlap", "wrong read id");
 }
