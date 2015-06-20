@@ -216,6 +216,16 @@ Overlap* AfgOverlap::clone() const {
     return new AfgOverlap(a_, b_, length_, aHang_, bHang_, innie_);
 }
 
+void AfgOverlap::print(std::ostream& o) const {
+  o << "{OVL" << std::endl;
+  o << "adj:" << (innie_ ? 'I' : 'N') << std::endl;
+  o << "rds:" << a_ << "," << b_ << std::endl;
+  o << "ahg:" << aHang_ << std::endl;
+  o << "bhg:" << bHang_ << std::endl;
+  o << "scr:" << 0 << std::endl; // TODO
+  o << "}" << std::endl;
+}
+
 void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path) {
 

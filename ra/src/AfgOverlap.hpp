@@ -93,6 +93,8 @@ public:
 
     Overlap* clone() const;
 
+    void print(std::ostream& str) const;
+
 private:
 
     int a_;

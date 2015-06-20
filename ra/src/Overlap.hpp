@@ -77,6 +77,14 @@ public:
     virtual uint hangingLength(int readId) const = 0;
 
     virtual Overlap* clone() const = 0;
+
+    virtual void print(std::ostream& str) const = 0;
+
+    friend std::ostream& operator<<(std::ostream& str, Overlap const& data)
+    {
+      data.print(str);
+      return str;
+    }
 };
 
 // path is used to cache the ReadIndex
