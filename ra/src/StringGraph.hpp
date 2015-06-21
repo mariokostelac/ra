@@ -171,7 +171,9 @@ private:
     void extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root,
         const StringGraphNode* junctureNode) const;
 
-    bool popBubble(const std::vector<StringGraphWalk*> walks, int direction);
+    bool popBubble(const std::vector<StringGraphWalk*>& walks, int direction);
+
+    bool isValidWalk(int id, const std::vector<StringGraphWalk*>& walks) const;
 
     void deleteMarked();
 

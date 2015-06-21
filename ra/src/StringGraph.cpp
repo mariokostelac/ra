@@ -653,7 +653,7 @@ void StringGraph::extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const V
     }
 }
 
-bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direction) {
+bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int direction) {
 
     size_t selectedWalk = 0;
     double selectedCoverage = 0;
@@ -722,7 +722,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
 
         int distance = editDistance(sequences[i], sequences[selectedWalk]);
 
-        if (distance / (double) sequences[selectedWalk].size() < MAX_DIFFERENCE) {
+        if (distance / (double) sequences[selectedWalk].size() < MAX_DIFFERENCE && isValidWalk(i, walks)) {
 
             // mark walk for removal
 
@@ -778,6 +778,53 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*> walks, int direc
     }
 
     return popped;
+}
+
+bool StringGraph::isValidWalk(int id, const std::vector<StringGraphWalk*>& walks) const {
+
+    std::set<int> verticesIds;
+
+    for (size_t i = 0; i < walks.size(); ++i) {
+
+        const auto& edges = walks[i]->getEdges();
+
+        verticesIds.insert(walks[i]->getStart()->getId());
+
+        for (size_t j = 0; j < edges.size(); ++j) {
+            verticesIds.insert(edges[j]->getB()->getId());
+        }
+    }
+
+    bool valid = true;
+
+    const auto& edges = walks[id]->getEdges();
+
+    for (size_t i = 0; i < edges.size() - 1; ++i) {
+
+        const Vertex* vertex = edges[i]->getB();
+
+        const auto& edgesB = vertex->getEdgesB();
+        for (const auto& edge : edgesB) {
+            if (!edge->isMarked() && verticesIds.count(edge->getB()->getId()) == 0) {
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) break;
+
+        const auto& edgesE = vertex->getEdgesE();
+        for (const auto& edge : edgesE) {
+            if (!edge->isMarked() && verticesIds.count(edge->getB()->getId()) == 0) {
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) break;
+    }
+
+    return valid;
 }
 
 void StringGraph::deleteMarked() {

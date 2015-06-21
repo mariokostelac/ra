@@ -1,5 +1,5 @@
 /*
-* AfgOverlap.cpp
+* Overlap.cpp
 *
 * Created on: May 14, 2015
 *     Author: rvaser
@@ -13,7 +13,6 @@ const double ALPHA = 3;
 static inline bool doubleEq(double x, double y, double eps) {
     return y <= x + eps && x <= y + eps;
 }
-
 
 bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
 
