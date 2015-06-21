@@ -75,6 +75,7 @@ namespace AMOS {
       std::stack<ReaderState> states;
       ObjectType next_type_;
 
+      int buffer_next_line();
       int buffer_next();
       int buffer_double();
       int buffer_clear();

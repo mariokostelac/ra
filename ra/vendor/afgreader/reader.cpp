@@ -5,16 +5,14 @@
 #include <cstring>
 #include <stack>
 
-#define BUFF_CAP 4096
-
 using std::istream;
 using std::stack;
 
 namespace AMOS {
 
   Reader::Reader(istream& input): input(&input), buff_written(0) {
-    buff = new char[BUFF_CAP];
-    buff_cap = BUFF_CAP;
+    buff = new char[4096];
+    buff_cap = 4096;
     states.push(OUT);
   }
 
@@ -105,6 +103,39 @@ namespace AMOS {
     return buff_cap;
   }
 
+  int Reader::buffer_next_line() {
+    const int start_offset = buff_written;
+    char* dst = buff + start_offset;
+    char* line_start = dst;
+
+    input->getline(dst, buff_cap - buff_written);
+    int read = strlen(dst);
+    buff_written += read;
+    dst += read;
+
+    while (input->fail() && buff_written == buff_cap - 1) {
+      buffer_double();
+      dst = buff + buff_written;
+      line_start = buff + start_offset;
+
+      input->clear();
+      input->getline(dst, buff_cap - buff_written);
+
+      int read = strlen(dst);
+      buff_written += read;
+      dst += read;
+    }
+
+    if (input->fail()) {
+      return -1;
+    }
+    if (input->eof()) {
+      return -1;
+    }
+
+    return strlen(line_start);
+  }
+
   int Reader::buffer_next() {
     assert(states.size() == 1);
     assert(buff_written == 0);
@@ -113,21 +144,20 @@ namespace AMOS {
 
     int seq_start = 0;
     while (true) {
-      auto line = buff + buff_written;
-
-      input->getline(line, buff_cap - buff_written);
-
-      int line_start = buff_written;
-      buff_written += strlen(line);
-
-      if (input->eof()) {
-        return -1;
-      }
-      if (input->fail()) {
+      int start_offset = buff_written;
+      if (buffer_next_line() < 0) {
         return -1;
       }
 
+      // buff could change due to reallocation so we need to calculate it
+      // after reading a line.
+      const int line_start = start_offset;
+      const char* line = buff + start_offset;
+
+      assert(states.size() > 0);
       auto state = states.top();
+
+      //std::cerr << state << " " << line << std::endl;
       switch (state) {
         case OUT:
           if (strncmp(line, "{RED", 4) == 0) {
