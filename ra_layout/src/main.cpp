@@ -68,6 +68,9 @@ int main(int argc, char* argv[]) {
     std::vector<StringGraphComponent*> components;
     graph->extractComponents(components);
 
+    Timer timer;
+    timer.start();
+
     {
         // extraction of transcripts is done in the consensus phase BUT as the
         // overlapper is exact, it can be done in layout phase as well (for now
@@ -93,9 +96,6 @@ int main(int argc, char* argv[]) {
     }
 
     // extract contigs from all graph components
-
-    Timer timer;
-    timer.start();
 
     std::vector<Contig*> contigs;
 
