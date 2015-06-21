@@ -14,6 +14,7 @@ namespace AMOS {
     buff = new char[4096];
     buff_cap = 4096;
     states.push(OUT);
+    line_num = 0;
   }
 
   Reader::~Reader() {
@@ -133,6 +134,7 @@ namespace AMOS {
       return -1;
     }
 
+    line_num++;
     return strlen(line_start);
   }
 
@@ -176,6 +178,7 @@ namespace AMOS {
             states.push(IN);
             next_type_ = FRAGMENT;
           } else {
+            std::cerr << line_num << ":" << line << std::endl;
             assert(false);
           }
 

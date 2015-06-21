@@ -74,6 +74,7 @@ namespace AMOS {
       std::vector<BufferMark> buff_marks;
       std::stack<ReaderState> states;
       ObjectType next_type_;
+      int line_num;
 
       int buffer_next_line();
       int buffer_next();
