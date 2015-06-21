@@ -18,6 +18,8 @@ void readFastqReads(std::vector<Read*>& reads, const char* path);
 
 void readAfgReads(std::vector<Read*>& reads, const char* path);
 
+void readAfgReads(std::vector<Read*>& reads, std::istream& input);
+
 void writeFastaReads(const std::vector<Read*>& reads, const char* path);
 
 void writeAfgReads(const std::vector<Read*>& reads, const char* path);

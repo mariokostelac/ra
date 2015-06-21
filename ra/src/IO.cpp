@@ -136,7 +136,18 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
     ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
 
     std::ifstream f(path);
-    AMOS::Reader* reader = new AMOS::Reader(f);
+
+    readAfgReads(reads, f);
+
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg input");
+}
+
+void readAfgReads(std::vector<Read*>& reads, std::istream& input) {
+
+    AMOS::Reader* reader = new AMOS::Reader(input);
 
     while (reader->has_next()) {
 
@@ -148,10 +159,6 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
     }
 
     delete reader;
-    f.close();
-
-    timer.stop();
-    timer.print("IO", "afg input");
 }
 
 void writeFastaReads(const std::vector<Read*>& reads, const char* path) {
