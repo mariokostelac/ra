@@ -26,6 +26,8 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path);
 
 void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path);
 
+void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input);
+
 void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
 
 void readAfgContigs(std::vector<Contig*>& contigs, const char* path);

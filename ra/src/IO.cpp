@@ -221,7 +221,16 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path) {
     ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
 
     std::ifstream f(path);
-    AMOS::Reader* reader = new AMOS::Reader(f);
+    readAfgOverlaps(overlaps, f);
+    f.close();
+
+    timer.stop();
+    timer.print("IO", "afg input");
+}
+
+void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input) {
+
+    AMOS::Reader* reader = new AMOS::Reader(input);
 
     while (reader->has_next()) {
 
@@ -233,10 +242,6 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path) {
     }
 
     delete reader;
-    f.close();
-
-    timer.stop();
-    timer.print("IO", "afg input");
 }
 
 void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
