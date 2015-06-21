@@ -17,8 +17,8 @@ static const int MAX_DISTANCE = 2500;
 static const double MAX_DIFFERENCE = 0.05;
 
 // contig extraction params
-static const size_t MAX_BRANCHES = 12;
-static const size_t MAX_START_NODES = 24;
+static const size_t MAX_BRANCHES = 10;
+static const size_t MAX_START_NODES = 20;
 
 //*****************************************************************************
 // Edge
@@ -987,13 +987,13 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& visited, int level, int maxLevel) {
+static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int level, int maxLevel) {
 
-    if (level > maxLevel || visited.count(vertex->getId()) > 0) {
+    if (level > maxLevel || visited[vertex->getId()]) {
         return 0;
     }
 
-    visited.insert(vertex->getId());
+    visited[vertex->getId()] = true;
 
     const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
@@ -1026,25 +1026,25 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& v
         length += maxLength;
     }
 
-    visited.erase(vertex->getId());
+    visited[vertex->getId()] = false;
 
     return length;
 }
 
-static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
+static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction, int maxId) {
 
     int totalLength = start->getLength();
     const Vertex* vertex = start;
 
-    std::set<int> visitedVertices;
+    std::vector<bool> visitedVertices(maxId + 1, false);
 
     while (true) {
 
-        if (visitedVertices.count(vertex->getId()) > 0) {
+        if (visitedVertices[vertex->getId()]) {
             break;
         }
 
-        visitedVertices.insert(vertex->getId());
+        visitedVertices[vertex->getId()] = true;
 
         const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
@@ -1061,7 +1061,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
 
                 const Vertex* next = edge->getB();
 
-                if (visitedVertices.count(next->getId()) > 0) {
+                if (visitedVertices[next->getId()]) {
                     continue;
                 }
 
@@ -1115,6 +1115,11 @@ void StringGraphComponent::extractLongestWalk() {
     // pick n start vertices based on total coverage of their chains to first branch
     std::vector<Candidate> startCandidates;
 
+    int maxId = 0;
+    for (const auto& vertex : vertices_) {
+        maxId = std::max(maxId, vertex->getId());
+    }
+
     for (int direction = 0; direction <= 1; ++direction) {
 
         for (const auto& vertex : vertices_) {
@@ -1122,7 +1127,7 @@ void StringGraphComponent::extractLongestWalk() {
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                std::set<int> visited;
+                std::vector<bool> visited(maxId + 1, false);
                 startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
                     visited, 0, 0));
             }
@@ -1137,7 +1142,7 @@ void StringGraphComponent::extractLongestWalk() {
 
     size_t n = std::min(MAX_START_NODES, startCandidates.size());
 
-    // expand each of n candidates to a full chain and pick the best one (by coverage)
+    // expand each of n candidates to a full chain and pick the best one (by length)
     StringGraphWalk* selectedContig = nullptr;
     int selectedLength = 0;
 
@@ -1147,7 +1152,7 @@ void StringGraphComponent::extractLongestWalk() {
         int direction = std::get<1>(startCandidates[i]);
 
         std::vector<const Edge*> edges;
-        int length = expandVertex(edges, start, direction);
+        int length = expandVertex(edges, start, direction, maxId);
 
         if (length > selectedLength) {
 
