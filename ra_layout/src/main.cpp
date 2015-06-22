@@ -3,6 +3,18 @@
 
 #include "ra/ra.hpp"
 
+// trimming params
+int READ_LEN_THRESHOLD = 100000;
+
+// BFS params in bubble popping
+size_t MAX_NODES = 750;
+int MAX_DISTANCE = 2500;
+double MAX_DIFFERENCE = 0.05;
+
+// contig extraction params
+size_t MAX_BRANCHES = 12;
+size_t MAX_START_NODES = 24;
+
 const struct option options[] = {
     {"reads", required_argument, 0, 'i'},
     {"overlaps", required_argument, 0, 'j'},

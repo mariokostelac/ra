@@ -14,6 +14,18 @@
 #include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
+// trimming params
+extern int READ_LEN_THRESHOLD;
+
+// BFS params in bubble popping
+extern size_t MAX_NODES;
+extern int MAX_DISTANCE;
+extern double MAX_DIFFERENCE;
+
+// contig extraction params
+extern size_t MAX_BRANCHES;
+extern size_t MAX_START_NODES;
+
 class Edge;
 class Vertex;
 class StringGraph;

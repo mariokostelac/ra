@@ -8,18 +8,6 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
-// trimming params
-static const int READ_LEN_THRESHOLD = 100000;
-
-// BFS params in bubble popping
-static const size_t MAX_NODES = 750;
-static const int MAX_DISTANCE = 2500;
-static const double MAX_DIFFERENCE = 0.05;
-
-// contig extraction params
-static const size_t MAX_BRANCHES = 12;
-static const size_t MAX_START_NODES = 24;
-
 //*****************************************************************************
 // Edge
 
