@@ -1,9 +1,12 @@
-/*
-* Preprocess.cpp
-*
-* Created on: Apr 27, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file Preprocess.cpp
+ *
+ * @brief Preprocess source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Apr 27, 2015
+ */
+
 
 #include "IO.hpp"
 #include "ReadIndex.hpp"
@@ -158,7 +161,6 @@ static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const Re
         }
     }
 
-    // int threshold = kmerDistribution.errorBoundary();
     int threshold = kmerDistribution.errorBoundary(2.0f);
 
     if (threshold == -1) return;
@@ -245,41 +247,10 @@ double KmerDistribution::cumulativeProportion(int n) const {
     return (double) runningSum / sum;
 }
 
-int KmerDistribution::errorBoundary() const {
-
-    int mode = ignoreMode(5);
-    if (mode == -1) return -1;
-
-    // fprintf(stderr, "Trusted mode = %d\n", mode);
-
-    std::vector<int> countVector;
-    toCountVector(countVector, 1000);
-
-    if (countVector.empty()) return -1;
-
-    int sum = 0, idx = -1;
-    double minContribution = std::numeric_limits<double>::max();
-
-    for (int i = 1; i < mode; ++i) {
-
-        sum += countVector[i];
-        double contribution = sum == 0 ? std::numeric_limits<double>::max() : (double) countVector[i] / sum;
-
-        if (contribution < minContribution) {
-            minContribution = contribution;
-            idx = i;
-        }
-    }
-
-    return idx;
-}
-
 int KmerDistribution::errorBoundary(double ratio) const {
 
     int mode = ignoreMode(5);
     if (mode == -1) return -1;
-
-    // fprintf(stderr, "Trusted mode = %d\n", mode);
 
     std::vector<int> countVector;
     toCountVector(countVector, 1000);

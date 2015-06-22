@@ -2,14 +2,14 @@
  * @file EnhancedSuffixArray.hpp
  *
  * @brief EnhancedSuffixArray class header file
- * @details Header file with declaration of EnhancedSuffixArray class and its methods.\n
- * Algorithms were rewritten to c++ from following papers:\n
- *     1. Title: Two efficient algorithms for linear time suffix array construction\n
- *        Authors: Ge Nong, Sen Zhang, Wai Hong Chan\n
- *     2. Title: Replacing suffix trees with enhanced suffix arrays\n
- *        Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch\n
- *     3. Title: Linear-time longest-common-prefix computation in suffix arrays and its applications\n
- *        Authors: Toru Kasai, Gunho Lee, Hiroki Arimura, Setsuo Arikawa, Kunsoo Park\n
+ * @details Header file with declaration of EnhancedSuffixArray class and its methods. \n
+ * Algorithms were rewritten to c++ from following papers: \n
+ *     1. Title: Two efficient algorithms for linear time suffix array construction \n
+ *        Authors: Ge Nong, Sen Zhang, Wai Hong Chan \n
+ *     2. Title: Replacing suffix trees with enhanced suffix arrays \n
+ *        Authors: Mohamed Ibrahim Abouelhoda, Stefan Kurtz, Enno Ohlebusch \n
+ *     3. Title: Linear-time longest-common-prefix computation in suffix arrays and its applications \n
+ *        Authors: Toru Kasai, Gunho Lee, Hiroki Arimura, Setsuo Arikawa, Kunsoo Park \n
  *
  * @author rvaser (robert.vaser@gmail.com)
  * @date Apr 18, 2015
@@ -22,18 +22,18 @@
 /*!
  * @brief EnhancedSuffixArray class
  * @details Enhaced suffix array = suffix array + longest common prefix table +
- * child table (+ other tables which are not needed here).
- * Class is used mostly for pattern search.
+ * child table (+ other tables which are not needed here). Class is used mostly
+ * for pattern search.
  */
 class EnhancedSuffixArray {
 public:
 
     /*!
      * @brief EnhancedSuffixArray constructor
-     * @details Creates EnhancedSuffixArray object from a given string which include
+     * @details Creates an EnhancedSuffixArray object from a given string which include
      * construction of the suffix array, longest common prefix table and child table.
      *
-     * @param [in] str string
+     * @param [in] str string with size less than 2GB
      */
     EnhancedSuffixArray(const std::string& str);
 
@@ -86,12 +86,12 @@ public:
 
     /*!
      * @brief Method for interval longest common prefix length retrieval
-     * @details Method returns the lenght of the longest common prefix of all
+     * @details Method returns the length of the longest common prefix of all
      * suffixes in the given interval [i, j] (complexity: O(1)).
      *
      * @param [in] i interval start position
      * @param [in] j interval end position
-     * @return logest common prefix lenght
+     * @return logest common prefix length
      */
     int intervalLcpLen(int i, int j) const;
 
@@ -107,7 +107,7 @@ public:
      * @brief Method for object serialization
      * @details Method serializes the object to a byte buffer.
      *
-     * @param [out] bytes output byte buffer
+     * @param [out] bytes byte buffer
      * @param [out] bytesLen output byte guffer length
      */
     void serialize(char** bytes, size_t* bytesLen) const;
@@ -116,8 +116,8 @@ public:
      * @brief Method for object deserialization
      * @details Method deserializes the object from a byte buffer.
      *
-     * @param [int] bytes byte buffer
-     * @\return EnhancedSuffixArray object
+     * @param [in] bytes byte buffer
+     * @return EnhancedSuffixArray object
      */
     static EnhancedSuffixArray* deserialize(const char* bytes);
 
@@ -134,7 +134,7 @@ private:
 
     /*!
      * @brief Private EnhancedSuffixArray constructor
-     * @details Creates an empty EnhancedSuffixArray object needed for deserialize method
+     * @details Creates an empty EnhancedSuffixArray object needed for deserialize method.
      */
     EnhancedSuffixArray() {};
 
@@ -142,7 +142,7 @@ private:
      * @brief Method for suffix array creation
      * @details Called by the EnhacedSuffixArray public constructor to create the
      * suffix array with the SA-IS algorithm which is based on induced sorting
-     * (article [1], complexity: O(n))
+     * (article [1], complexity: O(n)).
      *
      * @param [in] s pointer to suffix array
      * @param [in] n length of suffix array
@@ -154,7 +154,7 @@ private:
     /*!
      * @brief Method for longest common prefix table creation
      * @details Called by the EnhacedSuffixArray public constructor to create the
-     * longest common prefix table from informatin in suffix array
+     * longest common prefix table from informatin in suffix array.
      * (article [2], complexity: O(n))
      */
     void createLongestCommonPrefixTable();
@@ -162,7 +162,7 @@ private:
     /*!
      * @brief Method for child table creation
      * @details Called by the EnhacedSuffixArray public constructor to create the
-     * child table from information in longest common prefix table
+     * child table from information in longest common prefix table.
      * (article [3], complexity: O(n))
      */
     void createChildTable();

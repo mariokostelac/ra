@@ -5,6 +5,7 @@ Ra is short for RNA Assembler and it is a C++ implementation of an overlap-layou
 ## Requirements
 - g++ (4.6.3 or higher)
 - GNU Make
+- doxygen (optional)
 
 \*note: It was only tested on Linux (Ubuntu).
 

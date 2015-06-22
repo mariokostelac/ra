@@ -2,7 +2,7 @@
  * @file EditDistance.hpp
  *
  * @brief Edlib wrapper header file
- * @details Wrapper for edlib by @Martinsos (Github: https://github.com/Martinsos/edlib)
+ * @details Wrapper for edlib by @Martinsos (Github: https://github.com/Martinsos/edlib).
  *
  * @author rvaser (robert.vaser@gmail.com)
  * @date Jun 07, 2015
@@ -14,7 +14,7 @@
 
 /*!
  * @brief Edit distance wrapper
- * @details Method returns the edit distance between two strings
+ * @details Method returns the edit distance between two strings.
  *
  * @param [in] query string
  * @param [in] target string

@@ -1,13 +1,15 @@
-/*
-* IO.hpp
-*
-* Created on: Apr 21, 2015
-*     Author: rvaser
-*/
-
-#include "../vendor/afgreader/reader.h"
+/*!
+ * @file IO.cpp
+ *
+ * @brief Input Output methods source file
+ *
+ * @author: rvaser
+ * @date Apr 21, 2015
+ */
 
 #include "IO.hpp"
+
+#include "../vendor/afgreader/reader.h"
 
 #define BUFFER_SIZE 4096
 
