@@ -1,9 +1,11 @@
-/*
-* EnhancedSuffixArray.cpp
-*
-* Created on: Apr 18, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file EnhancedSuffixArray.cpp
+ *
+ * @brief EnhancedSuffixArray class source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Apr 18, 2015
+ */
 
 #include "EnhancedSuffixArray.hpp"
 
