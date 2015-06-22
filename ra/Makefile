@@ -1,4 +1,4 @@
-CP = g++
+CP = g++ -g
 LD = g++
 
 NAME = ra
