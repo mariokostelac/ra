@@ -17,7 +17,7 @@ static const int MAX_DISTANCE = 2500;
 static const double MAX_DIFFERENCE = 0.05;
 
 // contig extraction params
-static const size_t MAX_BRANCHES = 10;
+static const size_t MAX_BRANCHES = 6;
 static const size_t MAX_START_NODES = 20;
 
 //*****************************************************************************
@@ -987,9 +987,10 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int level, int maxLevel) {
+static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int branch,
+    int maxBranch) {
 
-    if (level > maxLevel || visited[vertex->getId()]) {
+    if (branch > maxBranch || visited[vertex->getId()]) {
         return 0;
     }
 
@@ -1004,7 +1005,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
         const auto& edge = edges.front();
         length += edge->getB()->getLength() - edge->getOverlap()->getLength();
         length += lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
-            (direction ^ 1) : direction, visited, level, maxLevel);
+            (direction ^ 1) : direction, visited, branch, maxBranch);
 
     } else if (edges.size() > 1) {
 
@@ -1014,7 +1015,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
         for (const auto& edge : edges) {
 
             int len = lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                direction, visited, level + 1, maxLevel);
+                direction, visited, branch + 1, maxBranch);
 
             if (len > maxLength) {
                 maxLength = len;
