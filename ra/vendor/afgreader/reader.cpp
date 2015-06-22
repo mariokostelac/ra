@@ -11,14 +11,14 @@ using std::stack;
 namespace AMOS {
 
   Reader::Reader(istream& input): input(&input), buff_written(0) {
-    buff = new char[4096];
+    buff = (char*) malloc(4096);
     buff_cap = 4096;
     states.push(OUT);
     line_num = 0;
   }
 
   Reader::~Reader() {
-    delete[] buff;
+    free(buff);
   }
 
   bool Reader::has_next() {
