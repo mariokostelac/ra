@@ -1,9 +1,11 @@
-/*
-* StringGraph.cpp
-*
-* Created on: May 30, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file StringGraph.cpp
+ *
+ * @brief StringGraph and other classes source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date May 30, 2015
+ */
 
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
@@ -169,7 +171,7 @@ void Vertex::markEdge(int id) {
     for (const auto& edge : edgesE_) {
         if (edge->getId() == id) {
             edge->mark();
-            edge->opposite_->mark();
+            edge->pair_->mark();
             return;
         }
     }
@@ -177,7 +179,7 @@ void Vertex::markEdge(int id) {
     for (const auto& edge : edgesB_) {
         if (edge->getId() == id) {
             edge->mark();
-            edge->opposite_->mark();
+            edge->pair_->mark();
             return;
         }
     }
@@ -187,12 +189,12 @@ void Vertex::markEdges() {
 
     for (const auto& edge : edgesE_) {
         edge->mark();
-        edge->opposite_->mark();
+        edge->pair_->mark();
     }
 
     for (const auto& edge : edgesB_) {
         edge->mark();
-        edge->opposite_->mark();
+        edge->pair_->mark();
     }
 }
 
@@ -251,8 +253,8 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
         edges_.emplace_back(edgeB);
         vertices_[verticesDict_.at(overlap->getB())]->addEdge(edgeB);
 
-        edgeA->opposite_ = edgeB;
-        edgeB->opposite_ = edgeA;
+        edgeA->pair_ = edgeB;
+        edgeB->pair_ = edgeA;
     }
 
     timer.stop();
@@ -506,14 +508,14 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     timer.print("SG", "component extraction");
 }
 
-void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
+void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction) {
 
     openedQueue_.clear();
     closedQueue_.clear();
     nodes_.clear();
 
     // BFS search the string graph
-    StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, dir, 0);
+    StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, direction, 0);
 
     openedQueue_.emplace_back(rootNode);
     nodes_.emplace_back(rootNode);
@@ -940,8 +942,9 @@ bool StringGraphWalk::containsEdge(int id) const {
 
 // StringGraphNode
 
-StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, const StringGraphNode* parent, int dir, int distance) :
-    vertex_(vertex), edgeFromParent_(edgeFromParent), parent_(parent), direction_(dir) {
+StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, const StringGraphNode* parent,
+        int direction, int distance) :
+    vertex_(vertex), edgeFromParent_(edgeFromParent), parent_(parent), direction_(direction) {
 
     if (parent_ == nullptr) {
         distance_ = 0;
