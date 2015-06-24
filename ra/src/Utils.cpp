@@ -1,9 +1,11 @@
-/*
-* Utils.cpp
-*
-* Created on: Apr 25, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file Utils.cpp
+ *
+ * @brief Utils source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Apr 25, 2015
+ */
 
 #include <stdlib.h>
 #include <stdio.h>

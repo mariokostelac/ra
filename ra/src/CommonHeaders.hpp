@@ -1,9 +1,11 @@
-/*
-* CommonHeaders.hpp
-*
-* Created on: Apr 13, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file CommonHeaders.hpp
+ *
+ * @brief Common standard headers
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Apr 13, 2015
+ */
 
 #pragma once
 

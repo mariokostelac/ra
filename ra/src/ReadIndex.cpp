@@ -1,9 +1,11 @@
-/*
-* ReadIndex.cpp
-*
-* Created on: May 02, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file ReadIndex.cpp
+ *
+ * @brief ReadIndex class source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date May 02, 2015
+ */
 
 #include "ReadIndex.hpp"
 

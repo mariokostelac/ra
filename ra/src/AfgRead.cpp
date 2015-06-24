@@ -1,9 +1,11 @@
-/*
-* Read.cpp
-*
-* Created on: Apr 20, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file Read.cpp
+ *
+ * @brief Read class source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Apr 20, 2015
+ */
 
 #include "AfgRead.hpp"
 

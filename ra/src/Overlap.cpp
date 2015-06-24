@@ -1,9 +1,12 @@
-/*
-* Overlap.cpp
-*
-* Created on: May 14, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file Overlap.cpp
+ *
+ * @brief Overlap class source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date May 14, 2015
+ */
+
 
 #include "ReadIndex.hpp"
 

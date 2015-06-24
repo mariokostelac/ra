@@ -1,9 +1,12 @@
-/*
-* PartialOrderdAlignment.hpp
-*
-* Created on: Jun 11, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file PartialOrderAlignment.cpp
+ *
+ * @brief Cpppoa wrapper source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Jun 11, 2015
+ */
+
 
 #include "PartialOrderAlignment.hpp"
 

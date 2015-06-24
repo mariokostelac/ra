@@ -1,11 +1,13 @@
 CP = g++ -g
 LD = g++
+DX = doxygen
 
 NAME = ra
 
 OBJ_DIR = obj
 SRC_DIR = src
 VND_DIR = vendor
+DOC_DIR = doc
 INC_DIR = ../include/$(NAME)
 LIB_DIR = ../lib
 EXC_DIR = ../bin
@@ -30,6 +32,7 @@ INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
 LIB = $(LIB_DIR)/lib$(NAME).a
 EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
+DOC = $(DOC_DIR)/DoxyFile
 
 all: $(OBJ)
 
@@ -70,6 +73,10 @@ $(BIN): $(EXC)
 	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
+
+docs:
+	@echo [DX] generating documentation
+	@$(DX) $(DOC)
 
 clean:
 	@echo [RM] cleaning

@@ -1,14 +1,15 @@
-# RA
+# Ra
 
-RA is short for RNA Assembler and it is a C++ implementation of an overlap-layout-consensus transcriptome assembler. It was developed as part of my master's thesis at [FER](http://www.fer.unizg.hr).
+Ra is short for RNA Assembler and it is a C++ implementation of an overlap-layout-consensus transcriptome assembler. It was developed as part of my master's thesis at [FER](http://www.fer.unizg.hr).
 
-## REQUIREMENTS
+## Requirements
 - g++ (4.6.3 or higher)
 - GNU Make
+- doxygen (optional)
 
 \*note: It was only tested on Linux (Ubuntu).
 
-## INSTALLATION
+## Installation
 
 To build the RA project run the following commands from your terminal:
 
@@ -18,7 +19,7 @@ To build the RA project run the following commands from your terminal:
 
 Running the 'make' command will create the bin folder where all executables will be stored.
 
-## MODULES
+## Modules
 
 Currently supported modules are:
 
@@ -29,7 +30,7 @@ Currently supported modules are:
 5. [ra_correct](ra_correct/README.md) - Module is optional and is used to correct reads. If used, it should be called before ra_overlap.
 6. [to_afg](to_afg/README.md) - Module is used for converting read sets from [FASTA][1]/[FASTQ][2] to [afg][3] format. It is neccessary to convert reads because all other modules are using the afg format.
 
-## EXAMPLES
+## Examples
 
 Convert reads:
 

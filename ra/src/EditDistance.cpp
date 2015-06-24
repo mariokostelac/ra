@@ -1,11 +1,15 @@
-/*
-* EditDistance.cpp
-*
-* Created on: Jun 07, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file EditDistance.cpp
+ *
+ * @brief Edlib wrapper source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Jun 07, 2015
+ */
 
 #include "EditDistance.hpp"
+
+ #include "../vendor/edlib/edlib.h"
 
 static unsigned char toUnsignedChar(char c) {
 

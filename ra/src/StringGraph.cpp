@@ -1,9 +1,11 @@
-/*
-* StringGraph.cpp
-*
-* Created on: May 30, 2015
-*     Author: rvaser
-*/
+/*!
+ * @file StringGraph.cpp
+ *
+ * @brief StringGraph and other classes source file
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date May 30, 2015
+ */
 
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
@@ -70,11 +72,6 @@ void Edge::label(std::string& dst) const {
             len = -1 * overlap_->getBHang();
         }
 
-        auto o = overlap_;
-        auto a = a_->getSequence();
-        auto b = b_->getSequence();
-        fprintf(stderr, "a:%d b:%d s:%d l:%d ahg:%d bhg:%d", o->getA(), o->getB(), start, len, o->getAHang(), o->getBHang());
-        fprintf(stderr, " alen: %lu blen:%lu\n", a.length(), b.length());
         dst = b_->getSequence().substr(start, len);
     }
 }
@@ -167,7 +164,7 @@ void Vertex::markEdge(int id) {
     for (const auto& edge : edgesE_) {
         if (edge->getId() == id) {
             edge->mark();
-            edge->opposite_->mark();
+            edge->pair_->mark();
             return;
         }
     }
@@ -175,7 +172,7 @@ void Vertex::markEdge(int id) {
     for (const auto& edge : edgesB_) {
         if (edge->getId() == id) {
             edge->mark();
-            edge->opposite_->mark();
+            edge->pair_->mark();
             return;
         }
     }
@@ -185,12 +182,12 @@ void Vertex::markEdges() {
 
     for (const auto& edge : edgesE_) {
         edge->mark();
-        edge->opposite_->mark();
+        edge->pair_->mark();
     }
 
     for (const auto& edge : edgesB_) {
         edge->mark();
-        edge->opposite_->mark();
+        edge->pair_->mark();
     }
 }
 
@@ -249,8 +246,8 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
         edges_.emplace_back(edgeB);
         vertices_[verticesDict_.at(overlap->getB())]->addEdge(edgeB);
 
-        edgeA->opposite_ = edgeB;
-        edgeB->opposite_ = edgeA;
+        edgeA->pair_ = edgeB;
+        edgeB->pair_ = edgeA;
     }
 
     timer.stop();
@@ -504,14 +501,14 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     timer.print("SG", "component extraction");
 }
 
-void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int dir) {
+void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction) {
 
     openedQueue_.clear();
     closedQueue_.clear();
     nodes_.clear();
 
     // BFS search the string graph
-    StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, dir, 0);
+    StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, direction, 0);
 
     openedQueue_.emplace_back(rootNode);
     nodes_.emplace_back(rootNode);
@@ -938,8 +935,9 @@ bool StringGraphWalk::containsEdge(int id) const {
 
 // StringGraphNode
 
-StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, const StringGraphNode* parent, int dir, int distance) :
-    vertex_(vertex), edgeFromParent_(edgeFromParent), parent_(parent), direction_(dir) {
+StringGraphNode::StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent, const StringGraphNode* parent,
+        int direction, int distance) :
+    vertex_(vertex), edgeFromParent_(edgeFromParent), parent_(parent), direction_(direction) {
 
     if (parent_ == nullptr) {
         distance_ = 0;
@@ -985,13 +983,14 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& visited, int level, int maxLevel) {
+static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int branch,
+    int maxBranch) {
 
-    if (level > maxLevel || visited.count(vertex->getId()) > 0) {
+    if (branch > maxBranch || visited[vertex->getId()]) {
         return 0;
     }
 
-    visited.insert(vertex->getId());
+    visited[vertex->getId()] = true;
 
     const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
@@ -1002,7 +1001,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& v
         const auto& edge = edges.front();
         length += edge->getB()->getLength() - edge->getOverlap()->getLength();
         length += lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
-            (direction ^ 1) : direction, visited, level, maxLevel);
+            (direction ^ 1) : direction, visited, branch, maxBranch);
 
     } else if (edges.size() > 1) {
 
@@ -1012,7 +1011,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& v
         for (const auto& edge : edges) {
 
             int len = lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                direction, visited, level + 1, maxLevel);
+                direction, visited, branch + 1, maxBranch);
 
             if (len > maxLength) {
                 maxLength = len;
@@ -1024,25 +1023,25 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::set<int>& v
         length += maxLength;
     }
 
-    visited.erase(vertex->getId());
+    visited[vertex->getId()] = false;
 
     return length;
 }
 
-static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction) {
+static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction, int maxId) {
 
     int totalLength = start->getLength();
     const Vertex* vertex = start;
 
-    std::set<int> visitedVertices;
+    std::vector<bool> visitedVertices(maxId + 1, false);
 
     while (true) {
 
-        if (visitedVertices.count(vertex->getId()) > 0) {
+        if (visitedVertices[vertex->getId()]) {
             break;
         }
 
-        visitedVertices.insert(vertex->getId());
+        visitedVertices[vertex->getId()] = true;
 
         const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
@@ -1059,7 +1058,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
 
                 const Vertex* next = edge->getB();
 
-                if (visitedVertices.count(next->getId()) > 0) {
+                if (visitedVertices[next->getId()]) {
                     continue;
                 }
 
@@ -1113,6 +1112,11 @@ void StringGraphComponent::extractLongestWalk() {
     // pick n start vertices based on total coverage of their chains to first branch
     std::vector<Candidate> startCandidates;
 
+    int maxId = 0;
+    for (const auto& vertex : vertices_) {
+        maxId = std::max(maxId, vertex->getId());
+    }
+
     for (int direction = 0; direction <= 1; ++direction) {
 
         for (const auto& vertex : vertices_) {
@@ -1120,7 +1124,7 @@ void StringGraphComponent::extractLongestWalk() {
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                std::set<int> visited;
+                std::vector<bool> visited(maxId + 1, false);
                 startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
                     visited, 0, 0));
             }
@@ -1135,7 +1139,7 @@ void StringGraphComponent::extractLongestWalk() {
 
     size_t n = std::min(MAX_START_NODES, startCandidates.size());
 
-    // expand each of n candidates to a full chain and pick the best one (by coverage)
+    // expand each of n candidates to a full chain and pick the best one (by length)
     StringGraphWalk* selectedContig = nullptr;
     int selectedLength = 0;
 
@@ -1145,7 +1149,7 @@ void StringGraphComponent::extractLongestWalk() {
         int direction = std::get<1>(startCandidates[i]);
 
         std::vector<const Edge*> edges;
-        int length = expandVertex(edges, start, direction);
+        int length = expandVertex(edges, start, direction, maxId);
 
         if (length > selectedLength) {
 

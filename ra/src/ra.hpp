@@ -1,11 +1,11 @@
-/*
-* ra.hpp
-*
-* Created on: Jun 9, 2015
-*     Author: rvaser
-*
-@brief ra project wrapper header
-*/
+/*!
+ * @file ra.hpp
+ *
+ * @brief Ra project wrapper header
+ *
+ * @author rvaser (robert.vaser@gmail.com)
+ * @date Jun 9, 2015
+ */
 
 #pragma once
 
