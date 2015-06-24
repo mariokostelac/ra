@@ -16,6 +16,8 @@ public:
 
     virtual int getId() const = 0;
 
+    virtual void setId(uint read_id) = 0;
+
     virtual const std::string& getName() const = 0;
 
     virtual const std::string& getSequence() const = 0;

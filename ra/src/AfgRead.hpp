@@ -20,6 +20,10 @@ public:
         return id_;
     }
 
+    void setId(uint read_id) {
+      id_ = read_id;
+    }
+
     const std::string& getName() const {
         return name_;
     }
