@@ -67,6 +67,18 @@ public:
     virtual void setA(int read_id) = 0;
 
     /*!
+     * @brief Getter for read A
+     * @return read A
+     */
+    virtual Read* getReadA() const = 0;
+
+    /*!
+     * @brief Setter for read A
+     * @return
+     */
+    virtual void setReadA(Read* read) = 0;
+
+    /*!
      * @brief Getter for read B identifier
      * @return read B identifier
      */
@@ -77,6 +89,18 @@ public:
      * @return
      */
     virtual void setB(int read_id) = 0;
+
+    /*!
+     * @brief Getter for read B
+     * @return read B
+     */
+    virtual Read* getReadB() const = 0;
+
+    /*!
+     * @brief Setter for read B identifier
+     * @return
+     */
+    virtual void setReadB(Read* read_id) = 0;
 
     /*!
      * @brief Getter for overlap length

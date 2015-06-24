@@ -174,7 +174,8 @@ static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*
 }
 
 AfgOverlap::AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie) :
-    a_(a), b_(b), length_(length), aHang_(aHang), bHang_(bHang), innie_(innie) {
+    ra_(nullptr), rb_(nullptr), a_(a), b_(b), length_(length),
+    aHang_(aHang), bHang_(bHang), innie_(innie) {
 }
 
 bool AfgOverlap::isUsingPrefix(int readId) const {

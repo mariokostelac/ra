@@ -57,12 +57,28 @@ public:
         a_ = a;
     }
 
+    Read* getReadA() const {
+        return ra_;
+    }
+
+    void setReadA(Read* read) {
+        ra_ = read;
+    }
+
     int getB() const {
         return b_;
     }
 
     void setB(int b) {
         b_ = b;
+    }
+
+    Read* getReadB() const {
+        return rb_;
+    }
+
+    void setReadB(Read* read) {
+        rb_ = read;
     }
 
     int getLength() const {
@@ -97,6 +113,8 @@ public:
 
 private:
 
+    Read* ra_;
+    Read* rb_;
     int a_;
     int b_;
     int length_;
