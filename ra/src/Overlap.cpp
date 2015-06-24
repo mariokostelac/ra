@@ -94,7 +94,7 @@ static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Rea
 }
 
 static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Overlap*>& overlaps,
-    const std::map<int, std::vector<std::pair<int, Overlap*>>>& edges, size_t start, size_t end) {
+    const std::unordered_map<int, std::vector<std::pair<int, Overlap*>>>& edges, size_t start, size_t end) {
 
     for (size_t i = start; i < end; ++i) {
 
@@ -350,7 +350,7 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     Timer timer;
     timer.start();
 
-    std::map<int, std::vector<std::pair<int, Overlap*>>> edges;
+    std::unordered_map<int, std::vector<std::pair<int, Overlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
         edges[overlap->getA()].emplace_back(overlap->getB(), overlap);
