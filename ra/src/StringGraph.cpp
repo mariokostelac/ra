@@ -17,8 +17,8 @@ Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph)
 
     id_ = id;
 
-    a_ = graph->getVertex(readId);
-    b_ = graph->getVertex(overlap->getA() == readId ? overlap->getB() : overlap->getA());
+    src_ = graph->getVertex(readId);
+    dst_ = graph->getVertex(overlap->getA() == readId ? overlap->getB() : overlap->getA());
 
     overlap_ = overlap;
 
@@ -28,15 +28,14 @@ Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph)
 
 void Edge::label(std::string& dst) const {
 
-    if (a_->getId() == overlap_->getA()) {
+    if (src_->getId() == overlap_->getA()) {
         // from A to B
-        // a from overlap is A from edge
         int start, len;
 
         if (overlap_->isInnie()) {
 
-            if (overlap_->isUsingSuffix(b_->getId())) {
-                start = overlap_->getLength(b_->getId());
+            if (overlap_->isUsingSuffix(dst_->getId())) {
+                start = overlap_->getLength(dst_->getId());
                 len = overlap_->getBHang();
             } else {
                 start = 0;
@@ -45,36 +44,35 @@ void Edge::label(std::string& dst) const {
 
         } else {
 
-            if (overlap_->isUsingSuffix(b_->getId())) {
+            if (overlap_->isUsingSuffix(dst_->getId())) {
                 start = 0;
                 len = -1 * overlap_->getAHang();
             } else {
-                start = overlap_->getLength(b_->getId());
+                start = overlap_->getLength(dst_->getId());
                 len = overlap_->getBHang();
             }
         }
 
         auto o = overlap_;
-        auto a = a_->getSequence();
-        auto b = b_->getSequence();
+        auto a = src_->getSequence();
+        auto b = dst_->getSequence();
         fprintf(stderr, "a:%d b:%d s:%d l:%d ahg:%d bhg:%d", o->getA(), o->getB(), start, len, o->getAHang(), o->getBHang());
         fprintf(stderr, " alen: %lu blen:%lu\n", a.length(), b.length());
-        dst = (overlap_->isInnie() ? b_->getReverseComplement() : b_->getSequence()).substr(start, len);
+        dst = (overlap_->isInnie() ? dst_->getReverseComplement() : dst_->getSequence()).substr(start, len);
 
     } else {
         // from B to A
-        // a from overlap is B from edge, and vice versa.
         int start, len;
 
-        if (overlap_->isUsingSuffix(b_->getId())) {
+        if (overlap_->isUsingSuffix(dst_->getId())) {
             start = 0;
             len = overlap_->getAHang();
         } else {
-            start = overlap_->getLength(b_->getId());
+            start = overlap_->getLength(dst_->getId());
             len = -1 * overlap_->getBHang();
         }
 
-        dst = b_->getSequence().substr(start, len);
+        dst = dst_->getSequence().substr(start, len);
     }
 }
 
@@ -112,8 +110,8 @@ void Edge::rkLabel(std::string& dst) const {
 
 const Vertex* Edge::oppositeVertex(int id) const {
 
-    if (id == a_->getId()) return b_;
-    if (id == b_->getId()) return a_;
+    if (id == src_->getId()) return dst_;
+    if (id == dst_->getId()) return src_;
 
     ASSERT(false, "Vertex", "wrong vertex id");
 }
@@ -471,18 +469,18 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
                 const auto& eVertex = this->getVertex(id);
 
                 for (const auto& edge : eVertex->getEdgesB()) {
-                    auto pair = componentVertices.insert(edge->getB()->getId());
+                    auto pair = componentVertices.insert(edge->getDst()->getId());
 
                     if (pair.second == true) {
-                        newExpanded.emplace_back(edge->getB()->getId());
+                        newExpanded.emplace_back(edge->getDst()->getId());
                     }
                 }
 
                 for (const auto& edge : eVertex->getEdgesE()) {
-                    auto pair = componentVertices.insert(edge->getB()->getId());
+                    auto pair = componentVertices.insert(edge->getDst()->getId());
 
                     if (pair.second == true) {
-                        newExpanded.emplace_back(edge->getB()->getId());
+                        newExpanded.emplace_back(edge->getDst()->getId());
                     }
                 }
             }
@@ -568,7 +566,7 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
 
         const Edge* lastEdge = walks[i]->getEdges().back();
 
-        if (lastEdge->getOverlap()->isUsingSuffix(lastEdge->getB()->getId())) {
+        if (lastEdge->getOverlap()->isUsingSuffix(lastEdge->getDst()->getId())) {
             walks1.emplace_back(walks[i]);
         } else {
             walks0.emplace_back(walks[i]);
@@ -663,7 +661,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
 
         double coverage = 0;
         for (const auto& edge : walk->getEdges()) {
-            coverage += edge->getB()->getCoverage();
+            coverage += edge->getDst()->getCoverage();
         }
 
         if (coverage > selectedCoverage) {
@@ -682,7 +680,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
     for (const auto& walk : walks) {
 
         const Vertex* root = walk->getStart();
-        const Vertex* juncture = walk->getEdges().back()->getB();
+        const Vertex* juncture = walk->getEdges().back()->getDst();
 
         std::string sequence;
         walk->extractSequence(sequence);
@@ -728,8 +726,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
             // needed for walks which consist of only 1 edge ("trasitive" walks)
             if (edges.size() == 1) {
 
-                const Vertex* start = edges.front()->getA();
-                const Vertex* end = edges.front()->getB();
+                const Vertex* start = edges.front()->getSrc();
+                const Vertex* end = edges.front()->getDst();
 
                 vertices_[verticesDict_.at(start->getId())]->markEdge(edges.front()->getId());
 
@@ -739,13 +737,13 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
 
             for (size_t e = 0; e < edges.size() - 1; ++e) {
 
-                Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getB()->getId())];
+                Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getDst()->getId())];
 
                 if (walks[selectedWalk]->containsVertex(vertex->getId())) {
 
                     if (!walks[selectedWalk]->containsEdge(edges[e]->getId())) {
 
-                        Vertex* opposite = vertices_[verticesDict_.at(edges[e]->getA()->getId())];
+                        Vertex* opposite = vertices_[verticesDict_.at(edges[e]->getSrc()->getId())];
 
                         opposite->markEdge(edges[e]->getId());
 
@@ -788,7 +786,7 @@ bool StringGraph::isValidWalk(int id, const std::vector<StringGraphWalk*>& walks
         verticesIds.insert(walks[i]->getStart()->getId());
 
         for (size_t j = 0; j < edges.size(); ++j) {
-            verticesIds.insert(edges[j]->getB()->getId());
+            verticesIds.insert(edges[j]->getDst()->getId());
         }
     }
 
@@ -798,11 +796,11 @@ bool StringGraph::isValidWalk(int id, const std::vector<StringGraphWalk*>& walks
 
     for (size_t i = 0; i < edges.size() - 1; ++i) {
 
-        const Vertex* vertex = edges[i]->getB();
+        const Vertex* vertex = edges[i]->getDst();
 
         const auto& edgesB = vertex->getEdgesB();
         for (const auto& edge : edgesB) {
-            if (!edge->isMarked() && verticesIds.count(edge->getB()->getId()) == 0) {
+            if (!edge->isMarked() && verticesIds.count(edge->getDst()->getId()) == 0) {
                 valid = false;
                 break;
             }
@@ -812,7 +810,7 @@ bool StringGraph::isValidWalk(int id, const std::vector<StringGraphWalk*>& walks
 
         const auto& edgesE = vertex->getEdgesE();
         for (const auto& edge : edgesE) {
-            if (!edge->isMarked() && verticesIds.count(edge->getB()->getId()) == 0) {
+            if (!edge->isMarked() && verticesIds.count(edge->getDst()->getId()) == 0) {
                 valid = false;
                 break;
             }
@@ -876,7 +874,7 @@ StringGraphWalk::StringGraphWalk(const Vertex* start) :
 void StringGraphWalk::addEdge(const Edge* edge) {
 
     edges_.emplace_back(edge);
-    visitedVertices_.insert(edge->getB()->getId());
+    visitedVertices_.insert(edge->getDst()->getId());
     visitedEdges_.insert(edge->getId());
 }
 
@@ -908,7 +906,7 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
     // add edge labels
     for (const auto& edge : edges_) {
 
-        int type = getType(edge, edge->getA()->getId());
+        int type = getType(edge, edge->getSrc()->getId());
 
         bool invert = type == prevType ? false : true;
 
@@ -921,7 +919,7 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 
         dst += appendToPrefix ? std::string(label.rbegin(), label.rend()) : label;
 
-        prevType = getType(edge, edge->getB()->getId()) ^ invert;
+        prevType = getType(edge, edge->getDst()->getId()) ^ invert;
     }
 
     if (appendToPrefix) dst = std::string(dst.rbegin(), dst.rend());
@@ -961,7 +959,7 @@ size_t StringGraphNode::expand(std::deque<StringGraphNode*>& queue) {
         std::string label;
         edge->label(label);
 
-        queue.emplace_back(new StringGraphNode(edge->getB(), edge, this,
+        queue.emplace_back(new StringGraphNode(edge->getDst(), edge, this,
             edge->getOverlap()->isInnie() ? (direction_ ^ 1) : direction_,
             label.size()));
     }
@@ -1001,8 +999,8 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        length += edge->getB()->getLength() - edge->getOverlap()->getLength();
-        length += lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ?
+        length += edge->getDst()->getLength() - edge->getOverlap()->getLength();
+        length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, branch, maxBranch);
 
     } else if (edges.size() > 1) {
@@ -1012,7 +1010,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
 
         for (const auto& edge : edges) {
 
-            int len = lengthRecursive(edge->getB(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+            int len = lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
                 direction, visited, branch + 1, maxBranch);
 
             if (len > maxLength) {
@@ -1021,7 +1019,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
             }
         }
 
-        length += selectedEdge->getB()->getLength() - selectedEdge->getOverlap()->getLength();
+        length += selectedEdge->getDst()->getLength() - selectedEdge->getOverlap()->getLength();
         length += maxLength;
     }
 
@@ -1058,7 +1056,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
 
             for (const auto& edge : edges) {
 
-                const Vertex* next = edge->getB();
+                const Vertex* next = edge->getDst();
 
                 if (visitedVertices[next->getId()]) {
                     continue;
@@ -1075,7 +1073,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         }
 
         dst.emplace_back(selectedEdge);
-        vertex = selectedEdge->getB();
+        vertex = selectedEdge->getDst();
 
         totalLength += vertex->getLength() - selectedEdge->getOverlap()->getLength();
 
@@ -1198,8 +1196,8 @@ Contig::Contig(const StringGraphWalk* walk) {
 
     for (const auto& edge : edges) {
 
-        const Vertex* a = edge->getA();
-        const Vertex* b = edge->getB();
+        const Vertex* a = edge->getSrc();
+        const Vertex* b = edge->getDst();
 
         int typeA = getType(edge, a->getId());
         bool invert = typeA == prevType ? false : true;

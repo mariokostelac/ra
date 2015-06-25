@@ -70,16 +70,16 @@ public:
      * @brief Getter for start vertex
      * @return start vertex
      */
-    const Vertex* getA() const {
-        return a_;
+    const Vertex* getSrc() const {
+        return src_;
     }
 
     /*!
      * @brief Getter for end vertex
      * @return end vertex
      */
-    const Vertex* getB() const {
-        return b_;
+    const Vertex* getDst() const {
+        return dst_;
     }
 
     /*!
@@ -139,8 +139,8 @@ public:
 private:
 
     int id_;
-    const Vertex* a_;
-    const Vertex* b_;
+    const Vertex* src_;
+    const Vertex* dst_;
     const Overlap* overlap_;
     Edge* pair_;
     const StringGraph* graph_;
