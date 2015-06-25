@@ -52,14 +52,6 @@ void Edge::label(std::string& dst) const {
                 len = overlap_->getBHang();
             }
         }
-
-        auto o = overlap_;
-        auto a = src_->getSequence();
-        auto b = dst_->getSequence();
-        fprintf(stderr, "a:%d b:%d s:%d l:%d ahg:%d bhg:%d", o->getA(), o->getB(), start, len, o->getAHang(), o->getBHang());
-        fprintf(stderr, " alen: %lu blen:%lu\n", a.length(), b.length());
-        dst = (overlap_->isInnie() ? dst_->getReverseComplement() : dst_->getSequence()).substr(start, len);
-
     } else {
         // from B to A
         int start, len;
