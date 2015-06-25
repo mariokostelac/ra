@@ -669,8 +669,17 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
             selectedCoverage = coverage;
         }
 
-        overlapStart = std::min(overlapStart, walk->getEdges().front()->getOverlap()->getLength());
-        overlapEnd = std::min(overlapEnd, walk->getEdges().back()->getOverlap()->getLength());
+        {
+          const auto& startEdge = walk->getEdges().front();
+          const auto& overlap = startEdge->overlap_;
+          overlapStart = std::min(overlapStart, overlap->getLength(startEdge->getSrc()->getId()));
+        }
+
+        {
+          const auto& endEdge = walk->getEdges().back();
+          const auto& overlap = endEdge->overlap_;
+          overlapEnd = std::min(overlapEnd, overlap->getLength(endEdge->getDst()->getId()));
+        }
 
         ++i;
     }
@@ -999,7 +1008,9 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        length += edge->getDst()->getLength() - edge->getOverlap()->getLength();
+        std::string label;
+        edge->label(label);
+        length += label.length();
         length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, branch, maxBranch);
 
@@ -1019,7 +1030,9 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
             }
         }
 
-        length += selectedEdge->getDst()->getLength() - selectedEdge->getOverlap()->getLength();
+        std::string label;
+        selectedEdge->label(label);
+        length += label.length();
         length += maxLength;
     }
 
@@ -1075,7 +1088,9 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         dst.emplace_back(selectedEdge);
         vertex = selectedEdge->getDst();
 
-        totalLength += vertex->getLength() - selectedEdge->getOverlap()->getLength();
+        std::string l;
+        selectedEdge->label(l);
+        totalLength += l.size();
 
         if (selectedEdge->getOverlap()->isInnie()) {
             direction ^= 1;
@@ -1204,7 +1219,7 @@ Contig::Contig(const StringGraphWalk* walk) {
 
         int typeB = getType(edge, b->getId()) ^ invert;
 
-        offset += a->getLength() - edge->getOverlap()->getLength();
+        offset += a->getLength() - edge->getOverlap()->getLength(a->getId());
 
         lo = direction ? 0 : b->getLength();
         hi = direction ? b->getLength() : 0;
