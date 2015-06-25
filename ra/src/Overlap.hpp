@@ -109,6 +109,14 @@ public:
     virtual int getLength() const = 0;
 
     /*!
+     * @brief Getter for overlap length in given read
+     *
+     * @param [in] readId read identifier
+     * @return length
+     */
+    virtual int getLength(int read_id) const = 0;
+
+    /*!
      * @brief Getter for read A hang
      * @return read A hang
      */

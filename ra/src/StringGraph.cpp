@@ -30,12 +30,13 @@ void Edge::label(std::string& dst) const {
 
     if (a_->getId() == overlap_->getA()) {
         // from A to B
+        // a from overlap is A from edge
         int start, len;
 
         if (overlap_->isInnie()) {
 
             if (overlap_->isUsingSuffix(b_->getId())) {
-                start = overlap_->getLength();
+                start = overlap_->getLength(b_->getId());
                 len = overlap_->getBHang();
             } else {
                 start = 0;
@@ -48,7 +49,7 @@ void Edge::label(std::string& dst) const {
                 start = 0;
                 len = -1 * overlap_->getAHang();
             } else {
-                start = overlap_->getLength();
+                start = overlap_->getLength(b_->getId());
                 len = overlap_->getBHang();
             }
         }
@@ -62,13 +63,14 @@ void Edge::label(std::string& dst) const {
 
     } else {
         // from B to A
+        // a from overlap is B from edge, and vice versa.
         int start, len;
 
         if (overlap_->isUsingSuffix(b_->getId())) {
             start = 0;
             len = overlap_->getAHang();
         } else {
-            start = overlap_->getLength();
+            start = overlap_->getLength(b_->getId());
             len = -1 * overlap_->getBHang();
         }
 

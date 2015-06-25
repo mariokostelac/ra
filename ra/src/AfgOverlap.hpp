@@ -81,9 +81,9 @@ public:
         rb_ = read;
     }
 
-    int getLength() const {
-        return length_;
-    }
+    int getLength() const;
+
+    int getLength(int read_id) const;
 
     int getAHang() const {
         return aHang_;
@@ -121,4 +121,7 @@ private:
     int aHang_;
     int bHang_;
     bool innie_;
+
+    int getLengthA() const;
+    int getLengthB() const;
 };
