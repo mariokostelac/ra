@@ -113,16 +113,31 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Ove
 
             if (it1->first == it2->first) {
 
-                if (overlap->isTransitive(it1->second, it2->second)) {
-                    transitive = true;
+                auto iStart = it1;
+                auto iEnd = iStart;
+                for (auto i = iStart; i != v1.end() && i->first == iStart->first; ++i) {
+                  iEnd++;
                 }
 
-                ++it1;
-                ++it2;
+                auto jStart = it2;
+                auto jEnd = jStart;
+                for (auto j = jStart; j != v2.end() && j->first == jStart->first; ++j) {
+                  jEnd++;
+                }
 
+                for (auto i = iStart; i != iEnd; ++i) {
+                  for (auto j = jStart; j != jEnd; ++j) {
+                    if (overlap->isTransitive(i->second, j->second)) {
+                      transitive = true;
+                      break;
+                    }
+                  }
+                }
+
+                it1 = iEnd;
+                it2 = jEnd;
             } else if (it1->first < it2->first) {
                 ++it1;
-
             } else {
                 ++it2;
             }
@@ -398,7 +413,6 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     }
 
     for (size_t i = 0; i < overlaps.size(); ++i) {
-
         if (!transitive[i]) {
             dst.push_back(view ? overlaps[i] : overlaps[i]->clone());
         }
