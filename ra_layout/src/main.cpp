@@ -12,7 +12,7 @@ int MAX_DISTANCE = 2500;
 double MAX_DIFFERENCE = 0.05;
 
 // contig extraction params
-size_t MAX_BRANCHES = 12;
+size_t MAX_BRANCHES = 20;
 size_t MAX_START_NODES = 24;
 
 const struct option options[] = {

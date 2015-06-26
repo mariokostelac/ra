@@ -96,13 +96,13 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input);
 
 /*!
  * @brief Method for Overlap output
- * @details Method writes Overlap objects to file in AFG format
+ * @details Method writes Overlap objects to file
  *
  * @param [in] reads vector of Overlap objects pointers
  * @param [in] path path to file where the Overlap objects will be stored
  * (if null, stdout is used)
  */
-void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
+void writeOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
 
 /*!
  * @brief Method for Contig input

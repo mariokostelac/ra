@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
     updateOverlapIds(notTransitive, filtered);
 
-    writeAfgOverlaps(notTransitive, overlapsOut);
+    writeOverlaps(notTransitive, overlapsOut);
     writeAfgReads(reads, readsOut == nullptr ? "reads.afg" : readsOut);
 
     for (const auto& it : overlaps) delete it;

@@ -246,7 +246,7 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input) {
     delete reader;
 }
 
-void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
+void writeOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
 
     Timer timer;
     timer.start();
@@ -258,13 +258,7 @@ void writeAfgOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
     std::ostream& out = path == nullptr ? std::cout : file;
 
     for (const auto& overlap : overlaps) {
-        out << "{OVL" << std::endl;
-        out << "adj:" << (overlap->isInnie() ? "I" : "N") << std::endl;
-        out << "rds:" << overlap->getA() << "," << overlap->getB() << std::endl;
-        out << "scr:" << overlap->getLength() << std::endl;
-        out << "ahg:" << overlap->getAHang() << std::endl;
-        out << "bhg:" << overlap->getBHang() << std::endl;
-        out << "}" << std::endl;
+      out << *overlap;
     }
 
     if (path != nullptr) file.close();
