@@ -258,7 +258,7 @@ int AfgOverlap::getLengthA() const {
 }
 
 int AfgOverlap::getLengthB() const {
-    ASSERT(ra_ != nullptr, "Overlap", "Read* b is nullptr");
+    ASSERT(rb_ != nullptr, "Overlap", "Read* b is nullptr");
 
     int len = rb_->getSequence().length();
     if (aHang_ < 0) {

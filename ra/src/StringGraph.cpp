@@ -54,6 +54,9 @@ void Edge::label(std::string& dst) const {
                 len = overlap_->getBHang();
             }
         }
+
+        dst = (overlap_->isInnie() ? dst_->getReverseComplement() : dst_->getSequence()).substr(start, len);
+
     } else {
         // from B to A
         int start, len;
@@ -79,6 +82,8 @@ int Edge::labelLength() {
     std::string l;
     label(l);
     labelLength_ = l.length();
+
+    assert(labelLength_ == abs(overlap_->getAHang()) || labelLength_ == abs(overlap_->getBHang()));
 
     return labelLength_;
 }
@@ -1269,7 +1274,7 @@ Contig* ContigExtractor::extractContig() {
                 std::vector<bool> visited(max_id + 1);
 
                 for (const auto& v: component_->vertices_) {
-                    fprintf(stdout, "%d%c %d\n",
+                    fprintf(stdout, "+ %d%c %d\n",
                         v->getId(),
                         direction == 0 ? 'B' : 'E',
                         longestPath(v->getId(), direction, cache, visited)
