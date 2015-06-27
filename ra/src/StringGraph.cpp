@@ -24,6 +24,8 @@ Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph)
 
     graph_ = graph;
     marked_ = false;
+
+    labelLength_ = -1;
 }
 
 void Edge::label(std::string& dst) const {
@@ -66,6 +68,19 @@ void Edge::label(std::string& dst) const {
 
         dst = dst_->getSequence().substr(start, len);
     }
+}
+
+int Edge::labelLength() {
+
+    if (labelLength_ > -1) {
+        return labelLength_;
+    }
+
+    std::string l;
+    label(l);
+    labelLength_ = l.length();
+
+    return labelLength_;
 }
 
 void Edge::rkLabel(std::string& dst) const {
@@ -951,18 +966,15 @@ size_t StringGraphNode::expand(std::deque<StringGraphNode*>& queue) {
 
     const auto& edges = direction_ == 0 ? vertex_->getEdgesB() : vertex_->getEdgesE();
 
-    for (const auto& edge : edges) {
+    for (auto& edge : edges) {
 
         if (edge->isMarked()) {
             continue;
         }
 
-        std::string label;
-        edge->label(label);
-
         queue.emplace_back(new StringGraphNode(edge->getDst(), edge, this,
             edge->getOverlap()->isInnie() ? (direction_ ^ 1) : direction_,
-            label.size()));
+            edge->labelLength()));
     }
 
     return edges.size();
@@ -1000,16 +1012,14 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        std::string label;
-        edge->label(label);
-        length += label.length();
+        length += edge->labelLength();
         length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, branch, maxBranch);
 
     } else if (edges.size() > 1) {
 
         int maxLength = 0;
-        const Edge* selectedEdge = edges.front();
+        Edge* selectedEdge = edges.front();
 
         for (const auto& edge : edges) {
 
@@ -1022,9 +1032,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
             }
         }
 
-        std::string label;
-        selectedEdge->label(label);
-        length += label.length();
+        length += selectedEdge->labelLength();
         length += maxLength;
     }
 
@@ -1054,7 +1062,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
             break;
         }
 
-        const Edge* selectedEdge = edges.front();
+        Edge* selectedEdge = edges.front();
         double selectedLength = 0;
 
         if (edges.size() > 1) {
@@ -1080,9 +1088,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         dst.emplace_back(selectedEdge);
         vertex = selectedEdge->getDst();
 
-        std::string l;
-        selectedEdge->label(l);
-        totalLength += l.size();
+        totalLength += selectedEdge->labelLength();
 
         if (selectedEdge->getOverlap()->isInnie()) {
             direction ^= 1;
@@ -1229,6 +1235,87 @@ Contig* StringGraphComponent::createContig() {
     if (walk_ == nullptr) extractLongestWalk();
     if (walk_ != nullptr) return new Contig(walk_);
     return nullptr;
+}
+
+//*****************************************************************************
+//
+//*****************************************************************************
+// ContigExtractor
+
+template <>
+struct std::hash<std::pair<int, bool>> {
+public:
+    size_t operator()(std::pair<int, bool> x) const throw() {
+        return x.first ^ x.second;
+    }
+};
+
+Contig* ContigExtractor::extractContig() {
+
+    int max_id = 0;
+
+    for (const auto& v: component_->vertices_) {
+        max_id = std::max(max_id, v->getId());
+    }
+
+    for (int direction = 0; direction <= 1; ++direction) {
+
+        for (const auto& vertex : component_->vertices_) {
+
+            if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
+                (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
+
+                std::unordered_map<std::pair<int, bool>, int> cache;
+                std::vector<bool> visited(max_id + 1);
+
+                for (const auto& v: component_->vertices_) {
+                    fprintf(stdout, "%d%c %d\n",
+                        v->getId(),
+                        direction == 0 ? 'B' : 'E',
+                        longestPath(v->getId(), direction, cache, visited)
+                    );
+                }
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+int ContigExtractor::longestPath(int vertexId, bool asBegin,
+    std::unordered_map<std::pair<int, bool>, int>& cache,
+    std::vector<bool>& visited) {
+
+    const auto& key = std::make_pair(vertexId, asBegin);
+    if (cache.count(key) == 1) {
+        return cache[key];
+    }
+
+    if (visited[vertexId]) {
+        return 0; // loop
+    }
+
+    visited[vertexId] = true;
+
+    const auto& vertex = component_->graph_->getVertex(vertexId);
+    std::list<Edge*> edges = asBegin ? vertex->getEdgesB() : vertex->getEdgesE();
+
+    int maxLength = vertex->getLength();
+
+    for (const auto& e: edges) {
+        bool asBeginNext = asBegin ^ e->getOverlap()->isInnie();
+        const auto& nextVertex = e->getDst();
+
+        const int currLen = longestPath(nextVertex->getId(), asBeginNext, cache, visited)
+            + vertex->getLength() + e->labelLength() - nextVertex->getLength();
+
+        maxLength = std::max(maxLength, currLen);
+    }
+
+    visited[vertexId] = false;
+
+    cache[key] = maxLength;
+    return cache[key];
 }
 
 //*****************************************************************************

@@ -116,6 +116,8 @@ public:
      */
     void label(std::string& dst) const;
 
+    int labelLength();
+
     /*!
      * @brief Method for reverse complement label extraction
      * @details Method calls label and reverse complements it.
@@ -145,6 +147,7 @@ private:
     Edge* pair_;
     const StringGraph* graph_;
     bool marked_;
+    int labelLength_;
 };
 
 /*!
@@ -646,6 +649,7 @@ private:
  */
 class StringGraphComponent {
 public:
+    friend class ContigExtractor;
 
     /*!
      * @brief StringGraphComponent constructor
@@ -732,7 +736,7 @@ public:
 
     /*!
      * @brief Method for adding parts
-     * 
+     *
      * @param [in] part part tuple to be added to parts
      */
     void addPart(const Part& part) {
@@ -742,4 +746,18 @@ public:
 private:
 
     std::vector<Part> parts_;
+};
+
+class ContigExtractor {
+public:
+    ContigExtractor(StringGraphComponent* component) : component_(component) {}
+
+    Contig* extractContig();
+
+private:
+    StringGraphComponent* component_;
+
+    int longestPath(int vertexId, bool usePrefix,
+        std::unordered_map<std::pair<int, bool>, int>& cache,
+        std::vector<bool>& visited);
 };
