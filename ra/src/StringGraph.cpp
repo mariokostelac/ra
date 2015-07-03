@@ -1247,13 +1247,15 @@ Contig* StringGraphComponent::createContig() {
 //*****************************************************************************
 // ContigExtractor
 
-template <>
-struct std::hash<std::pair<int, bool>> {
-public:
-    size_t operator()(std::pair<int, bool> x) const throw() {
-        return x.first ^ x.second;
-    }
-};
+namespace std {
+  template <>
+    struct hash<std::pair<int, bool>> {
+      public:
+        size_t operator()(std::pair<int, bool> x) const throw() {
+          return x.first ^ x.second;
+        }
+    };
+}
 
 Contig* ContigExtractor::extractContig() {
 
