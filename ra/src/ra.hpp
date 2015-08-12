@@ -11,6 +11,8 @@
 
 #include "AfgRead.hpp"
 #include "AfgOverlap.hpp"
+#include "Contig.hpp"
+#include "ContigExtractor.hpp"
 #include "CommonHeaders.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"

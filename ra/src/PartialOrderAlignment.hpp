@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Contig.hpp"
 #include "Read.hpp"
 #include "StringGraph.hpp"
 #include "CommonHeaders.hpp"

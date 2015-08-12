@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "Contig.hpp"
 #include "Read.hpp"
 #include "Overlap.hpp"
 #include "StringGraph.hpp"

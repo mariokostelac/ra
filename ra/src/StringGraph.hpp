@@ -33,7 +33,6 @@ class StringGraph;
 class StringGraphWalk;
 class StringGraphNode;
 class StringGraphComponent;
-class Contig;
 
 /*!
  * @brief Edge class
@@ -667,15 +666,6 @@ public:
     ~StringGraphComponent();
 
     /*!
-     * @brief Method for contig extraction
-     * @details Calls extractLongestWalk if nullptr is store in walk_ and creates
-     * a contig from walk_.
-     *
-     * @return Contig object pointer (if a walk was found, else nullptr)
-     */
-    Contig* createContig();
-
-    /*!
      * @brief Method for sequence extraction
      * @details Calls extractLongestWalk if nullptr is store in walk_ and extracts
      * the sequence from walk_.
@@ -693,71 +683,3 @@ private:
     StringGraphWalk* walk_;
 };
 
-/*!
- * @brief Contig class
- * @details Holds a different notation for a StringGraphWalk
- */
-class Contig {
-public:
-
-    /*!
-     * @brief Part tuple
-     * @details Part tuple = read id, type: normal 0 - rk 1, offset, lo, hi.
-     * It is used for writig contigs in afg format.
-     */
-    typedef std::tuple<int, int, int, int, int> Part;
-
-    /*!
-     * @brief Contig constructor
-     * @details Creates an empty Contig object
-     */
-    Contig() {}
-
-    /*!
-     * @brief Contig constructor
-     * @details Creates a Contig object from SringGraphWalk object
-     *
-     * @param [in] walk StrinGraphWalk object pointer
-     */
-    Contig(const StringGraphWalk* walk);
-
-    /*!
-     * @brief Contig destructor
-     */
-    ~Contig() {}
-
-    /*!
-     * @brief Getter for contig parts
-     * @return parts
-     */
-    const std::vector<Part>& getParts() const {
-        return parts_;
-    }
-
-    /*!
-     * @brief Method for adding parts
-     *
-     * @param [in] part part tuple to be added to parts
-     */
-    void addPart(const Part& part) {
-        parts_.emplace_back(part);
-    }
-
-private:
-
-    std::vector<Part> parts_;
-};
-
-class ContigExtractor {
-public:
-    ContigExtractor(StringGraphComponent* component) : component_(component) {}
-
-    Contig* extractContig();
-
-private:
-    StringGraphComponent* component_;
-
-    int longestPath(int vertexId, bool usePrefix,
-        std::unordered_map<std::pair<int, bool>, int>& cache,
-        std::vector<bool>& visited);
-};
