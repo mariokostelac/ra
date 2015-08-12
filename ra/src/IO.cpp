@@ -305,7 +305,7 @@ void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
                         break;
                     }
                     end = true;
-                    contig->addPart(Contig::Part(id, type, off, lo, hi));
+                    contig->addPart(ContigPart(id, lo, hi, off));
                 }
             }
 
@@ -339,10 +339,10 @@ void writeAfgContigs(const std::vector<Contig*>& contigs, const char* path) {
         for (const auto& part : contig->getParts()) {
 
             out << "{TLE" << std::endl;
-            out << "clr:" << std::get<3>(part) << "," << std::get<4>(part) << std::endl;
-            out << "off:" << std::get<2>(part) << std::endl;
-            out << "src:" << std::get<0>(part) << std::endl;
-            out << "rvc:" << std::get<1>(part) << std::endl;
+            out << "clr:" << part.clr_lo << "," << part.clr_hi << std::endl;
+            out << "off:" << part.offset << std::endl;
+            out << "src:" << part.src << std::endl;
+            out << "rvc:" << part.type() << std::endl;
             out << "}" << std::endl;
         }
 

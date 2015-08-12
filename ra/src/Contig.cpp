@@ -24,7 +24,7 @@ Contig::Contig(const StringGraphWalk* walk) {
     int lo = direction ? 0 : start->getLength();
     int hi = direction ? start->getLength() : 0;
 
-    parts_.emplace_back(start->getId(), startType, offset, lo, hi);
+    parts_.emplace_back(start->getId(), lo, hi, offset);
 
     int prevType = startType;
 
@@ -43,7 +43,7 @@ Contig::Contig(const StringGraphWalk* walk) {
         lo = direction ? 0 : b->getLength();
         hi = direction ? b->getLength() : 0;
 
-        parts_.emplace_back(b->getId(), typeB, offset, lo, hi);
+        parts_.emplace_back(b->getId(), lo, hi, offset);
 
         prevType = typeB;
     }

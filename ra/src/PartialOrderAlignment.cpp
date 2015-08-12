@@ -18,8 +18,8 @@ extern std::string consensus(const Contig* contig, const std::vector<Read*>& rea
 
     for (const auto& part : contig->getParts()) {
 
-        int id = std::get<0>(part);
-        int type = std::get<1>(part);
+        int id = part.src;
+        int type = part.type(); 
 
         sequences.emplace_back(type ? reads[id]->getReverseComplement() : reads[id]->getSequence());
     }
