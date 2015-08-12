@@ -285,7 +285,7 @@ void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
             bool end = true;
             Contig* contig = new Contig();
 
-            int lo, hi, off, id, type;
+            int lo, hi, off, id;
 
             while (std::getline(f, line)) {
 
@@ -297,8 +297,6 @@ void readAfgContigs(std::vector<Contig*>& contigs, const char* path) {
                 } else if (sscanf(line.c_str(), "off:%d", &off) == 1) {
                     // skip
                 } else if (sscanf(line.c_str(), "src:%d", &id) == 1) {
-                    // skip
-                } else if (sscanf(line.c_str(), "rvc:%d", &type) == 1) {
                     // skip
                 } else if (std::strncmp(line.c_str(), "}", 1) == 0) {
                     if (end == true) {
