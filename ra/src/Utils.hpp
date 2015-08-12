@@ -20,6 +20,8 @@
         }\
     } while (0)
 
+typedef unsigned int uint;
+
 /*!
  * @brief Timer class
  */

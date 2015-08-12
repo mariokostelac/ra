@@ -3,6 +3,23 @@ LD = g++
 
 NAME = to_afg
 
+UNAME_S := $(shell uname -s)
+versions := 0
+
+ifeq ($(UNAME_S),Darwin)
+	compiler := $(shell g++-4.8 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.8
+		LD = g++-4.8
+	endif
+
+	compiler := $(shell g++-4.9 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.9
+		LD = g++-4.8
+	endif
+endif
+
 OBJ_DIR = obj
 SRC_DIR = src
 INC_DIR = ../include/$(NAME)

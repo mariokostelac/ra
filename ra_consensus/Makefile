@@ -3,6 +3,23 @@ LD = g++
 
 NAME = ra_consensus
 
+UNAME_S := $(shell uname -s)
+versions := 0
+
+ifeq ($(UNAME_S),Darwin)
+	compiler := $(shell g++-4.8 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.8
+		LD = g++-4.8
+	endif
+
+	compiler := $(shell g++-4.9 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.9
+		LD = g++-4.8
+	endif
+endif
+
 OBJ_DIR = obj
 SRC_DIR = src
 INC_DIR = ../include/$(NAME)
@@ -51,7 +68,7 @@ $(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
 	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
-	
+
 $(LIB): $(OBJ)
 	@echo [AR] $@
 	@mkdir -p $(dir $@)
@@ -61,7 +78,7 @@ $(BIN): $(EXC)
 	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
-	
+
 clean:
 	@echo [RM] cleaning
 	@rm $(OBJ_DIR) $(EXC) -rf

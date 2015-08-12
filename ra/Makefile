@@ -2,6 +2,23 @@ CP = g++ -g
 LD = g++
 DX = doxygen
 
+UNAME_S := $(shell uname -s)
+versions := 0
+
+ifeq ($(UNAME_S),Darwin)
+	compiler := $(shell g++-4.8 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.8
+		LD = g++-4.8
+	endif
+
+	compiler := $(shell g++-4.9 --version 2>/dev/null)
+	ifdef compiler
+		CP = g++-4.9
+		LD = g++-4.8
+	endif
+endif
+
 NAME = ra
 
 OBJ_DIR = obj
