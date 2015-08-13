@@ -34,7 +34,11 @@ extern std::string consensus(const Contig* contig, const std::vector<Read*>& rea
       seqs.emplace_back(result.substr(break_index, result.size() - break_index));
       seqs.emplace_back(curr_seq);
 
+      Timer t;
+      t.start();
       const auto& aligned = poa_consensus(seqs);
+      t.stop();
+      t.print("consensus", "poa");
 
       result = fixed + aligned;
 
