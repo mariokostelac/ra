@@ -1,4 +1,4 @@
-CP = g++ -g
+CP = g++
 LD = g++
 DX = doxygen
 
@@ -15,7 +15,7 @@ ifeq ($(UNAME_S),Darwin)
 	compiler := $(shell g++-4.9 --version 2>/dev/null)
 	ifdef compiler
 		CP = g++-4.9
-		LD = g++-4.8
+		LD = g++-4.9
 	endif
 endif
 
@@ -33,7 +33,7 @@ I_CMD = $(addprefix -I, $(SRC_DIR))
 I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, )
 
-CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall
+CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall -g
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
 API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp ContigExtractor.hpp EnhancedSuffixArray.hpp IO.hpp \

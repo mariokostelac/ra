@@ -12,6 +12,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <limits>
+#include <iostream>
+#include <cassert>
 
 #include "./alignment.hpp"
 #include "./graph.hpp"
@@ -23,7 +25,6 @@ using std::tuple;
 using std::get;
 using std::numeric_limits;
 
-
 int Alignment::match_score_ = 4;
 int Alignment::mismatch_score_ = -2;
 int Alignment::open_gap_score_ = -4;
@@ -32,7 +33,9 @@ int Alignment::extend_gap_score_ = -2;
 
 Alignment::Alignment(const string& sequence,
                      const Graph& graph): sequence_(sequence),
-                                          graph_(graph) {}
+                                          graph_(graph) {
+    assert(sequence.size() > 0);
+}
 
 
 move Alignment::get_best_move(const vector<move>& candidates) {
