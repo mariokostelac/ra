@@ -7,10 +7,20 @@
  * @date Apr 25, 2015
  */
 
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "Utils.hpp"
+
+void debug(const char* fmt, ...) {
+#ifdef DEBUG
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(stderr, fmt, args);
+  va_end(args);
+#endif
+}
 
 Timer::Timer() :
     paused_(0), time_(0), timeval_() {

@@ -51,6 +51,12 @@ EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
 DOC = $(DOC_DIR)/DoxyFile
 
+DEBUG := $(shell env | grep DEBUG | cut -d= -f2)
+ifeq ($(DEBUG),1)
+	CP_FLAGS += -g
+	CP_FLAGS += -DDEBUG
+endif
+
 all: $(OBJ)
 
 install: lib include

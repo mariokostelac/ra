@@ -22,6 +22,8 @@
 
 typedef unsigned int uint;
 
+void debug(const char* fmt, ...);
+
 /*!
  * @brief Timer class
  */
