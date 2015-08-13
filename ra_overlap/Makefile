@@ -44,6 +44,12 @@ LIB = $(LIB_DIR)/lib$(NAME).a
 EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
 
+DEBUG := $(shell env | grep DEBUG | cut -d= -f2)
+ifeq ($(DEBUG),1)
+	CP_FLAGS += -g
+	CP_FLAGS += -DDEBUG
+endif
+
 all: $(EXC)
 
 install: bin
@@ -68,7 +74,7 @@ $(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
 	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
-	
+
 $(LIB): $(OBJ)
 	@echo [AR] $@
 	@mkdir -p $(dir $@)
@@ -78,7 +84,7 @@ $(BIN): $(EXC)
 	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
-	
+
 clean:
 	@echo [RM] cleaning
 	@rm $(OBJ_DIR) $(EXC) -rf
