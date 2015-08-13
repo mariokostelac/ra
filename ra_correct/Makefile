@@ -16,7 +16,7 @@ ifeq ($(UNAME_S),Darwin)
 	compiler := $(shell g++-4.9 --version 2>/dev/null)
 	ifdef compiler
 		CP = g++-4.9
-		LD = g++-4.8
+		LD = g++-4.9
 	endif
 endif
 
