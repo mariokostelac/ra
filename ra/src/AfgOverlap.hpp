@@ -49,38 +49,6 @@ public:
     AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
     ~AfgOverlap() {}
 
-    int getA() const {
-        return a_;
-    }
-
-    void setA(int a) {
-        a_ = a;
-    }
-
-    Read* getReadA() const {
-        return ra_;
-    }
-
-    void setReadA(Read* read) {
-        ra_ = read;
-    }
-
-    int getB() const {
-        return b_;
-    }
-
-    void setB(int b) {
-        b_ = b;
-    }
-
-    Read* getReadB() const {
-        return rb_;
-    }
-
-    void setReadB(Read* read) {
-        rb_ = read;
-    }
-
     int getLength() const;
 
     int getLength(int read_id) const;
@@ -113,10 +81,6 @@ public:
 
 private:
 
-    Read* ra_;
-    Read* rb_;
-    int a_;
-    int b_;
     int length_;
     int aHang_;
     int bHang_;

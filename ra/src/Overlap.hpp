@@ -50,6 +50,17 @@ class Overlap {
 public:
 
     /*!
+     * @brief Overlap constructor
+     */
+    Overlap(const int read_id_a, const int read_id_b): a_(read_id_a), b_(read_id_b) {}
+
+    /*!
+     * @brief Overlap constructor
+     */
+    Overlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b):
+      a_(read_id_a), ra_(read_a), b_(read_id_b), rb_(read_b) {}
+
+    /*!
      * @brief Overlap destructor
      */
     virtual ~Overlap() {}
@@ -58,49 +69,65 @@ public:
      * @brief Getter for read A identifier
      * @return read A identifier
      */
-    virtual int getA() const = 0;
+    int getA() const {
+      return a_;
+    }
 
     /*!
      * @brief Setter for read A identifier
      * @return
      */
-    virtual void setA(int read_id) = 0;
+    void setA(int read_id) {
+      a_ =  read_id;
+    }
 
     /*!
      * @brief Getter for read A
      * @return read A
      */
-    virtual Read* getReadA() const = 0;
+    Read* getReadA() const {
+      return ra_;
+    }
 
     /*!
      * @brief Setter for read A
      * @return
      */
-    virtual void setReadA(Read* read) = 0;
+    void setReadA(Read* read) {
+      ra_ = read;
+    }
 
     /*!
      * @brief Getter for read B identifier
      * @return read B identifier
      */
-    virtual int getB() const = 0;
+    int getB() const {
+      return b_;
+    }
 
     /*!
      * @brief Setter for read B identifier
      * @return
      */
-    virtual void setB(int read_id) = 0;
+    void setB(int read_id) {
+      b_ = read_id;
+    }
 
     /*!
      * @brief Getter for read B
      * @return read B
      */
-    virtual Read* getReadB() const = 0;
+    Read* getReadB() const {
+      return rb_;
+    }
 
     /*!
      * @brief Setter for read B identifier
      * @return
      */
-    virtual void setReadB(Read* read_id) = 0;
+    void setReadB(Read* read) {
+      rb_ = read;
+    }
 
     /*!
      * @brief Getter for overlap length
@@ -211,6 +238,14 @@ public:
       data.print(str);
       return str;
     }
+
+private:
+
+    int a_;
+    Read* ra_;
+
+    int b_;
+    Read* rb_;
 };
 
 /*!
