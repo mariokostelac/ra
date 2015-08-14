@@ -43,6 +43,15 @@ bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
         return false;
     }
 
+    debug("ISTRAN %d %d because of %d %d and %d %d",
+        o1->getA(),
+        o1->getB(),
+        o2->getA(),
+        o2->getB(),
+        o3->getA(),
+        o3->getB()
+    );
+
     return true;
 }
 

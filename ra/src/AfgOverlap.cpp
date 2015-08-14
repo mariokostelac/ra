@@ -346,6 +346,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         if (overlap->isUsingPrefix(a) && overlap->isUsingSuffix(a)) {
             // readA is contained
             contained[a] = true;
+            debug("ISCONT %d\n", a);
 
             reads[b]->addCoverage(reads[a]->getLength() / (double) reads[b]->getLength());
 
@@ -357,13 +358,17 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         if (overlap->isUsingPrefix(b) && overlap->isUsingSuffix(b)) {
             // readB is contained
             contained[b] = true;
+            debug("ISCONT %d\n", b);
 
             reads[a]->addCoverage(reads[b]->getLength() / (double) reads[a]->getLength());
         }
     }
 
     for (const auto& overlap : overlaps) {
-        if (contained[overlap->getA()] || contained[overlap->getB()]) continue;
+        if (contained[overlap->getA()] || contained[overlap->getB()]) {
+          debug("SKIPCONT %d %d\n", overlap->getA(), overlap->getB());
+          continue;
+        }
 
         dst.push_back(view ? overlap : overlap->clone());
     }
@@ -415,6 +420,8 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
     for (size_t i = 0; i < overlaps.size(); ++i) {
         if (!transitive[i]) {
             dst.push_back(view ? overlaps[i] : overlaps[i]->clone());
+        } else {
+            debug("SKIPTRAN %d %d\n", overlaps[i]->getReadA(), overlaps[i]->getReadB());
         }
     }
 
