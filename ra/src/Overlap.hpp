@@ -78,6 +78,7 @@ public:
      * @return
      */
     void setA(int read_id) {
+      debug("OVLCHID %d %d A\n", a_, read_id);
       a_ =  read_id;
     }
 
@@ -110,6 +111,7 @@ public:
      * @return
      */
     void setB(int read_id) {
+      debug("OVLCHID %d %d B\n", b_, read_id);
       b_ = read_id;
     }
 
