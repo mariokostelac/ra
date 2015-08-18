@@ -11,8 +11,11 @@
 #include "PartialOrderAlignment.hpp"
 
 #include "../vendor/cpppoa/poa.hpp"
+#include "../vendor/cpppoa/graph.hpp"
+#include "../vendor/cpppoa/alignment.hpp"
 
 const double THRESHOLD = 0.05;
+const double BAND_PERCENTAGE = 0.1;
 
 extern std::string consensus(const Contig* contig, const std::vector<Read*>& reads) {
 
@@ -22,28 +25,24 @@ extern std::string consensus(const Contig* contig, const std::vector<Read*>& rea
     }
 
     auto& first = contig->getParts().front();
-    string result = first.type() ? reads[first.src]->getReverseComplement() : reads[first.src]->getSequence();
+    POA::Graph graph(first.type() ? reads[first.src]->getReverseComplement() : reads[first.src]->getSequence(), "seq0");
 
     for (int i = 1; i < size; ++i) {
       const auto& curr = contig->getParts()[i];
       const auto& curr_seq = curr.type() ? reads[curr.src]->getReverseComplement() : reads[curr.src]->getSequence();
-      const int break_index = std::max(0, (int) (curr.offset - curr_seq.length()*THRESHOLD));
-
-      const auto& fixed = result.substr(0, break_index);
-      vector<string> seqs;
-      seqs.emplace_back(result.substr(break_index, result.size() - break_index));
-      seqs.emplace_back(curr_seq);
+      const int offset = std::max((int) (curr.offset - THRESHOLD * curr_seq.length()), (int) (BAND_PERCENTAGE * curr_seq.length()));
 
       Timer t;
       t.start();
-      const auto& aligned = poa_consensus(seqs);
+      POA::Alignment aln(const_cast<string&>(curr_seq), graph);
+      aln.align_banded_starting_at(offset, BAND_PERCENTAGE * curr_seq.length());
       t.stop();
       t.print("consensus", "poa");
 
-      result = fixed + aligned;
-
-      fprintf(stderr, "%d o:%d ovllen:%lu reslen:%lu\n", i, break_index, aligned.length(), result.length());
+      graph.insertSequenceAlignment(aln, curr_seq, "seq" + std::to_string(i));
     }
 
-    return result;
+    string consensus;
+    graph.generate_consensus(&consensus);
+    return consensus;
 }
