@@ -10,6 +10,8 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
+inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk);
+
 //*****************************************************************************
 // Edge
 
@@ -290,6 +292,7 @@ void StringGraph::trim() {
         if (vertex->getEdgesB().size() == 0 && vertex->getEdgesE().size() == 0) {
             vertex->mark();
             ++disconnectedNum;
+            debug("TRIM %d DISCONNECTED\n", vertex->getId());
             continue;
         }
 
@@ -322,13 +325,16 @@ void StringGraph::trim() {
                     vertex->markEdges();
                     ++tipsNum;
 
+                    debug("TRIM %d TIP\n", vertex->getId());
                     break;
                 }
             }
 
             if (vertex->isMarked()) {
                 for (const auto& edge : edges) {
-                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
+                    const auto id = edge->oppositeVertex(vertex->getId())->getId();
+                    debug("TRIM %d TIP EDGE CONNECTION\n", id);
+                    marked_.emplace_back(id);
                 }
             }
         }
@@ -737,59 +743,76 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
         }
 
         int distance = editDistance(sequences[i], sequences[selectedWalk]);
+        if (distance / (double) sequences[selectedWalk].size() >= MAX_DIFFERENCE) {
+            auto curr_repr = vertices_sequence_from_walk(walks[i]);
+            auto selected_repr = vertices_sequence_from_walk(walks[selectedWalk]);
+            debug("KEEPBUBBLE %s because diff with %s is %f > %f\n",
+                    curr_repr.c_str(), selected_repr.c_str(),
+                    distance / (double) sequences[selectedWalk].size(),
+                    MAX_DIFFERENCE
+            );
 
-        if (distance / (double) sequences[selectedWalk].size() < MAX_DIFFERENCE && isValidWalk(i, walks)) {
+            continue;
+        }
 
-            // mark walk for removal
+        if (!isValidWalk(i, walks)) {
+            auto curr_repr = vertices_sequence_from_walk(walks[i]);
+            debug("KEEPBUBBLE %s because not valid\n", curr_repr.c_str());
 
-            const auto& edges = walks[i]->getEdges();
+            continue;
+        }
 
-            // needed for walks which consist of only 1 edge ("trasitive" walks)
-            if (edges.size() == 1) {
+        auto curr_repr = vertices_sequence_from_walk(walks[i]);
+        debug("RMBUBBLE %s\n", curr_repr.c_str());
 
-                const Vertex* start = edges.front()->getSrc();
-                const Vertex* end = edges.front()->getDst();
+        // mark walk for removal
+        const auto& edges = walks[i]->getEdges();
 
-                vertices_[verticesDict_.at(start->getId())]->markEdge(edges.front()->getId());
+        // needed for walks which consist of only 1 edge ("trasitive" walks)
+        if (edges.size() == 1) {
 
-                marked_.emplace_back(start->getId());
-                marked_.emplace_back(end->getId());
+            const Vertex* start = edges.front()->getSrc();
+            const Vertex* end = edges.front()->getDst();
+
+            vertices_[verticesDict_.at(start->getId())]->markEdge(edges.front()->getId());
+
+            marked_.emplace_back(start->getId());
+            marked_.emplace_back(end->getId());
+        }
+
+        for (size_t e = 0; e < edges.size() - 1; ++e) {
+
+            Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getDst()->getId())];
+
+            if (walks[selectedWalk]->containsVertex(vertex->getId())) {
+
+                if (!walks[selectedWalk]->containsEdge(edges[e]->getId())) {
+
+                    Vertex* opposite = vertices_[verticesDict_.at(edges[e]->getSrc()->getId())];
+
+                    opposite->markEdge(edges[e]->getId());
+
+                    marked_.emplace_back(vertex->getId());
+                    marked_.emplace_back(opposite->getId());
+
+                    popped = true;
+                }
+
+                continue;
             }
 
-            for (size_t e = 0; e < edges.size() - 1; ++e) {
+            vertex->mark();
+            vertex->markEdges();
 
-                Vertex* vertex = vertices_[verticesDict_.at(edges[e]->getDst()->getId())];
-
-                if (walks[selectedWalk]->containsVertex(vertex->getId())) {
-
-                    if (!walks[selectedWalk]->containsEdge(edges[e]->getId())) {
-
-                        Vertex* opposite = vertices_[verticesDict_.at(edges[e]->getSrc()->getId())];
-
-                        opposite->markEdge(edges[e]->getId());
-
-                        marked_.emplace_back(vertex->getId());
-                        marked_.emplace_back(opposite->getId());
-
-                        popped = true;
-                    }
-
-                    continue;
-                }
-
-                vertex->mark();
-                vertex->markEdges();
-
-                for (const auto& edge : vertex->getEdgesB()) {
-                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
-                }
-
-                for (const auto& edge : vertex->getEdgesE()) {
-                    marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
-                }
-
-                popped = true;
+            for (const auto& edge : vertex->getEdgesB()) {
+                marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
             }
+
+            for (const auto& edge : vertex->getEdgesE()) {
+                marked_.emplace_back(edge->oppositeVertex(vertex->getId())->getId());
+            }
+
+            popped = true;
         }
     }
 
@@ -944,6 +967,32 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
     }
 
     if (appendToPrefix) dst = std::string(dst.rbegin(), dst.rend());
+}
+
+void StringGraphWalk::extractVertices(std::vector<const Vertex*>& dst) const {
+
+    // types: 0 - normal, 1 - reverse complement
+    auto getType = [](const Edge* edge, int id) -> int {
+        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->isInnie()) return 0;
+        return 1;
+    };
+
+    int startType = getType(edges_.front(), start_->getId());
+    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ startType;
+
+    int size_before = dst.size();
+    // add start vertex
+    dst.push_back(start_);
+
+    // add edge labels
+    for (const auto& edge : edges_) {
+        dst.push_back(edge->getDst());
+    }
+
+    if (appendToPrefix) {
+        reverse(dst.begin() + size_before, dst.end());
+    }
 }
 
 bool StringGraphWalk::containsVertex(int id) const {
@@ -1186,3 +1235,17 @@ void StringGraphComponent::extractLongestWalk() {
 }
 
 // StringGraphComponent
+
+// debug util functions
+inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk) {
+    std::string dst = "";
+
+    std::vector<const Vertex*> vertices;
+    walk->extractVertices(vertices);
+    for (const auto v: vertices) {
+        dst += std::to_string(v->getReadId());
+        dst += " ";
+    }
+
+    return dst;
+}

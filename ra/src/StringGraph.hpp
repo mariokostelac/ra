@@ -180,6 +180,14 @@ public:
     }
 
     /*!
+     * @brief Getter for read identifier
+     * @return read identifier
+     */
+    int getReadId() const {
+        return read_->getId();
+    }
+
+    /*!
      * @brief Getter for read legnth
      * @return length
      */
@@ -518,6 +526,14 @@ public:
      * @param [out] dst sequence string
      */
     void extractSequence(std::string& dst) const;
+
+    /*!
+     * @brief Method for vertices extraction
+     * @details Method appends vertices ids extracted from the path.
+     *
+     * @param [out] dst vertices 
+     */
+    void extractVertices(std::vector<const Vertex*>& dst) const;
 
     /*!
      * @brief Method for vertex check
