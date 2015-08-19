@@ -1053,7 +1053,12 @@ const StringGraphNode* StringGraphNode::findInWalk(const StringGraphNode* node) 
 static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int branch,
     int maxBranch) {
 
-    if (branch > maxBranch || visited[vertex->getId()]) {
+    if (branch > maxBranch) {
+        debug("STOPEXPAND %d because hit max branches %d\n", vertex->getReadId(), MAX_BRANCHES);
+        return 0;
+    }
+
+    if (visited[vertex->getId()]) {
         return 0;
     }
 
@@ -1129,6 +1134,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
                     continue;
                 }
 
+                debug("EXPAND %d\n", start->getReadId());
                 int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (direction ^ 1) :
                     direction, visitedVertices, 0, MAX_BRANCHES);
 
