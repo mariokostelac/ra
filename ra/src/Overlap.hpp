@@ -245,6 +245,8 @@ public:
       return str;
     }
 
+    std::string repr() const;
+
 private:
 
     int a_;
