@@ -702,36 +702,47 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
         ++i;
     }
 
+    // types: 0 - normal, 1 - reverse complement
+    auto getType = [](const Edge* edge, int id) -> int {
+        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->isInnie()) return 0;
+        return 1;
+    };
+
     std::vector<std::string> sequences;
 
     for (const auto& walk : walks) {
 
-        const Vertex* root = walk->getStart();
-        const Vertex* juncture = walk->getEdges().back()->getDst();
+        // TODO: consider returning this trimming logic back
+        //const Vertex* root = walk->getStart();
+        //const Vertex* juncture = walk->getEdges().back()->getDst();
+
+        int startInverted = getType(walk->getEdges().front(), walk->getStart()->getId());
 
         std::string sequence;
         walk->extractSequence(sequence);
 
-        int start, end;
+        //int start, end;
 
-        if (direction == 0) {
-            // start     --------
-            // end   -------
-            // full  ------------
-            // out      ------
-            start = juncture->getLength() - overlapEnd;
-            end = sequence.size() - (root->getLength() - overlapStart);
+        //if (direction == 0) {
+            //// start     --------
+            //// end   -------
+            //// full  ------------
+            //// out      ------
+            //start = juncture->getLength() - overlapEnd;
+            //end = sequence.size() - (root->getLength() - overlapStart);
 
-        } else {
-            // start --------
-            // end        -------
-            // full  ------------
-            // out      ------
-            start = root->getLength() - overlapStart;
-            end = sequence.size() - (juncture->getLength() - overlapEnd);
-        }
+        //} else {
+            //// start --------
+            //// end        -------
+            //// full  ------------
+            //// out      ------
+            //start = root->getLength() - overlapStart;
+            //end = sequence.size() - (juncture->getLength() - overlapEnd);
+        //}
 
-        sequences.emplace_back(end > start ? sequence.substr(start, end - start) : std::string());
+        //sequences.emplace_back(end > start ? sequence.substr(start, end - start) : std::string());
+        sequences.push_back(startInverted ? reversedComplement(sequence) : sequence);
     }
 
     bool popped = false;
@@ -970,28 +981,12 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 }
 
 void StringGraphWalk::extractVertices(std::vector<const Vertex*>& dst) const {
-
-    // types: 0 - normal, 1 - reverse complement
-    auto getType = [](const Edge* edge, int id) -> int {
-        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
-        if (!edge->getOverlap()->isInnie()) return 0;
-        return 1;
-    };
-
-    int startType = getType(edges_.front(), start_->getId());
-    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ startType;
-
-    int size_before = dst.size();
     // add start vertex
     dst.push_back(start_);
 
     // add edge labels
     for (const auto& edge : edges_) {
         dst.push_back(edge->getDst());
-    }
-
-    if (appendToPrefix) {
-        reverse(dst.begin() + size_before, dst.end());
     }
 }
 

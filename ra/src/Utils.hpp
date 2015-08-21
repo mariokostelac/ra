@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <string>
 #include <sys/stat.h>
 #include <sys/time.h>
 
@@ -21,6 +22,8 @@
     } while (0)
 
 typedef unsigned int uint;
+
+std::string reversedComplement(const std::string& original);
 
 void debug(const char* fmt, ...);
 
