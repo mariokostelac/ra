@@ -134,6 +134,8 @@ public:
      */
     const Vertex* oppositeVertex(int id) const;
 
+    Edge* pair() const;
+
     friend class Vertex;
     friend class StringGraph;
 
@@ -624,10 +626,10 @@ public:
      * @brief Method for path expansion
      * @details Method expands this vertex in direction and fills the input deque
      *
-     * @param [in] queue deque of StringGraphNode object pointers
+     * @param [in] vector of StringGraphNode object pointers
      * @return number of StringGraphNodes added to queue
      */
-    size_t expand(std::deque<StringGraphNode*>& queue);
+    size_t expand(std::vector<StringGraphNode*>& queue) const;
 
     /*!
      * @brief Method for walk check
@@ -648,6 +650,11 @@ public:
      * @return node in path (if not found nullptr is returned)
      */
     const StringGraphNode* findInWalk(const StringGraphNode* node) const;
+
+    // TODO
+    const StringGraphNode* rewindedTo(const int vertexId) const;
+
+    StringGraphWalk* getWalk() const;
 
 private:
 
