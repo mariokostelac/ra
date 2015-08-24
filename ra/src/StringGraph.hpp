@@ -301,6 +301,9 @@ public:
      */
     void removeMarkedEdges();
 
+    // TODO:
+    const bool isBeginEdge(const Edge* e) const;
+
 private:
 
     int id_;

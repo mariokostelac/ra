@@ -179,6 +179,13 @@ void Vertex::addEdge(Edge* edge) {
     }
 }
 
+
+const bool Vertex::isBeginEdge(const Edge* e) const {
+  if (e == nullptr) return false;
+  if (e->getOverlap()->isUsingSuffix(this->getId())) return false;
+  return true;
+}
+
 void Vertex::markEdge(int id) {
 
     for (const auto& edge : edgesE_) {
@@ -793,15 +800,46 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
         return 1;
     };
 
+    // maps edge -> number of walks using that edge
     std::map<std::pair<uint32_t, uint32_t>, uint32_t> edge_used;
     auto edge_key = [](const Edge* edge) -> const std::pair<uint32_t, uint32_t> {
       auto src = edge->getSrc()->getId(), dst = edge->getDst()->getId();
       return std::make_pair(std::min(src, dst), std::max(src, dst));
     };
 
+    // fill edge usage map
     for (const auto& walk: walks) {
       for (const auto& e: walk->getEdges()) {
         edge_used[edge_key(e)]++;
+      }
+    }
+
+    auto count_external_edges = [&edge_used, &edge_key](const Vertex* v, const Edge* incoming_edge) -> int {
+      int external_edges = 0;
+
+      // get incoming all incoming edges
+      auto v_edges = v->isBeginEdge(incoming_edge) ? v->getEdgesB() : v->getEdgesE();
+      for (const auto& v_edge: v_edges) {
+        // edge is not part of any walk -> external edge
+        if (edge_used.count(edge_key(v_edge)) == 0) {
+          external_edges++;
+        }
+      }
+
+      return external_edges;
+    };
+
+    // add extra usage if walk has external inbound edges
+    for (const auto& walk: walks) {
+      int external_edges = 0;
+      for (const auto& walk_edge: walk->getEdges()) {
+        if (walk_edge->isMarked()) continue;
+
+        auto key = edge_key(walk_edge);
+        edge_used[key] += external_edges;
+
+        auto v = walk_edge->getDst();
+        edge_used[key] += count_external_edges(v, walk_edge);
       }
     }
 
@@ -871,7 +909,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
           const auto key = edge_key(e);
           edge_used[key]--;
 
-          // remove edges that are unique to the route we are removing
+          // remove the edge if that was the last walk using it
           if (edge_used[key] == 0) {
             Edge* edge = const_cast<Edge*>(e);
 
