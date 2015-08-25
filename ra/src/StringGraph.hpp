@@ -413,28 +413,6 @@ private:
     void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction);
 
     /*!
-     * @brief Method for bubble juncture check
-     * @details Method checks if openedQue_ or closedQue_ contain duplicates (i.e. junctures).
-     *
-     * @param [in] rootNode root StringGraphNode object pointer
-     * @return juncture StingGraphNode object pointer if found
-     */
-    const StringGraphNode* bubbleJuncture(StringGraphNode* rootNode) const;
-
-    /*!
-     * @brief Method for bubble extraction
-     * @details Method finds all StingGraphNodes which encapsule the same vertex as the juncture
-     * and backtracts the path from each of them to the root. For each path a StringGraphWalk
-     * object is created from root to juncture.
-     *
-     * @param [out] dst vector of found paths
-     * @param [in] root Vertex object pointer
-     * @param [in] junctureNode juncture StringGraphNode object pointer
-     */
-    void extractBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root,
-        const StringGraphNode* junctureNode) const;
-
-    /*!
      * @brief Method for bubble popping
      * @details Method tries to remove all paths from bubble but the one with the highest
      * coverage. First constraint is that paths must share similar sequences (at least 95%).
@@ -446,15 +424,6 @@ private:
      * for sequence extraction
      */
     bool popBubble(const std::vector<StringGraphWalk*>& walks, int direction);
-
-    /*!
-     * @brief Method for path checking
-     * @details Method checks if the given path has any external edges
-     *
-     * @param [in] id index of the path in bubble
-     * @param [in] walks bubble consisting of 2 or more paths (walks)
-     */
-    bool isValidWalk(int id, const std::vector<StringGraphWalk*>& walks) const;
 
     /*!
      * @brief Method for deletion of vertices and edges
@@ -471,12 +440,6 @@ private:
 
     // helper for edge removal (contains indices of vertices which have marked edges)
     std::vector<int> marked_;
-
-    // queues for bubble popping
-    std::deque<StringGraphNode*> openedQueue_;
-    std::deque<StringGraphNode*> closedQueue_;
-    // helper for bubble popping
-    std::vector<StringGraphNode*> nodes_;
 };
 
 /*!
