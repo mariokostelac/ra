@@ -95,7 +95,7 @@ bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
         return false;
     }
 
-    debug("ISTRAN %d %d because of %d %d and %d %d",
+    debug("ISTRAN %d %d because of %d %d and %d %d\n",
         o1->getA(),
         o1->getB(),
         o2->getA(),

@@ -987,8 +987,8 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited, int branch,
-    int maxBranch) {
+static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited,
+    const int branch, const int maxBranch) {
 
     if (branch > maxBranch) {
         debug("STOPEXPAND %d because hit max branches %d\n", vertex->getReadId(), MAX_BRANCHES);
@@ -1060,9 +1060,11 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
         }
 
         Edge* selectedEdge = edges.front();
-        double selectedLength = 0;
 
         if (edges.size() > 1) {
+
+            double selectedLength = 0;
+            int selectedScore = -1;
 
             for (const auto& edge : edges) {
 
@@ -1076,9 +1078,13 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                 int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
                     curr_direction, visitedVertices, 0, max_branches);
 
-                if (length > selectedLength) {
+                int curr_score = edge->getOverlap()->getScore();
+                // TODO: remove magic number
+                if ((length > selectedLength && 0.8 * selectedScore < curr_score) ||
+                    (curr_score > selectedScore && 0.8 * selectedLength < length)) {
                     selectedEdge = edge;
                     selectedLength = length;
+                    selectedScore = curr_score;
                 }
             }
         }
@@ -1163,6 +1169,7 @@ void StringGraphComponent::extractLongestWalk() {
         maxId = std::max(maxId, vertex->getId());
     }
 
+    // tips and singular chains could be good candidates
     for (int direction = 0; direction <= 1; ++direction) {
 
         for (const auto& vertex : vertices_) {
@@ -1173,6 +1180,21 @@ void StringGraphComponent::extractLongestWalk() {
                 std::vector<bool> visited(maxId + 1, false);
                 startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
                     visited, 0, 0));
+            }
+        }
+    }
+
+    // forks could be good candidates, too
+    for (int direction = 0; direction <= 1; ++direction) {
+
+        for (const auto& vertex : vertices_) {
+
+            if ((direction == 0 && vertex->getEdgesB().size() > 1) ||
+                (direction == 1 && vertex->getEdgesE().size() > 1)) {
+
+                std::vector<bool> visited(maxId + 1, false);
+                startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
+                    visited, 0, 1));
             }
         }
     }

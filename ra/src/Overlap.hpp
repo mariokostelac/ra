@@ -162,6 +162,12 @@ public:
     virtual int getBHang() const = 0;
 
     /*!
+     * @brief Getter for overlap score 
+     * @return overlap score
+     */
+    virtual int getScore() const = 0;
+
+    /*!
      * @brief Getter for overlap type
      * @return true if overlap is innie
      */
