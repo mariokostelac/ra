@@ -300,7 +300,8 @@ public:
      * @brief Method for edge removal
      * @details Method removes marked edges in both lists but does not delete them!
      */
-    void removeMarkedEdges();
+    // TODO
+    void removeMarkedEdges(bool propagate = true);
 
     // TODO:
     const bool isBeginEdge(const Edge* e) const;

@@ -219,11 +219,16 @@ void Vertex::markEdges() {
     }
 }
 
-void Vertex::removeMarkedEdges() {
+void Vertex::removeMarkedEdges(const bool propagate) {
+
+    std::vector<Vertex *> other_vertices;
 
     for (auto edge = edgesE_.begin(); edge != edgesE_.end();) {
 
         if ((*edge)->isMarked()) {
+            if (propagate) {
+              other_vertices.push_back(const_cast<Vertex*>((*edge)->oppositeVertex(getId())));
+            }
             edge = edgesE_.erase(edge);
         } else {
             ++edge;
@@ -233,10 +238,17 @@ void Vertex::removeMarkedEdges() {
     for (auto edge = edgesB_.begin(); edge != edgesB_.end();) {
 
         if ((*edge)->isMarked()) {
+            if (propagate) {
+              other_vertices.push_back(const_cast<Vertex*>((*edge)->oppositeVertex(getId())));
+            }
             edge = edgesB_.erase(edge);
         } else {
             ++edge;
         }
+    }
+
+    for (auto v: other_vertices) {
+      v->removeMarkedEdges(false);
     }
 }
 
@@ -318,6 +330,7 @@ void StringGraph::trim() {
 
             debug("TIPCANDIDATE %d\n", vertex->getId());
 
+            bool isTip = false;
             for (const auto& edge : edges) {
 
                 // check if opposite vertex has other edges similar as this one
@@ -327,8 +340,6 @@ void StringGraph::trim() {
                 const auto& oppositeEdges = edge->getOverlap()->isUsingSuffix(opposite->getId()) ?
                     opposite->getEdgesE() : opposite->getEdgesB();
 
-                bool isTip = false;
-
                 for (const auto& oedge : oppositeEdges) {
                     if (!oedge->isMarked() && !oedge->oppositeVertex(opposite->getId())->isTipCandidate()) {
                         isTip = true;
@@ -337,30 +348,27 @@ void StringGraph::trim() {
                 }
 
                 if (isTip) {
-                    vertex->mark();
-                    vertex->markEdges();
-                    ++tipsNum;
-
-                    debug("TRIM %d TIP\n", vertex->getId());
-                    break;
+                  break;
                 }
             }
 
-            // check if long tip
-            std::vector<const Edge*> chain;
-            findSingularChain(&chain, vertex, vertex->getEdgesE().size() ? 1 : 0);
-            if (chain.size() <= MAX_READS_IN_TIP) {
-                vertex->mark();
-                vertex->markEdges();
+            if (!isTip) {
+              // check if long tip
+              std::vector<const Edge*> chain;
+              findSingularChain(&chain, vertex, vertex->getEdgesE().size() ? 1 : 0);
+              if (chain.size() <= MAX_READS_IN_TIP) {
+                isTip = true;
+              }
+              // TODO: maybe filter by seqlen, too
             }
-            // TODO: maybe filter by seqlen, too
 
-            if (vertex->isMarked()) {
-                for (const auto& edge : edges) {
-                    const auto id = edge->oppositeVertex(vertex->getId())->getId();
-                    debug("TRIM %d TIP EDGE CONNECTION\n", id);
-                    marked_.emplace_back(id);
-                }
+            if (isTip) {
+              debug("TRIM %d TIP\n", vertex->getId());
+              vertex->mark();
+              vertex->markEdges();
+              vertex->removeMarkedEdges();
+
+              ++tipsNum;
             }
         }
     }
