@@ -14,6 +14,7 @@ const int NOT_FOUND = -1;
 
 inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk);
 static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start, const int start_direction);
+static int countForks(const Vertex* start, const int start_direction, const int depth);
 
 //*****************************************************************************
 // Edge
@@ -355,14 +356,15 @@ void StringGraph::trim() {
             if (!isTip) {
               // check if long tip
               std::vector<const Edge*> chain;
-              findSingularChain(&chain, vertex, vertex->getEdgesE().size() ? 1 : 0);
-              if (chain.size() <= MAX_READS_IN_TIP) {
+              int use_suffix = vertex->getEdgesE().size() ? 1 : 0;
+              findSingularChain(&chain, vertex, use_suffix);
+
+              debug("CHAIN %d, FORKS %d\n", chain.size(), countForks(vertex, use_suffix, MAX_DEPTH_WITHOUT_EXTRA_FORK));
+              if (chain.size() <= MAX_READS_IN_TIP && countForks(vertex, use_suffix, MAX_DEPTH_WITHOUT_EXTRA_FORK) <= 1) {
                 debug("LONG TIP %d\n", vertex->getId());
                 isTip = true;
               }
-              // TODO: add complexity number and filter by complexity number
-              // Without that, it removes some tips before bubbles are popped, which is not good.
-              //
+
               // TODO: maybe filter by seqlen, too
             }
 
@@ -1147,6 +1149,34 @@ static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start,
     }
 
     return totalLength;
+}
+
+static int countForks(const Vertex* start, const int start_direction, const int depth) {
+
+    if (depth <= 0) {
+      return 0;
+    }
+
+    int forks = 0;
+    const Vertex* curr_vertex = start;
+    int curr_direction = start_direction;
+
+    const auto& edges = curr_direction == 0 ? curr_vertex->getEdgesB() : curr_vertex->getEdgesE();
+
+    if (curr_vertex->getEdgesB().size() + curr_vertex->getEdgesE().size() > 2) {
+      forks++;
+    }
+
+    for (auto e: edges) {
+      curr_vertex = e->getDst();
+      if (e->getOverlap()->isInnie()) {
+        curr_direction ^= 1;
+      }
+
+      forks += countForks(curr_vertex, curr_direction, depth - 1);
+    }
+
+    return forks;
 }
 
 StringGraphComponent::StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph) :
