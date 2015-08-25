@@ -357,8 +357,12 @@ void StringGraph::trim() {
               std::vector<const Edge*> chain;
               findSingularChain(&chain, vertex, vertex->getEdgesE().size() ? 1 : 0);
               if (chain.size() <= MAX_READS_IN_TIP) {
+                debug("LONG TIP %d\n", vertex->getId());
                 isTip = true;
               }
+              // TODO: add complexity number and filter by complexity number
+              // Without that, it removes some tips before bubbles are popped, which is not good.
+              //
               // TODO: maybe filter by seqlen, too
             }
 
