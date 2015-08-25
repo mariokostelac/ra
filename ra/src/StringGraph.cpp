@@ -13,6 +13,7 @@
 const int NOT_FOUND = -1;
 
 inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk);
+static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start, const int start_direction);
 
 //*****************************************************************************
 // Edge
@@ -315,6 +316,8 @@ void StringGraph::trim() {
             const auto& edges = vertex->getEdgesB().size() == 0 ? vertex->getEdgesE() :
                 vertex->getEdgesB();
 
+            debug("TIPCANDIDATE %d\n", vertex->getId());
+
             for (const auto& edge : edges) {
 
                 // check if opposite vertex has other edges similar as this one
@@ -342,6 +345,15 @@ void StringGraph::trim() {
                     break;
                 }
             }
+
+            // check if long tip
+            std::vector<const Edge*> chain;
+            findSingularChain(&chain, vertex, vertex->getEdgesE().size() ? 1 : 0);
+            if (chain.size() <= MAX_READS_IN_TIP) {
+                vertex->mark();
+                vertex->markEdges();
+            }
+            // TODO: maybe filter by seqlen, too
 
             if (vertex->isMarked()) {
                 for (const auto& edge : edges) {
@@ -1025,10 +1037,11 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
     return length;
 }
 
-static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, int direction, int maxId) {
+static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, const int start_direction, const int maxId, const int max_branches) {
 
     int totalLength = start->getLength();
     const Vertex* vertex = start;
+    int curr_direction = start_direction;
 
     std::vector<bool> visitedVertices(maxId + 1, false);
 
@@ -1040,7 +1053,7 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
 
         visitedVertices[vertex->getId()] = true;
 
-        const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
+        const auto& edges = curr_direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
         if (edges.size() == 0) {
             break;
@@ -1060,8 +1073,8 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
                 }
 
                 debug("EXPAND %d\n", start->getReadId());
-                int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                    direction, visitedVertices, 0, MAX_BRANCHES);
+                int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
+                    curr_direction, visitedVertices, 0, max_branches);
 
                 if (length > selectedLength) {
                     selectedEdge = edge;
@@ -1076,7 +1089,42 @@ static double expandVertex(std::vector<const Edge*>& dst, const Vertex* start, i
         totalLength += selectedEdge->labelLength();
 
         if (selectedEdge->getOverlap()->isInnie()) {
-            direction ^= 1;
+            curr_direction ^= 1;
+        }
+    }
+
+    return totalLength;
+}
+
+static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start, const int start_direction) {
+
+    int totalLength = start->getLength();
+    const Vertex* curr_vertex = start;
+    int curr_direction = start_direction;
+
+    while (true) {
+
+        const auto& edges = curr_direction == 0 ? curr_vertex->getEdgesB() : curr_vertex->getEdgesE();
+
+        if (edges.size() == 0) {
+            // end of chain
+            break;
+        }
+
+        if (curr_vertex->getEdgesB().size() + curr_vertex->getEdgesE().size() > 2) {
+            // not singular chain anymore
+            break;
+        }
+
+        Edge* selectedEdge = edges.front();
+
+        if (dst != nullptr) dst->emplace_back(selectedEdge);
+        curr_vertex = selectedEdge->getDst();
+
+        totalLength += selectedEdge->labelLength();
+
+        if (selectedEdge->getOverlap()->isInnie()) {
+            curr_direction ^= 1;
         }
     }
 
@@ -1147,7 +1195,7 @@ void StringGraphComponent::extractLongestWalk() {
         int direction = std::get<1>(startCandidates[i]);
 
         std::vector<const Edge*> edges;
-        int length = expandVertex(edges, start, direction, maxId);
+        int length = expandVertex(edges, start, direction, maxId, MAX_BRANCHES);
 
         if (length > selectedLength) {
 

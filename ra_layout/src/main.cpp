@@ -5,6 +5,7 @@
 
 // trimming params
 int READ_LEN_THRESHOLD = 100000;
+uint32_t MAX_READS_IN_TIP = 2;
 
 // BFS params in bubble popping
 size_t MAX_NODES = 750;

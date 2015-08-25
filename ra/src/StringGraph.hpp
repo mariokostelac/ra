@@ -17,6 +17,7 @@
 
 // trimming params
 extern int READ_LEN_THRESHOLD;
+extern uint32_t MAX_READS_IN_TIP;
 
 // BFS params in bubble popping
 extern size_t MAX_NODES;
