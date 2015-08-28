@@ -1,0 +1,21 @@
+language: cpp
+
+sudo: false
+
+compiler:
+  - gcc
+  - clang
+
+branches:
+  only:
+    - master
+
+script:
+  - make
+
+notifications-policy: &notifications-policy
+  on_success: change
+  on_failure: always
+
+notifications:
+  email: true
