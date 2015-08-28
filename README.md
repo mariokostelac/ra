@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/mariokostelac/ra.svg?branch=master)](https://travis-ci.org/mariokostelac/ra)
 # Ra
 
 Ra is short for RNA Assembler and it is a C++ implementation of an overlap-layout-consensus transcriptome assembler. It was developed as part of my master's thesis at [FER](http://www.fer.unizg.hr).
