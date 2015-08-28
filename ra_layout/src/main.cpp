@@ -16,6 +16,8 @@ double MAX_DIFFERENCE = 0.05;
 // contig extraction params
 size_t MAX_BRANCHES = 20;
 size_t MAX_START_NODES = 24;
+double LENGTH_THRESHOLD = 0.0;
+double QUALITY_THRESHOLD = 0.0;
 
 const struct option options[] = {
     {"reads", required_argument, 0, 'i'},

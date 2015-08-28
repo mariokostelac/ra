@@ -28,6 +28,8 @@ extern double MAX_DIFFERENCE;
 // contig extraction params
 extern size_t MAX_BRANCHES;
 extern size_t MAX_START_NODES;
+extern double LENGTH_THRESHOLD;
+extern double QUALITY_THRESHOLD;
 
 class Edge;
 class Vertex;

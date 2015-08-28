@@ -1091,9 +1091,8 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     curr_direction, visitedVertices, 0, max_branches);
 
                 int curr_score = edge->getOverlap()->getScore();
-                // TODO: remove magic number
-                if ((length > selectedLength && 0.8 * selectedScore < curr_score) ||
-                    (curr_score > selectedScore && 0.8 * selectedLength < length)) {
+                if ((length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
+                    (curr_score > selectedScore && (int) ((1 - LENGTH_THRESHOLD) * selectedLength) <= length)) {
                     selectedEdge = edge;
                     selectedLength = length;
                     selectedScore = curr_score;
