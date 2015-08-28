@@ -365,7 +365,7 @@ void StringGraph::trim() {
                 isTip = true;
               }
 
-              // TODO: maybe filter by seqlen, too
+              // maybe filter by seqlen, too
             }
 
             if (isTip) {
@@ -618,8 +618,6 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
           }
         }
       }
-
-      // TODO: think about min and max size of walk, if it really differs, something went wrong -> abort
 
     } while (changed && juncture_id == NOT_FOUND);
 

@@ -280,7 +280,7 @@ void AfgOverlap::print(std::ostream& o) const {
   o << "rds:" << getA() << "," << getB() << std::endl;
   o << "ahg:" << aHang_ << std::endl;
   o << "bhg:" << bHang_ << std::endl;
-  o << "scr:" << 0 << std::endl; // TODO
+  o << "scr:" << getScore() << std::endl;
   o << "}" << std::endl;
 }
 

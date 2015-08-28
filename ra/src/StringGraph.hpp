@@ -299,12 +299,19 @@ public:
 
     /*!
      * @brief Method for edge removal
-     * @details Method removes marked edges in both lists but does not delete them!
+     * @details Method removes marked edges in both lists but does not delete them from the graph!
+     *
+     * @param [int] propagate propagate call to all vertices adjacent with removed edges.
      */
-    // TODO
-    void removeMarkedEdges(bool propagate = true);
+    void removeMarkedEdges(const bool propagate = true);
 
-    // TODO:
+
+    /*!
+     * @brief Method for testing if edge uses vertex's read prefix
+     * @details Method for testing if edge uses vertex's read prefix
+     *
+     * @return true if e uses vertex's read prefix
+     */
     const bool isBeginEdge(const Edge* e) const;
 
 private:
@@ -620,9 +627,21 @@ public:
      */
     const StringGraphNode* findInWalk(const StringGraphNode* node) const;
 
-    // TODO
+    /*!
+     * @brief Method returns preceeding StringGraphNode* with given vertexId.
+     * @details Method returns preceeding StringGraphNode* with given vertexId.
+     *
+     * @param [in] vertexId vertexId
+     * @return preceeding node with given vertexId, nullptr if does not exist such node.
+     */
     const StringGraphNode* rewindedTo(const int vertexId) const;
 
+    /*!
+     * @brief Method creates StringGraphWalk from this node and it's predecessors.
+     * @details Method creates StringGraphWalk from this node and it's predecessors.
+     *
+     * @return StringGraphWalk from this node and it's predecessors.
+     */
     StringGraphWalk* getWalk() const;
 
 private:
