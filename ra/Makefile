@@ -1,23 +1,5 @@
-CP = g++
 LD = g++
 DX = doxygen
-
-UNAME_S := $(shell uname -s)
-versions := 0
-
-ifeq ($(UNAME_S),Darwin)
-	compiler := $(shell g++-4.8 --version 2>/dev/null)
-	ifdef compiler
-		CP = g++-4.8
-		LD = g++-4.8
-	endif
-
-	compiler := $(shell g++-4.9 --version 2>/dev/null)
-	ifdef compiler
-		CP = g++-4.9
-		LD = g++-4.9
-	endif
-endif
 
 NAME = ra
 
@@ -33,7 +15,7 @@ I_CMD = $(addprefix -I, $(SRC_DIR))
 I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, )
 
-CP_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall -g
+CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -O3 -Wall -g
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
 API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp ContigExtractor.hpp EnhancedSuffixArray.hpp IO.hpp \
@@ -53,8 +35,8 @@ DOC = $(DOC_DIR)/DoxyFile
 
 DEBUG := $(shell env | grep DEBUG | cut -d= -f2)
 ifeq ($(DEBUG),1)
-	CP_FLAGS += -g
-	CP_FLAGS += -DDEBUG
+	CXX_FLAGS += -g
+	CXX_FLAGS += -DDEBUG
 endif
 
 all: $(OBJ)
@@ -73,17 +55,17 @@ $(EXC): $(OBJ)
 	@$(LD) -o $@ $^ $(LD_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo [CP] $<
+	@echo [CXX] $<
 	@mkdir -p $(dir $@)
-	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
+	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)
 
 $(OBJ_DIR)/%.o: $(VND_DIR)/%.cpp
-	@echo [CP] $<
+	@echo [CXX] $<
 	@mkdir -p $(dir $@)
-	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
+	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)
 
 $(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
-	@echo [CP] $@
+	@echo [CXX] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
 	
@@ -93,7 +75,7 @@ $(LIB): $(OBJ)
 	@ar rcs $(LIB) $(OBJ)
 
 $(BIN): $(EXC)
-	@echo [CP] $@
+	@echo [CXX] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
 

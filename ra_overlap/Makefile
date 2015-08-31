@@ -1,24 +1,4 @@
-CP = g++
-LD = g++
-
 NAME = ra_overlap
-
-UNAME_S := $(shell uname -s)
-versions := 0
-
-ifeq ($(UNAME_S),Darwin)
-	compiler := $(shell g++-4.8 --version 2>/dev/null)
-	ifdef compiler
-		CP = g++-4.8
-		LD = g++-4.8
-	endif
-
-	compiler := $(shell g++-4.9 --version 2>/dev/null)
-	ifdef compiler
-		CP = g++-4.9
-		LD = g++-4.9
-	endif
-endif
 
 OBJ_DIR = obj
 SRC_DIR = src
@@ -31,7 +11,7 @@ L_CMD = $(addprefix -L, ../lib )
 
 DEP_LIBS = ../lib/libra.a
 
-CP_FLAGS = $(I_CMD) -std=c++0x -O3 -Wall
+CXX_FLAGS = $(I_CMD) -std=c++0x -O3 -Wall
 LD_FLAGS = $(I_CMD) $(L_CMD) -lra -lstdc++ -pthread
 
 API = $(addprefix $(SRC_DIR)/, )
@@ -46,8 +26,8 @@ BIN = $(EXC_DIR)/$(EXC)
 
 DEBUG := $(shell env | grep DEBUG | cut -d= -f2)
 ifeq ($(DEBUG),1)
-	CP_FLAGS += -g
-	CP_FLAGS += -DDEBUG
+	CXX_FLAGS += -g
+	CXX_FLAGS += -DDEBUG
 endif
 
 all: $(EXC)
@@ -63,15 +43,15 @@ lib: $(LIB)
 $(EXC): $(OBJ) $(DEP_LIBS)
 	@echo [LD] $@
 	@mkdir -p $(dir $@)
-	@$(LD) $(OBJ) -o $@ $(LD_FLAGS)
+	@$(CXX) $(OBJ) -o $@ $(LD_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo [CP] $<
+	@echo [CXX] $<
 	@mkdir -p $(dir $@)
-	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
+	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)
 
 $(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
-	@echo [CP] $@
+	@echo [CXX] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
@@ -81,7 +61,7 @@ $(LIB): $(OBJ)
 	@ar rcs $(LIB) $(OBJ)
 
 $(BIN): $(EXC)
-	@echo [CP] $@
+	@echo [CXX] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
