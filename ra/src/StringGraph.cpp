@@ -999,7 +999,7 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool>& visited,
+static int lengthRecursive(const Vertex* vertex, const int direction, std::vector<bool>& visited,
     const int branch, const int maxBranch) {
 
     if (branch > maxBranch) {
@@ -1008,6 +1008,7 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
     }
 
     if (visited[vertex->getId()]) {
+        debug("STOPEXPAND %d because visited\n", vertex->getReadId());
         return 0;
     }
 
@@ -1015,38 +1016,43 @@ static int lengthRecursive(const Vertex* vertex, int direction, std::vector<bool
 
     const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
-    int length = 0;
+    int res_length = 0;
 
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
-        length += edge->labelLength();
-        length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
+        res_length += edge->labelLength();
+        res_length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
             (direction ^ 1) : direction, visited, branch, maxBranch);
 
     } else if (edges.size() > 1) {
 
-        int maxLength = 0;
         Edge* selectedEdge = edges.front();
+        int selectedLength = 0;
+        int selectedScore = -1;
 
         for (const auto& edge : edges) {
 
-            int len = lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+            int curr_length = lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
                 direction, visited, branch + 1, maxBranch);
 
-            if (len > maxLength) {
-                maxLength = len;
-                selectedEdge = edge;
+            int curr_score = edge->getOverlap()->getScore();
+            if ((curr_length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
+                (curr_score > selectedScore && (int) ((1 - LENGTH_THRESHOLD) * selectedLength) <= curr_length)) {
+
+              selectedEdge = edge;
+              selectedLength = curr_length;
+              selectedScore = curr_score;
             }
         }
 
-        length += selectedEdge->labelLength();
-        length += maxLength;
+        res_length += selectedEdge->labelLength();
+        res_length += selectedLength;
     }
 
     visited[vertex->getId()] = false;
 
-    return length;
+    return res_length;
 }
 
 static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, const int start_direction, const int maxId, const int max_branches) {
