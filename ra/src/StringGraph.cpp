@@ -1000,7 +1000,7 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 // StringGraphComponent
 
 static int lengthRecursive(const Vertex* vertex, const int direction, std::vector<bool>& visited,
-    const int branch, const int maxBranch) {
+    const int branch, const int maxBranch, Edge** via) {
 
     if (branch > maxBranch) {
         debug("STOPEXPAND %d because hit max branches %d\n", vertex->getReadId(), MAX_BRANCHES);
@@ -1018,23 +1018,23 @@ static int lengthRecursive(const Vertex* vertex, const int direction, std::vecto
 
     int res_length = 0;
 
+    Edge* selectedEdge = edges.front();
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
         res_length += edge->labelLength();
         res_length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
-            (direction ^ 1) : direction, visited, branch, maxBranch);
+            (direction ^ 1) : direction, visited, branch, maxBranch, nullptr);
 
     } else if (edges.size() > 1) {
 
-        Edge* selectedEdge = edges.front();
         int selectedLength = 0;
         int selectedScore = -1;
 
         for (const auto& edge : edges) {
 
             int curr_length = lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                direction, visited, branch + 1, maxBranch);
+                direction, visited, branch + 1, maxBranch, nullptr);
 
             int curr_score = edge->getOverlap()->getScore();
             if ((curr_length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
@@ -1048,6 +1048,10 @@ static int lengthRecursive(const Vertex* vertex, const int direction, std::vecto
 
         res_length += selectedEdge->labelLength();
         res_length += selectedLength;
+    }
+
+    if (via != nullptr) {
+      *via = selectedEdge;
     }
 
     visited[vertex->getId()] = false;
@@ -1094,7 +1098,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
 
                 debug("EXPAND %d\n", start->getReadId());
                 int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
-                    curr_direction, visitedVertices, 0, max_branches);
+                    curr_direction, visitedVertices, 0, max_branches, nullptr);
 
                 int curr_score = edge->getOverlap()->getScore();
                 if ((length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
@@ -1224,7 +1228,7 @@ void StringGraphComponent::extractLongestWalk() {
 
                 std::vector<bool> visited(maxId + 1, false);
                 startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
-                    visited, 0, 0));
+                    visited, 0, 0, nullptr));
             }
         }
     }
@@ -1239,7 +1243,7 @@ void StringGraphComponent::extractLongestWalk() {
 
                 std::vector<bool> visited(maxId + 1, false);
                 startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
-                    visited, 0, 1));
+                    visited, 0, 1, nullptr));
             }
         }
     }
