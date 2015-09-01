@@ -1016,7 +1016,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
     const auto& edges = direction == 0 ? from->getEdgesB() : from->getEdgesE();
 
-    int res_length = from->getLength();
+    int res_length = 0;
 
     Edge* best_edge = edges.front();
     if (edges.size() == 1) {
@@ -1062,24 +1062,21 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
 
     while (true) {
 
-        if (visitedVertices[vertex->getId()]) {
-            break;
-        }
-
         visitedVertices[vertex->getId()] = true;
 
         const auto& edges = curr_direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
 
-        if (edges.size() == 0) {
-            break;
-        }
+        Edge* best_edge = nullptr;
+        if (edges.size() == 1) {
 
-        Edge* selectedEdge = edges.front();
+            if (!visitedVertices[edges.front()->getDst()->getId()]) {
+                best_edge = edges.front();
+            }
 
-        if (edges.size() > 1) {
+        } else if (edges.size() > 1) {
 
-            double selectedLength = 0;
-            int selectedScore = -1;
+            double best_length = 0;
+            int best_score = -1;
 
             for (const auto& edge : edges) {
 
@@ -1090,24 +1087,28 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                 }
 
                 int length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
-                    curr_direction, visitedVertices, max_branches);
+                    curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
 
                 int curr_score = edge->getOverlap()->getScore();
-                if ((length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
-                    (curr_score > selectedScore && (int) ((1 - LENGTH_THRESHOLD) * selectedLength) <= length)) {
-                    selectedEdge = edge;
-                    selectedLength = length;
-                    selectedScore = curr_score;
+                if ((length > best_length && (int) ((1 - QUALITY_THRESHOLD) * best_score) <= curr_score) ||
+                    (curr_score > best_score && (int) ((1 - LENGTH_THRESHOLD) * best_length) <= length)) {
+                    best_edge = edge;
+                    best_length = length;
+                    best_score = curr_score;
                 }
             }
         }
 
-        dst.emplace_back(selectedEdge);
-        vertex = selectedEdge->getDst();
+        if (best_edge == nullptr) {
+            break;
+        }
 
-        totalLength += selectedEdge->labelLength();
+        dst.emplace_back(best_edge);
+        vertex = best_edge->getDst();
 
-        if (selectedEdge->getOverlap()->isInnie()) {
+        totalLength += best_edge->labelLength();
+
+        if (best_edge->getOverlap()->isInnie()) {
             curr_direction ^= 1;
         }
     }
