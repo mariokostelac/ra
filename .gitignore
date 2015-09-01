@@ -3,9 +3,3 @@ bin
 include
 obj
 lib
-
-ra_consensus/ra_consensus
-ra_correct/ra_correct
-ra_layout/ra_layout
-ra_overlap/ra_overlap
-to_afg/to_afg

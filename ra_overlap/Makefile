@@ -1,76 +1,23 @@
 NAME = ra_overlap
 
-OBJ_DIR = obj
-SRC_DIR = src
-INC_DIR = ../include/$(NAME)
-LIB_DIR = ../lib
-EXC_DIR = ../bin
+all: debug release
 
-I_CMD = $(addprefix -I, $(SRC_DIR) ../include )
-L_CMD = $(addprefix -L, ../lib )
+install:
+	@echo [MAKE] install
+	@$(MAKE) -C debug install
+	@$(MAKE) -C release install
 
-DEP_LIBS = ../lib/libra.a
+debug:
+	@echo [MAKE] $(NAME) $@
+	@$(MAKE) -C debug
 
-CXX_FLAGS = $(I_CMD) -std=c++0x -O3 -Wall
-LD_FLAGS = $(I_CMD) $(L_CMD) -lra -lstdc++ -pthread
-
-API = $(addprefix $(SRC_DIR)/, )
-
-SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
-OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
-DEP = $(OBJ:.o=.d)
-INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
-LIB = $(LIB_DIR)/lib$(NAME).a
-EXC = $(NAME)
-BIN = $(EXC_DIR)/$(EXC)
-
-DEBUG := $(shell env | grep DEBUG | cut -d= -f2)
-ifeq ($(DEBUG),1)
-	CXX_FLAGS += -g
-	CXX_FLAGS += -DDEBUG
-endif
-
-all: $(EXC)
-
-install: bin
-
-bin: $(BIN)
-
-include: $(INC)
-
-lib: $(LIB)
-
-$(EXC): $(OBJ) $(DEP_LIBS)
-	@echo [LD] $@
-	@mkdir -p $(dir $@)
-	@$(CXX) $(OBJ) -o $@ $(LD_FLAGS)
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	@echo [CXX] $<
-	@mkdir -p $(dir $@)
-	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)
-
-$(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
-	@echo [CXX] $@
-	@mkdir -p $(dir $@)
-	@cp $< $@
-
-$(LIB): $(OBJ)
-	@echo [AR] $@
-	@mkdir -p $(dir $@)
-	@ar rcs $(LIB) $(OBJ)
-
-$(BIN): $(EXC)
-	@echo [CXX] $@
-	@mkdir -p $(dir $@)
-	@cp $< $@
+release:
+	@echo [MAKE] $(NAME) $@
+	@$(MAKE) -C release
 
 clean:
-	@echo [RM] cleaning
-	@rm $(OBJ_DIR) $(EXC) -rf
+	@echo [MAKE] clean
+	@$(MAKE) -C debug clean
+	@$(MAKE) -C release clean
 
-remove:
-	@echo [RM] removing
-	@rm $(INC_DIR) $(LIB) $(BIN) $(EXC) $(WIN) -rf
-
--include $(DEP)
+.PHONY: default all install remove
