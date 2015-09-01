@@ -999,67 +999,60 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 
 // StringGraphComponent
 
-static int lengthRecursive(const Vertex* vertex, const int direction, std::vector<bool>& visited,
-    const int branch, const int maxBranch, Edge** via) {
+static int longest_sequence_length(const Vertex* from, const int direction, std::vector<bool>& visited,
+    const int forks_left) {
 
-    if (branch > maxBranch) {
-        debug("STOPEXPAND %d because hit max branches %d\n", vertex->getReadId(), MAX_BRANCHES);
+    if (forks_left < 0) {
+        debug("STOPEXPAND %d because hit max branches %d\n", from->getReadId(), MAX_BRANCHES);
         return 0;
     }
 
-    if (visited[vertex->getId()]) {
-        debug("STOPEXPAND %d because visited\n", vertex->getReadId());
+    if (visited[from->getId()]) {
+        debug("STOPEXPAND %d because visited\n", from->getReadId());
         return 0;
     }
 
-    visited[vertex->getId()] = true;
+    visited[from->getId()] = true;
 
-    const auto& edges = direction == 0 ? vertex->getEdgesB() : vertex->getEdgesE();
+    const auto& edges = direction == 0 ? from->getEdgesB() : from->getEdgesE();
 
-    int res_length = 0;
+    int res_length = from->getLength();
 
-    Edge* selectedEdge = edges.front();
+    Edge* best_edge = edges.front();
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
         res_length += edge->labelLength();
-        res_length += lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ?
-            (direction ^ 1) : direction, visited, branch, maxBranch, nullptr);
+        res_length += longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ?
+            (direction ^ 1) : direction, visited, forks_left);
 
     } else if (edges.size() > 1) {
 
-        int selectedLength = 0;
-        int selectedScore = -1;
+        int best_len = 0;
 
         for (const auto& edge : edges) {
 
-            int curr_length = lengthRecursive(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                direction, visited, branch + 1, maxBranch, nullptr);
+            int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+                direction, visited, forks_left - 1);
 
-            int curr_score = edge->getOverlap()->getScore();
-            if ((curr_length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
-                (curr_score > selectedScore && (int) ((1 - LENGTH_THRESHOLD) * selectedLength) <= curr_length)) {
-
-              selectedEdge = edge;
-              selectedLength = curr_length;
-              selectedScore = curr_score;
+            if (curr_len > best_len) {
+              best_edge = edge;
+              best_len = curr_len;
             }
         }
 
-        res_length += selectedEdge->labelLength();
-        res_length += selectedLength;
+        res_length += best_edge->labelLength();
+        res_length += best_len;
     }
 
-    if (via != nullptr) {
-      *via = selectedEdge;
-    }
-
-    visited[vertex->getId()] = false;
+    visited[from->getId()] = false;
 
     return res_length;
 }
 
 static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, const int start_direction, const int maxId, const int max_branches) {
+
+    debug("EXPAND %d\n", start->getReadId());
 
     int totalLength = start->getLength();
     const Vertex* vertex = start;
@@ -1096,9 +1089,8 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                debug("EXPAND %d\n", start->getReadId());
-                int length = lengthRecursive(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
-                    curr_direction, visitedVertices, 0, max_branches, nullptr);
+                int length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
+                    curr_direction, visitedVertices, max_branches);
 
                 int curr_score = edge->getOverlap()->getScore();
                 if ((length > selectedLength && (int) ((1 - QUALITY_THRESHOLD) * selectedScore) <= curr_score) ||
@@ -1227,8 +1219,8 @@ void StringGraphComponent::extractLongestWalk() {
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
                 std::vector<bool> visited(maxId + 1, false);
-                startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
-                    visited, 0, 0, nullptr));
+                startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+                    visited, 0));
             }
         }
     }
@@ -1242,8 +1234,8 @@ void StringGraphComponent::extractLongestWalk() {
                 (direction == 1 && vertex->getEdgesE().size() > 1)) {
 
                 std::vector<bool> visited(maxId + 1, false);
-                startCandidates.emplace_back(vertex, direction, lengthRecursive(vertex, direction,
-                    visited, 0, 1, nullptr));
+                startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+                    visited, 1));
             }
         }
     }
