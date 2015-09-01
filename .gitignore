@@ -4,6 +4,12 @@ include
 obj
 lib
 
+consensus/debug/consensus
+consensus/release/consensus
+layout/debug/layout
+layout/release/layout
+overlap2dot/debug/overlap2dot
+overlap2dot/release/overlap2dot
 ra_consensus/debug/ra_consensus
 ra_consensus/release/ra_consensus
 ra_correct/debug/ra_correct
@@ -14,3 +20,5 @@ ra_overlap/debug/ra_overlap
 ra_overlap/release/ra_overlap
 to_afg/debug/to_afg
 to_afg/release/to_afg
+zoom/debug/zoom
+zoom/release/zoom
