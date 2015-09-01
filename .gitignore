@@ -3,3 +3,14 @@ bin
 include
 obj
 lib
+
+ra_consensus/debug/ra_consensus
+ra_consensus/release/ra_consensus
+ra_correct/debug/ra_correct
+ra_correct/release/ra_correct
+ra_layout/debug/ra_layout
+ra_layout/release/ra_layout
+ra_overlap/debug/ra_overlap
+ra_overlap/release/ra_overlap
+to_afg/debug/to_afg
+to_afg/release/to_afg
