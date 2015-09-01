@@ -1,21 +1,25 @@
 OBJ_DIR = obj
 SRC_DIR = ../src
+VND_DIR = ../../vendor
 INC_DIR = ../../include/$(NAME)
 LIB_DIR = ../../lib/$(MODULE)
 EXC_DIR = ../../bin/$(MODULE)
 
 I_CMD = $(addprefix -I, $(SRC_DIR) ../../include )
+I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, ../../lib/$(MODULE) )
 
 DEP_LIBS = ../../lib/$(MODULE)/libra.a
 
-CXX_FLAGS = $(I_CMD) -std=c++0x -Wall
-LD_FLAGS = $(I_CMD) $(L_CMD) -lra -lstdc++ -pthread
+CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall
+LD_FLAGS = $(I_CMD) $(L_CMD) $(I_CMD_V) -lra -lstdc++ -pthread
 
 API = $(addprefix $(SRC_DIR)/, )
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
+VND = $(shell find $(VND_DIR) -type f -regex ".*\.cpp")
 OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
+OBJ += $(subst $(VND_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(VND))))
 DEP = $(OBJ:.o=.d)
 INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
 LIB = $(LIB_DIR)/lib$(NAME).a
@@ -38,6 +42,11 @@ $(EXC): $(OBJ) $(DEP_LIBS)
 	@$(CXX) $(OBJ) -o $@ $(LD_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@echo [CXX] $<
+	@mkdir -p $(dir $@)
+	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)
+
+$(OBJ_DIR)/%.o: $(VND_DIR)/%.cpp
 	@echo [CXX] $<
 	@mkdir -p $(dir $@)
 	@$(CXX) $< -c -o $@ -MMD $(CXX_FLAGS)

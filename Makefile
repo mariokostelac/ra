@@ -1,6 +1,6 @@
 
 CORE = ra
-MODULES = ra_correct ra_overlap ra_layout ra_consensus to_afg
+MODULES = ra_correct ra_overlap ra_layout ra_consensus to_afg consensus layout overlap2dot zoom
 
 INC_DIR = include/$(CORE)
 LIB_DIR = lib
@@ -25,5 +25,6 @@ $(CORE):
 $(MODULES): $(CORE)
 	@echo [MOD] $@
 	@$(MAKE) -s -C $@ $(TARGETS)
+	@cp bin/release/* bin/
 
 .PHONY: $(CORE) $(MODULES)

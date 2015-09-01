@@ -9,16 +9,18 @@
 
 #pragma once
 
-#include "AfgRead.hpp"
 #include "AfgOverlap.hpp"
+#include "AfgRead.hpp"
+#include "CommonHeaders.hpp"
 #include "Contig.hpp"
 #include "ContigExtractor.hpp"
-#include "CommonHeaders.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"
+#include "MhapOverlap.hpp"
+#include "MhapParser.hpp"
 #include "Overlap.hpp"
-#include "Preprocess.hpp"
 #include "PartialOrderAlignment.hpp"
+#include "Preprocess.hpp"
 #include "Read.hpp"
 #include "ReadIndex.hpp"
 #include "StringGraph.hpp"
