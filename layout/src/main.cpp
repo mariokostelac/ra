@@ -335,14 +335,14 @@ int main(int argc, char **argv) {
   filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
 
   if (verbose_output) {
-    writeOverlaps(nocontainments, (output_dir + "/nocont.afg").c_str());
+    writeOverlaps(nocontainments, (output_dir + "/nocont." + overlaps_format).c_str());
   }
 
   vector<Overlap*> notransitives;
   filterTransitiveOverlaps(notransitives, nocontainments, thread_num, true);
 
   if (verbose_output) {
-    writeOverlaps(notransitives, (output_dir + "/nocont.notran.afg").c_str());
+    writeOverlaps(notransitives, (output_dir + "/nocont.notran." + overlaps_format).c_str());
   }
 
   createReverseComplements(reads, thread_num);
@@ -353,7 +353,7 @@ int main(int argc, char **argv) {
   if (verbose_output) {
     vector<Overlap*> simplified_overlaps;
     graph->extractOverlaps(simplified_overlaps);
-    writeOverlaps(simplified_overlaps, (output_dir + "/simplified.afg").c_str());
+    writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
   }
 
   std::vector<StringGraphComponent*> components;
