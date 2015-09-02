@@ -684,10 +684,9 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
     };
 
     // maps edge -> number of walks using that edge
-    std::map<std::pair<uint32_t, uint32_t>, uint32_t> edge_used;
-    auto edge_key = [](const Edge* edge) -> const std::pair<uint32_t, uint32_t> {
-      auto src = edge->getSrc()->getId(), dst = edge->getDst()->getId();
-      return std::make_pair(std::min(src, dst), std::max(src, dst));
+    std::map<uint32_t, uint32_t> edge_used;
+    auto edge_key = [](const Edge* edge) -> uint32_t {
+      return std::min(edge->getId(), edge->pair()->getId());
     };
 
     // fill edge usage map
