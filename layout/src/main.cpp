@@ -34,7 +34,7 @@ uint32_t MAX_READS_IN_TIP = 2;
 uint32_t MAX_DEPTH_WITHOUT_EXTRA_FORK = 5;
 
 // BFS params in bubble popping
-size_t MAX_NODES = 2000;
+size_t MAX_NODES = 200;
 int MAX_DISTANCE = MAX_NODES * 10000;
 double MAX_DIFFERENCE = 0.25;
 
@@ -176,8 +176,8 @@ void init_args(int argc, char** argv) {
   args.add<bool>("verbose", 'v', "verbose output", false);
 
   // bubble popping params
-  args.add<int>("bp_max_nodes", 'm', "max nodes in bubble branch", false, 750);
-  args.add<double>("bp_max_diff", 'n', "max difference between bubble branches", false, 0.25);
+  args.add<int>("bp_max_nodes", 'm', "max nodes in bubble branch", false, MAX_NODES);
+  args.add<double>("bp_max_diff", 'n', "max difference between bubble branches", false, MAX_DIFFERENCE);
 
   args.parse_check(argc, argv);
 }
