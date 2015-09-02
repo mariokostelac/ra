@@ -409,20 +409,7 @@ void StringGraph::popBubbles() {
                 continue;
             }
 
-            std::vector<StringGraphWalk*> walks;
-            findBubbleWalks(walks, vertex, direction);
-
-            debug("FOUND BUBBLE %\n", vertex->getId());
-
-            if (walks.size() == 0) {
-                continue;
-            }
-
-            if (popBubble(walks, direction)) {
-                ++bubblesPoppedNum;
-            }
-
-            for (const auto& walk : walks) delete walk;
+            bubblesPoppedNum += popBubblesStartingAt(vertex, direction);
         }
     }
 
@@ -560,20 +547,23 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     timer.print("SG", "component extraction");
 }
 
-void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction) {
+uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
 
     debug("FINDBUBBLE %d\n", root->getId());
+
+    // result -> number of popped walks
+    uint32_t popped = 0;
 
     std::map<uint32_t, uint32_t> node_visited;
 
     // vector that keeps track of all created BFS nodes.
     std::vector<StringGraphNode*> nodes;
 
-    // all active walks
-    std::vector<const StringGraphNode*> walks;
+    // heads of all walks
+    std::vector<const StringGraphNode*> heads;
 
     StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, direction, 0);
-    walks.push_back(rootNode);
+    heads.push_back(rootNode);
     nodes.push_back(rootNode);
 
     bool changed = false;
@@ -586,24 +576,24 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
       changed = false;
 
       /*
-       * We are getting walks.size() upfront on purpose.
-       * That's how we make extending fair for every walk (otherwise would add new walk
-       * and extend it in the same round).
+       * We are getting heads.size() upfront on purpose.
+       * That's how we make extending fair for every walk (otherwise would fork head to two heads
+       * and extend second one in the same round)
        */
-      int size = walks.size();
+      int size = heads.size();
       for (int i = 0; i < size && juncture_id == NOT_FOUND; ++i) {
-        auto curr_walk = walks[i];
+        auto curr_head = heads[i];
 
         int lo = nodes.size();
-        int extended_walks = curr_walk->expand(nodes);
+        int extended_walks = curr_head->expand(nodes);
 
         if (extended_walks> 0) {
-          // replace current walk with one that's one node longer
-          walks[i] = nodes[lo];
+          // replace current head with one that represents longer walk
+          heads[i] = nodes[lo];
 
-          // walk forked so we have to add new walks at the and for the next round
+          // walk forked so we have to add new heads at the and for the next round
           for (int j = 1; j < extended_walks; ++j) {
-            walks.push_back(nodes[lo + j]);
+            heads.push_back(nodes[lo + j]);
           }
 
           changed = true;
@@ -615,7 +605,7 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
           const auto end_id = new_walk->getVertex()->getId();
           node_visited[end_id]++;
 
-          if (node_visited[end_id] == walks.size()) {
+          if (node_visited[end_id] == heads.size()) {
             juncture_id = end_id;
             break;
           }
@@ -629,21 +619,29 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
 
       debug("BUBBLEROOT %d JUNCTURE %d\n", root->getId(), juncture_id);
 
-      for (uint32_t i = 0; i < walks.size(); ++i) {
-        walks[i] = walks[i]->rewindedTo(juncture_id);
-        has_bubble = has_bubble && walks[i] != nullptr;
+      for (uint32_t i = 0; i < heads.size(); ++i) {
+        heads[i] = heads[i]->rewindedTo(juncture_id);
+        has_bubble = has_bubble && heads[i] != nullptr;
       }
 
       if (has_bubble) {
-        for (uint32_t i = 0; i < walks.size(); ++i) {
-          dst.emplace_back(walks[i]->getWalk());
+
+        debug("FOUND BUBBLE %\n", root->getId());
+
+        std::vector<StringGraphWalk*> walks;
+        for (uint32_t i = 0; i < heads.size(); ++i) {
+          walks.emplace_back(heads[i]->getWalk());
         }
+
+        popped += popBubble(walks, direction);
       }
     }
 
     for (auto n: nodes) {
       delete n;
     }
+
+    return popped;
 }
 
 bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int direction) {

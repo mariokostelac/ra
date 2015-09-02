@@ -421,8 +421,9 @@ private:
      * @param [out] dst vector of bubble paths
      * @param [in] root vertex from which the BFS is executed
      * @param [in] direction direction the BFS is executed (Begin or End)
+     * TODO
      */
-    void findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction);
+    uint32_t popBubblesStartingAt(const Vertex* root, int direction);
 
     /*!
      * @brief Method for bubble popping
