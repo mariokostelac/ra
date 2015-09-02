@@ -412,6 +412,8 @@ void StringGraph::popBubbles() {
             std::vector<StringGraphWalk*> walks;
             findBubbleWalks(walks, vertex, direction);
 
+            debug("FOUND BUBBLE %\n", vertex->getId());
+
             if (walks.size() == 0) {
                 continue;
             }
@@ -560,6 +562,8 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
 
 void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vertex* root, int direction) {
 
+    debug("FINDBUBBLE %d\n", root->getId());
+
     std::map<uint32_t, uint32_t> node_visited;
 
     // vector that keeps track of all created BFS nodes.
@@ -571,7 +575,6 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
     StringGraphNode* rootNode = new StringGraphNode(root, nullptr, nullptr, direction, 0);
     walks.push_back(rootNode);
     nodes.push_back(rootNode);
-    node_visited[rootNode->getVertex()->getId()]++;
 
     bool changed = false;
     int juncture_id = NOT_FOUND;
@@ -623,6 +626,9 @@ void StringGraph::findBubbleWalks(std::vector<StringGraphWalk*>& dst, const Vert
 
     if (juncture_id != NOT_FOUND) {
       bool has_bubble = true;
+
+      debug("BUBBLEROOT %d JUNCTURE %d\n", root->getId(), juncture_id);
+
       for (uint32_t i = 0; i < walks.size(); ++i) {
         walks[i] = walks[i]->rewindedTo(juncture_id);
         has_bubble = has_bubble && walks[i] != nullptr;
@@ -660,6 +666,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
             selectedWalk = i;
             selectedCoverage = coverage;
         }
+
+        assert("bubblewalk is not empty" && walk->getEdges().size() > 0);
 
         {
           const auto& startEdge = walk->getEdges().front();
@@ -713,11 +721,14 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
 
     // add extra usage if walk has external inbound edges
     for (const auto& walk: walks) {
+
       int external_edges_before = 0;
+
       for (const auto& walk_edge: walk->getEdges()) {
         if (walk_edge->isMarked()) continue;
 
         auto key = edge_key(walk_edge);
+
         edge_used[key] += external_edges_before;
 
         auto v = walk_edge->getDst();
