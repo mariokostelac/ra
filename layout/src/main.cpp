@@ -9,6 +9,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <set>
 #include <sys/stat.h>
 #include <vector>
@@ -19,6 +20,7 @@ using std::cout;
 using std::endl;
 using std::fstream;
 using std::make_pair;
+using std::map;
 using std::max;
 using std::min;
 using std::pair;
@@ -102,6 +104,48 @@ void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
 
     seen.insert(make_pair(a, b));
   }
+}
+
+uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
+  map<pair<uint32_t, uint32_t>, Overlap*> best;
+
+  for (const auto& overlap: *overlaps) {
+    uint32_t a = min(overlap->getA(), overlap->getB());
+    uint32_t b = max(overlap->getA(), overlap->getB());
+
+    auto key = make_pair(a, b);
+    if (best.count(key)) {
+      if (overlap->getScore() > best[key]->getScore()) {
+        best[key] = overlap;
+      }
+
+    } else {
+      best[key] = overlap;
+    }
+  }
+
+  int removed = 0;
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    const auto& overlap = (*overlaps)[i];
+    uint32_t a = min(overlap->getA(), overlap->getB());
+    uint32_t b = max(overlap->getA(), overlap->getB());
+
+    auto key = make_pair(a, b);
+    if (best[key] != overlap) {
+      removed++;
+      delete (*overlaps)[i];
+    }
+  }
+
+  uint32_t idx = 0;
+  for (auto kv: best) {
+    (*overlaps)[idx] = kv.second;
+    idx++;
+  }
+
+  overlaps->resize(best.size());
+
+  return removed;
 }
 
 void print_contigs_info(const vector<Contig *>& contigs, const vector<Read*>& reads) {
@@ -243,6 +287,10 @@ int main(int argc, char **argv) {
   } else {
     assert(false);
   }
+
+  auto filtered_duplicates = filter_best_overlap_per_pair(&overlaps);
+  cerr << "Filtered " << filtered_duplicates <<
+    " overlaps because had more than one overlap per read pair (kept best)." << endl;
 
   must_one_overlap_per_pair(overlaps);
 
