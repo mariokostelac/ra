@@ -9,15 +9,20 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
-#include <vector>
+#include <set>
 #include <sys/stat.h>
+#include <vector>
 
 using std::cerr;
 using std::cin;
 using std::cout;
 using std::endl;
 using std::fstream;
+using std::make_pair;
 using std::max;
+using std::min;
+using std::pair;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -81,6 +86,22 @@ void must_mkdir(const string& path) {
         fprintf(stderr, "Can't create directory %s\n", path.c_str());
         exit(1);
     }
+}
+
+void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
+  set<pair<uint32_t, uint32_t>> seen;
+
+  for (const auto& overlap: overlaps) {
+    uint32_t a = min(overlap->getA(), overlap->getB());
+    uint32_t b = max(overlap->getA(), overlap->getB());
+
+    if (seen.count(make_pair(a, b)) > 0) {
+      fprintf(stderr, "Read pair (%d, %d) has more than one overlap\n", a, b);
+      exit(1);
+    }
+
+    seen.insert(make_pair(a, b));
+  }
 }
 
 void print_contigs_info(const vector<Contig *>& contigs, const vector<Read*>& reads) {
@@ -222,6 +243,8 @@ int main(int argc, char **argv) {
   } else {
     assert(false);
   }
+
+  must_one_overlap_per_pair(overlaps);
 
   // fix overlap read ids
   for (auto o: overlaps) {
