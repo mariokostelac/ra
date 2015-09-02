@@ -713,15 +713,17 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
 
     // add extra usage if walk has external inbound edges
     for (const auto& walk: walks) {
-      int external_edges = 0;
+      int external_edges_before = 0;
       for (const auto& walk_edge: walk->getEdges()) {
         if (walk_edge->isMarked()) continue;
 
         auto key = edge_key(walk_edge);
-        edge_used[key] += external_edges;
+        edge_used[key] += external_edges_before;
 
         auto v = walk_edge->getDst();
         edge_used[key] += count_external_edges(v, walk_edge);
+
+        external_edges_before += count_external_edges(v, walk_edge);
       }
     }
 
