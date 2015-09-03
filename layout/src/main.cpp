@@ -34,7 +34,7 @@ uint32_t MAX_READS_IN_TIP = 2;
 uint32_t MAX_DEPTH_WITHOUT_EXTRA_FORK = 5;
 
 // BFS params in bubble popping
-size_t MAX_NODES = 200;
+size_t MAX_NODES = 160;
 int MAX_DISTANCE = MAX_NODES * 10000;
 double MAX_DIFFERENCE = 0.25;
 
@@ -257,6 +257,7 @@ int main(int argc, char **argv) {
   write_version(run_args_file);
   write_call_cmd(run_args_file, argc, argv);
   write_settings(run_args_file);
+  write_settings(stderr);
   fclose(run_args_file);
 
   vector<Overlap*> overlaps, filtered;
