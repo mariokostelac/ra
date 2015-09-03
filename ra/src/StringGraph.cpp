@@ -10,6 +10,10 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
+using std::max;
+using std::min;
+using std::swap;
+
 const int NOT_FOUND = -1;
 
 inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk);
@@ -390,7 +394,7 @@ void StringGraph::trim() {
     timer.print("SG", "trimming");
 }
 
-void StringGraph::popBubbles() {
+uint32_t StringGraph::popBubbles() {
 
     Timer timer;
     timer.start();
@@ -421,6 +425,8 @@ void StringGraph::popBubbles() {
 
     timer.stop();
     timer.print("SG", "bubble popping");
+
+    return bubblesPoppedNum;
 }
 
 void StringGraph::simplify() {
@@ -453,8 +459,23 @@ void StringGraph::simplify() {
         numVerticesTemp = vertices_.size();
         size_t numEdgesTemp = edges_.size();
 
+        auto MAX_NODES_TMP = MAX_NODES;
+        MAX_NODES = min((size_t) 5, MAX_NODES);
+        do {
+          MAX_NODES = min(MAX_NODES * 2, MAX_NODES_TMP);
+
+          fprintf(stderr, "[SG][bubble popping]: max bracket size %lu\n", MAX_NODES);
+          int popped = popBubbles();
+          if (popped > 0) {
+            break;
+          }
+
+        } while (MAX_NODES < MAX_NODES_TMP);
+
+        // bring back original limit
+        swap(MAX_NODES, MAX_NODES_TMP);
+
         ++numBubbleRounds;
-        popBubbles();
 
         if (numVerticesTemp == vertices_.size() && numEdgesTemp == edges_.size()) {
             break;
@@ -567,11 +588,7 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
     nodes.push_back(rootNode);
 
     bool changed = false;
-    int juncture_id = NOT_FOUND;
     do {
-      if (nodes.size() > MAX_NODES) {
-        break;
-      }
 
       changed = false;
 
@@ -581,6 +598,8 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
        * and extend second one in the same round)
        */
       int size = heads.size();
+      int juncture_id = NOT_FOUND;
+
       for (int i = 0; i < size && juncture_id == NOT_FOUND; ++i) {
         auto curr_head = heads[i];
 
@@ -612,30 +631,25 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
         }
       }
 
-    } while (changed && juncture_id == NOT_FOUND);
-
-    if (juncture_id != NOT_FOUND) {
-      bool has_bubble = true;
-
-      debug("BUBBLEROOT %d JUNCTURE %d\n", root->getId(), juncture_id);
-
-      for (uint32_t i = 0; i < heads.size(); ++i) {
-        heads[i] = heads[i]->rewindedTo(juncture_id);
-        has_bubble = has_bubble && heads[i] != nullptr;
+      if (nodes.size() > MAX_NODES) {
+        break;
       }
 
-      if (has_bubble) {
-
-        debug("FOUND BUBBLE %\n", root->getId());
+      if (juncture_id != NOT_FOUND) {
+        debug("BUBBLEROOT %d JUNCTURE %d\n", root->getId(), juncture_id);
 
         std::vector<StringGraphWalk*> walks;
+
         for (uint32_t i = 0; i < heads.size(); ++i) {
-          walks.emplace_back(heads[i]->getWalk());
+          auto rewinded = heads[i]->rewindedTo(juncture_id);
+          walks.emplace_back(rewinded ? rewinded->getWalk() : heads[i]->getWalk());
         }
 
-        popped += popBubble(walks, direction);
+        popped += popBubble(walks, juncture_id, direction);
+        break;
       }
-    }
+
+    } while (changed && popped == 0);
 
     for (auto n: nodes) {
       delete n;
@@ -644,7 +658,72 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
     return popped;
 }
 
-bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int direction) {
+bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, const uint32_t juncture_id, const int direction) {
+
+    // types: 0 - normal, 1 - reverse complement
+    auto getType = [](const Edge* edge, int id) -> int {
+        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->isInnie()) return 0;
+        return 1;
+    };
+
+    // maps edge -> number of walks using that edge
+    std::map<uint32_t, uint32_t> edge_used;
+    auto edge_key = [](const Edge* edge) -> uint32_t {
+      return std::min(edge->getId(), edge->pair()->getId());
+    };
+
+    // fill edge usage map
+    for (const auto& walk: all_walks) {
+      for (const auto& e: walk->getEdges()) {
+        edge_used[edge_key(e)]++;
+      }
+    }
+
+    auto count_external_edges = [&edge_used, &edge_key](const Vertex* v, const Edge* incoming_edge) -> int {
+      int external_edges = 0;
+
+      // get incoming all incoming edges
+      auto v_edges = v->isBeginEdge(incoming_edge) ? v->getEdgesB() : v->getEdgesE();
+      for (const auto& v_edge: v_edges) {
+        // edge is not part of any walk -> external edge
+        if (edge_used.count(edge_key(v_edge)) == 0) {
+          external_edges++;
+        }
+      }
+
+      return external_edges;
+    };
+
+    // add extra usage if walk has external inbound edges
+    for (const auto& walk: all_walks) {
+
+      int external_edges_before = 0;
+
+      for (const auto& walk_edge: walk->getEdges()) {
+        if (walk_edge->isMarked()) continue;
+
+        auto key = edge_key(walk_edge);
+
+        edge_used[key] += external_edges_before;
+
+        auto v = walk_edge->getDst();
+        edge_used[key] += count_external_edges(v, walk_edge);
+
+        external_edges_before += count_external_edges(v, walk_edge);
+      }
+    }
+
+    std::vector<StringGraphWalk*> bubble_walks;
+    std::vector<std::string> sequences;
+
+    for (const auto& walk : all_walks) {
+      if (walk->getEdges().back()->getDst()->getId() == juncture_id) {
+        bubble_walks.push_back(walk);
+      }
+    }
+
+    assert("we need at least two bubble walks" && bubble_walks.size() >= 2);
 
     size_t selectedWalk = 0;
     double selectedCoverage = 0;
@@ -653,7 +732,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
     int overlapEnd = std::numeric_limits<int>::max();
 
     size_t i = 0;
-    for (const auto& walk : walks) {
+    for (const auto& walk : bubble_walks) {
 
         double coverage = 0;
         for (const auto& edge : walk->getEdges()) {
@@ -682,63 +761,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
         ++i;
     }
 
-    // types: 0 - normal, 1 - reverse complement
-    auto getType = [](const Edge* edge, int id) -> int {
-        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
-        if (!edge->getOverlap()->isInnie()) return 0;
-        return 1;
-    };
-
-    // maps edge -> number of walks using that edge
-    std::map<uint32_t, uint32_t> edge_used;
-    auto edge_key = [](const Edge* edge) -> uint32_t {
-      return std::min(edge->getId(), edge->pair()->getId());
-    };
-
-    // fill edge usage map
-    for (const auto& walk: walks) {
-      for (const auto& e: walk->getEdges()) {
-        edge_used[edge_key(e)]++;
-      }
-    }
-
-    auto count_external_edges = [&edge_used, &edge_key](const Vertex* v, const Edge* incoming_edge) -> int {
-      int external_edges = 0;
-
-      // get incoming all incoming edges
-      auto v_edges = v->isBeginEdge(incoming_edge) ? v->getEdgesB() : v->getEdgesE();
-      for (const auto& v_edge: v_edges) {
-        // edge is not part of any walk -> external edge
-        if (edge_used.count(edge_key(v_edge)) == 0) {
-          external_edges++;
-        }
-      }
-
-      return external_edges;
-    };
-
-    // add extra usage if walk has external inbound edges
-    for (const auto& walk: walks) {
-
-      int external_edges_before = 0;
-
-      for (const auto& walk_edge: walk->getEdges()) {
-        if (walk_edge->isMarked()) continue;
-
-        auto key = edge_key(walk_edge);
-
-        edge_used[key] += external_edges_before;
-
-        auto v = walk_edge->getDst();
-        edge_used[key] += count_external_edges(v, walk_edge);
-
-        external_edges_before += count_external_edges(v, walk_edge);
-      }
-    }
-
-    std::vector<std::string> sequences;
-
-    for (const auto& walk : walks) {
+    for (const auto& walk : bubble_walks) {
 
         // TODO: consider returning this trimming logic back
         //const Vertex* root = walk->getStart();
@@ -780,10 +803,24 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
             continue;
         }
 
+        auto smaller = min(sequences[i].size(), sequences[selectedWalk].size());
+        auto bigger = max(sequences[i].size(), sequences[selectedWalk].size());
+        if ((bigger - smaller) / (double) bigger >= MAX_DIFFERENCE) {
+            auto curr_repr = vertices_sequence_from_walk(bubble_walks[i]);
+            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selectedWalk]);
+            debug("KEEPBUBBLE %s because len diff with %s is %f > %f\n",
+                    curr_repr.c_str(), selected_repr.c_str(),
+                    sequences[i].size() / (double) sequences[selectedWalk].size(),
+                    MAX_DIFFERENCE
+            );
+
+            continue;
+        }
+
         int distance = editDistance(sequences[i], sequences[selectedWalk]);
         if (distance / (double) sequences[selectedWalk].size() >= MAX_DIFFERENCE) {
-            auto curr_repr = vertices_sequence_from_walk(walks[i]);
-            auto selected_repr = vertices_sequence_from_walk(walks[selectedWalk]);
+            auto curr_repr = vertices_sequence_from_walk(bubble_walks[i]);
+            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selectedWalk]);
             debug("KEEPBUBBLE %s because diff with %s is %f > %f\n",
                     curr_repr.c_str(), selected_repr.c_str(),
                     distance / (double) sequences[selectedWalk].size(),
@@ -793,14 +830,15 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
             continue;
         }
 
-        auto curr_repr = vertices_sequence_from_walk(walks[i]);
-        debug("RMBUBBLE %s\n", curr_repr.c_str());
+        auto curr_repr = vertices_sequence_from_walk(bubble_walks[i]);
 
         // mark walk for removal
-        auto& edges = walks[i]->getEdges();
+        auto& edges = bubble_walks[i]->getEdges();
         for (auto& e: edges) {
           const auto key = edge_key(e);
           edge_used[key]--;
+
+          assert(edge_used[key] >= 0);
 
           // remove the edge if that was the last walk using it
           if (edge_used[key] == 0) {
@@ -812,9 +850,13 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& walks, int dire
 
             marked_.push_back(edge->getSrc()->getId());
             marked_.push_back(edge->getDst()->getId());
-          }
 
-          popped = true;
+            popped = true;
+          }
+        }
+
+        if (popped) {
+          debug("RMBUBBLE %s\n", curr_repr.c_str());
         }
     }
 

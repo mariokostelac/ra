@@ -381,8 +381,9 @@ public:
      * @details Method finds all bubbles in graph and if possible removes
      * all paths (removes and deletes all vertices an their edges) from the
      * bubble but the best one.
+     * TODO
      */
-    void popBubbles();
+    uint32_t popBubbles();
 
     /*!
      * @brief Method for graph simplification
@@ -436,7 +437,7 @@ private:
      * @param [in] direction direction the paths in bubble are pointing (Begin or End) needed
      * for sequence extraction
      */
-    bool popBubble(const std::vector<StringGraphWalk*>& walks, int direction);
+    bool popBubble(const std::vector<StringGraphWalk*>& walks, const uint32_t juncture_id, const int direction);
 
     /*!
      * @brief Method for deletion of vertices and edges
