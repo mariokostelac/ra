@@ -26,6 +26,9 @@ LIB = $(LIB_DIR)/lib$(NAME).a
 EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
 
+GIT_VERSION := $(shell git describe --dirty --always --tags)
+CXX_FLAGS += -DVERSION=\"$(GIT_VERSION)\"
+
 all: $(EXC)
 
 install: bin
