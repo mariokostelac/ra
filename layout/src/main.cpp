@@ -1,6 +1,6 @@
 
 #ifndef VERSION
-#define VERSION "NO_VESION"
+#define VERSION "NO_VERSION"
 #endif
 
 #include "cmdline/cmdline.h"
