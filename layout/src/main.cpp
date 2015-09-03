@@ -300,6 +300,9 @@ int main(int argc, char **argv) {
   write_version(run_args_file);
   write_call_cmd(run_args_file, argc, argv);
   write_settings(run_args_file);
+
+  write_version(stderr);
+  write_call_cmd(stderr, argc, argv);
   write_settings(stderr);
   fclose(run_args_file);
 
