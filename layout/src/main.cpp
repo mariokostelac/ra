@@ -56,6 +56,7 @@ string overlaps_filename;
 string overlaps_format;
 bool verbose_output;
 int reads_id_offset;
+string settings_file;
 
 // map reads so we can access reads with mapped[read_id]
 void map_reads(vector<Read*>* mapped, vector<Read*>& reads) {
@@ -172,6 +173,7 @@ void init_args(int argc, char** argv) {
   args.add<int>("reads_id_offset", 'a', "reads id offset (first read id)", false, 0);
   args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
+  args.add<string>("settings", 'b', "settings file", false);
 
   args.add<bool>("verbose", 'v', "verbose output", false);
 
@@ -190,6 +192,7 @@ void read_args() {
   overlaps_format = args.get<string>("overlaps_format");
   verbose_output = args.get<bool>("verbose");
   reads_id_offset = args.get<int>("reads_id_offset");
+  settings_file = args.get<string>("settings");
 
   MAX_NODES = args.get<int>("bp_max_nodes");
   MAX_DISTANCE = MAX_NODES * 10000;
@@ -204,6 +207,40 @@ FILE* must_fopen(const char* path, const char* mode) {
   }
 
   return res;
+}
+
+void read_settings(FILE *fd) {
+  char buff[4096];
+
+  while (fgets(buff, 4096, fd) != nullptr) {
+
+    // comment
+    if (buff[0] == '#') continue;
+
+    if (sscanf(buff, "READS_MIN_LEN: %lu", &READS_MIN_LEN)) {
+      debug("READ READS_MIN_LEN: %lu from file\n", READS_MIN_LEN);
+    } else if (sscanf(buff, "READ_LEN_THRESHOLD: %d", &READ_LEN_THRESHOLD)) {
+      debug("READ READ_LEN_THRESHOLD: %lu from file\n", READ_LEN_THRESHOLD);
+    } else if (sscanf(buff, "MAX_READS_IN_TIP: %d", &MAX_READS_IN_TIP)) {
+      debug("READ MAX_READS_IN_TIP: %lu from file\n", MAX_READS_IN_TIP);
+    } else if (sscanf(buff, "MAX_DEPTH_WITHOUT_EXTRA_FORK: %d", &MAX_DEPTH_WITHOUT_EXTRA_FORK)) {
+      debug("READ MAX_DEPTH_WITHOUT_EXTRA_FORK: %lu from file\n", MAX_DEPTH_WITHOUT_EXTRA_FORK);
+    } else if (sscanf(buff, "MAX_NODES: %lu", &MAX_NODES)) {
+      debug("READ MAX_NODES: %lu from file\n", MAX_NODES);
+    } else if (sscanf(buff, "MAX_DISTANCE: %d", &MAX_DISTANCE)) {
+      debug("READ MAX_DISTANCE: %lu from file\n", MAX_DISTANCE);
+    } else if (sscanf(buff, "MAX_DIFFERENCE: %lf", &MAX_DIFFERENCE)) {
+      debug("READ MAX_DIFFERENCE: %lf from file\n", MAX_DIFFERENCE);
+    } else if (sscanf(buff, "MAX_BRANCHES: %lu", &MAX_BRANCHES)) {
+      debug("READ MAX_BRANCHES: %lu from file\n", MAX_BRANCHES);
+    } else if (sscanf(buff, "MAX_START_NODES: %lu", &MAX_START_NODES)) {
+      debug("READ MAX_START_NODES: %lu from file\n", MAX_START_NODES);
+    } else if (sscanf(buff, "LENGTH_THRESHOLD: %lf", &LENGTH_THRESHOLD)) {
+      debug("READ LENGTH_THRESHOLD: %lf from file\n", LENGTH_THRESHOLD);
+    } else if (sscanf(buff, "QUALITY_THRESHOLD: %lf", &QUALITY_THRESHOLD)) {
+      debug("READ QUALITY_THRESHOLD: %lf from file\n", QUALITY_THRESHOLD);
+    }
+  }
 }
 
 void write_settings(FILE *fd) {
@@ -247,6 +284,12 @@ int main(int argc, char **argv) {
 
   init_args(argc, argv);
   read_args();
+
+  if (settings_file.size() > 0) {
+    FILE* settings_fd = fopen(settings_file.c_str(), "r");
+    read_settings(settings_fd);
+    fclose(settings_fd);
+  }
 
   string output_dir = output_dir_name();
 
