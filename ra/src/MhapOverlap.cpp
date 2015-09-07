@@ -10,11 +10,13 @@ namespace MHAP {
 
   int MhapOverlap::getScore() const {
 
+    int base_score = ((a_hi-a_lo)/(double)a_len + (b_hi-b_lo)/(double)b_len) * 1000;
+
     if (jaccard_score > 0) {
-      return jaccard_score * 1000;
+      return base_score * jaccard_score;
     }
 
-    return ((a_hi-a_lo)/(double)a_len + (b_hi-b_lo)/(double)b_len) * 1000;
+    return base_score;
   }
 
   bool MhapOverlap::isUsingPrefix(int read_id) const {
