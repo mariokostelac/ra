@@ -370,6 +370,14 @@ public:
     }
 
     /*!
+     * @brief Getter for number of edges in graph
+     * @return number of edges
+     */
+    size_t getNumEdges() const {
+        return edges_.size();
+    }
+
+    /*!
      * @brief Method for graph simplification
      * @details Method removes and deletes all tips and disconnected
      * vertices from the graph
