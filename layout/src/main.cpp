@@ -403,8 +403,7 @@ int main(int argc, char **argv) {
     writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
   }
 
-  cerr << "Graph simplified, " << graph->getNumVertices() << " vertices and " << graph->getNumEdges() <<
-    " edges left" << endl;
+  fprintf(stderr, "Simplified string graph: %d vertices, %d edges\n", graph->getNumVertices(), graph->getNumEdges());
 
   std::vector<StringGraphComponent*> components;
   graph->extractComponents(components);
