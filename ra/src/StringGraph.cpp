@@ -1070,7 +1070,6 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
     int res_length = 0;
 
-    Edge* best_edge = edges.front();
     if (edges.size() == 1) {
 
         const auto& edge = edges.front();
@@ -1080,21 +1079,37 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
     } else if (edges.size() > 1) {
 
+        Edge* best_edge = nullptr;
+
         int best_len = 0;
+        int best_qual = 0;
+        int qual_lo = 0;
+
+        for (const auto& edge : edges) {
+          best_qual = max(best_qual, edge->getOverlap()->getScore());
+        }
+
+        qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
 
         for (const auto& edge : edges) {
 
-            int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
-                direction, visited, forks_left - 1);
+            int curr_qual = edge->getOverlap()->getScore();
 
-            if (curr_len > best_len) {
-              best_edge = edge;
-              best_len = curr_len;
+            if (curr_qual >= qual_lo) {
+              int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+                  direction, visited, forks_left - 1);
+
+              if (curr_len > best_len) {
+                best_edge = edge;
+                best_len = curr_len;
+              }
             }
         }
 
-        res_length += best_edge->labelLength();
-        res_length += best_len;
+        if (best_edge != nullptr) {
+            res_length += best_edge->labelLength();
+            res_length += best_len;
+        }
     }
 
     visited[from->getId()] = false;
@@ -1128,7 +1143,14 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
         } else if (edges.size() > 1) {
 
             double best_length = 0;
-            int best_score = -1;
+            int best_qual = 0;
+            int qual_lo = 0;
+
+            for (const auto& edge : edges) {
+              best_qual = max(best_qual, edge->getOverlap()->getScore());
+            }
+
+            qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
 
             for (const auto& edge : edges) {
 
@@ -1138,15 +1160,15 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                int length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
-                    curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
+                int curr_qual = edge->getOverlap()->getScore();
+                if (curr_qual >= qual_lo) {
+                  int curr_length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
+                      curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
 
-                int curr_score = edge->getOverlap()->getScore();
-                if ((length > best_length && (int) ((1 - QUALITY_THRESHOLD) * best_score) <= curr_score) ||
-                    (curr_score > best_score && (int) ((1 - LENGTH_THRESHOLD) * best_length) <= length)) {
+                  if (curr_length > best_length) {
                     best_edge = edge;
-                    best_length = length;
-                    best_score = curr_score;
+                    best_length = curr_length;
+                  }
                 }
             }
         }
