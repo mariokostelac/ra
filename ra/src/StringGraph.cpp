@@ -822,7 +822,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
     std::vector<std::string> sequences;
 
     for (const auto& walk : all_walks) {
-      if (walk->getEdges().back()->getDst()->getId() == juncture_id) {
+      if (walk->getEdges().back()->getDst()->getId() == (int) juncture_id) {
         bubble_walks.push_back(walk);
       }
     }
@@ -1419,6 +1419,17 @@ void StringGraphComponent::extractLongestWalk() {
         }
     }
 
+    // circular component
+    if (startCandidates.size() == 0) {
+      std::vector<bool> visited(maxId + 1, false);
+
+      int direction = 0;
+      const auto vertex = vertices_.front();
+
+      startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+            visited, 1));
+    }
+
     std::sort(startCandidates.begin(), startCandidates.end(),
         [](const Candidate& left, const Candidate& right) {
             return std::get<2>(left) > std::get<2>(right);
@@ -1435,6 +1446,8 @@ void StringGraphComponent::extractLongestWalk() {
 
         const Vertex* start = std::get<0>(startCandidates[i]);
         int direction = std::get<1>(startCandidates[i]);
+
+        debug("CREATECONTIG from vertex %d\n", start->getId());
 
         std::vector<const Edge*> edges;
         int length = expandVertex(edges, start, direction, maxId, MAX_BRANCHES);
