@@ -1024,50 +1024,7 @@ void StringGraphWalk::addEdge(const Edge* edge) {
 }
 
 void StringGraphWalk::extractSequence(std::string& dst) const {
-
-    if (edges_.empty()) {
-        dst = std::string(start_->getSequence());
-        return;
-    }
-
-    // types: 0 - normal, 1 - reverse complement
-    auto getType = [](const Edge* edge, int id) -> int {
-        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
-        if (!edge->getOverlap()->isInnie()) return 0;
-        return 1;
-    };
-
-    int startType = getType(edges_.front(), start_->getId());
-
-    bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ startType;
-
-    std::string startSequence = std::string(startType ? start_->getReverseComplement() : start_->getSequence());
-
-    // add start vertex
-    dst = appendToPrefix ? std::string(startSequence.rbegin(), startSequence.rend()) : startSequence;
-
-    int prevType = startType;
-
-    // add edge labels
-    for (const auto& edge : edges_) {
-
-        int type = getType(edge, edge->getSrc()->getId());
-
-        bool invert = type == prevType ? false : true;
-
-        std::string label;
-        if (invert) {
-            edge->rkLabel(label);
-        } else {
-            edge->label(label);
-        }
-
-        dst += appendToPrefix ? std::string(label.rbegin(), label.rend()) : label;
-
-        prevType = getType(edge, edge->getDst()->getId()) ^ invert;
-    }
-
-    if (appendToPrefix) dst = std::string(dst.rbegin(), dst.rend());
+    dst = extract_sequence(start_, edges_);
 }
 
 void StringGraphWalk::extractVertices(std::vector<const Vertex*>& dst) const {
@@ -1469,6 +1426,55 @@ void StringGraphComponent::extractLongestWalk() {
 }
 
 // StringGraphComponent
+std::string extract_sequence(const Vertex* start, const std::vector<const Edge*> edges) {
+
+  if (edges.empty()) {
+    return std::string(start->getSequence());
+  }
+
+  std::string dst;
+
+  // types: 0 - normal, 1 - reverse complement
+  auto getType = [](const Edge* edge, int id) -> int {
+    if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
+    if (!edge->getOverlap()->isInnie()) return 0;
+    return 1;
+  };
+
+  int startType = getType(edges.front(), start->getId());
+
+  bool appendToPrefix = edges.front()->getOverlap()->isUsingPrefix(start->getId()) ^ startType;
+
+  std::string startSequence = std::string(startType ? start->getReverseComplement() : start->getSequence());
+
+  // add start vertex
+  dst = appendToPrefix ? std::string(startSequence.rbegin(), startSequence.rend()) : startSequence;
+
+  int prevType = startType;
+
+  // add edge labels
+  for (const auto& edge : edges) {
+
+    int type = getType(edge, edge->getSrc()->getId());
+
+    bool invert = type == prevType ? false : true;
+
+    std::string label;
+    if (invert) {
+      edge->rkLabel(label);
+    } else {
+      edge->label(label);
+    }
+
+    dst += appendToPrefix ? std::string(label.rbegin(), label.rend()) : label;
+
+    prevType = getType(edge, edge->getDst()->getId()) ^ invert;
+  }
+
+  if (appendToPrefix) dst = std::string(dst.rbegin(), dst.rend());
+
+  return dst;
+}
 
 // debug util functions
 inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk) {

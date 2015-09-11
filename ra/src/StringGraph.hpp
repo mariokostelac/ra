@@ -712,3 +712,4 @@ private:
     StringGraphWalk* walk_;
 };
 
+std::string extract_sequence(const Vertex* start, const std::vector<const Edge*> edges);
