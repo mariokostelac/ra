@@ -316,6 +316,9 @@ public:
      */
     const bool isBeginEdge(const Edge* e) const;
 
+    // TODO
+    const Edge* bestEdge(const bool use_end) const;
+
 private:
 
     int id_;
@@ -399,6 +402,9 @@ public:
      * fashion until no changes occur in graph.
      */
     void simplify();
+
+    // TODO
+    int reduceToBOG();
 
     /*!
      * @brief Method for overlap extracion

@@ -10,6 +10,7 @@
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
 
+using std::map;
 using std::max;
 using std::min;
 using std::swap;
@@ -257,6 +258,29 @@ void Vertex::removeMarkedEdges(const bool propagate) {
     }
 }
 
+const Edge* Vertex::bestEdge(const bool use_end) const {
+  const auto& edges = use_end ? edgesE_ : edgesB_;
+
+  if (edges.size() == 0) {
+    return nullptr;
+  }
+
+  Edge* best_edge = edges.front();
+  int best_length = best_edge->getOverlap()->getLength(this->getReadId());
+
+  for (auto& edge : edges) {
+
+    int curr_length = edge->getOverlap()->getLength(this->getReadId());
+
+    if (curr_length > best_length) {
+      best_edge = edge;
+      best_length = curr_length;
+    }
+  }
+
+  return best_edge;
+}
+
 //*****************************************************************************
 
 
@@ -487,6 +511,86 @@ void StringGraph::simplify() {
 
     timer.stop();
     timer.print("SG", "simplification");
+}
+
+int StringGraph::reduceToBOG() {
+
+  int removed = 0;
+
+  // maps overlap_id -> Vertex if overlap_id is best overlap for read inside Vertex.
+  // overlap_id =  min(edge1, edge2); edges represent the same overlap.
+  map<uint32_t, Vertex*> best_for;
+
+  for (const auto& v1 : vertices_) {
+
+    for (int use_end = 0; use_end < 2; ++use_end) {
+
+      const auto& best_edge = v1->bestEdge(use_end);
+      if (best_edge == nullptr) {
+        continue;
+      }
+
+      const auto& overlap = best_edge->getOverlap();
+      auto overlap_id = min(best_edge->getId(), best_edge->pair()->getId());
+
+      if (best_for.count(overlap_id)) {
+        // we found that this overlap is best for two different vertices
+        assert("Reads must be different" && v1 != best_for[overlap_id]);
+
+        const auto& v2 = best_edge->getSrc() == v1 ? best_edge->getDst() : best_edge->getSrc();
+
+        debug("RMBADEDGES %d\n", v1->getReadId());
+        debug("RMBADEDGES %d\n", v2->getReadId());
+
+        const auto& edges_v1 = use_end ? v1->getEdgesE() : v1->getEdgesB();
+        const auto& edges_v2 = use_end ^ overlap->isInnie() ? v2->getEdgesB() : v2->getEdgesE();
+
+        int kept = 0;
+
+        for (const auto& edge : edges_v1) {
+
+          if (edge->getOverlap() == best_edge->getOverlap()) {
+            ++kept;
+            continue;
+          }
+
+          edge->mark();
+          edge->pair()->mark();
+          marked_.push_back(edge->getSrc()->getId());
+          marked_.push_back(edge->getDst()->getId());
+
+          removed += 2;
+        }
+        assert(kept == 1);
+
+        for (const auto& edge : edges_v2) {
+
+          if (edge->getOverlap() == best_edge->getOverlap()) {
+            ++kept;
+            continue;
+          }
+
+          edge->mark();
+          edge->pair()->mark();
+          marked_.push_back(edge->getSrc()->getId());
+          marked_.push_back(edge->getDst()->getId());
+
+          removed += 2;
+        }
+        assert(kept == 2);
+
+      } else {
+        best_for[overlap_id] = v1;
+      }
+
+    }
+  }
+
+  this->deleteMarked();
+
+  trim();
+
+  return removed;
 }
 
 void StringGraph::extractOverlaps(std::vector<Overlap*>& dst, bool view) const {
