@@ -50,8 +50,8 @@ size_t READS_MIN_LEN = 3000;
 // global vars
 cmdline::parser args;
 int thread_num;
-string reads_filename;
 string reads_format;
+string reads_filename;
 string overlaps_filename;
 string overlaps_format;
 bool verbose_output;
@@ -149,12 +149,12 @@ uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
   return removed;
 }
 
-void print_contigs_info(const vector<Contig *>& contigs, const vector<Read*>& reads) {
+void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
 
-  for (uint32_t i = 0; i < contigs.size(); ++i) {
-    const auto& contig = contigs[i];
-    const auto& parts = contig->getParts();
-    const auto& last_part = contig->getParts().back();
+  for (uint32_t i = 0; i < walks.size(); ++i) {
+    Contig contig(walks[i]);
+    const auto& parts = contig.getParts();
+    const auto& last_part = contig.getParts().back();
 
     fprintf(stdout, "contig %u; length: ≈%lu, reads: %lu\n",
         i, last_part.offset + reads[last_part.src]->getLength(), parts.size()
@@ -280,6 +280,48 @@ void write_call_cmd(FILE* fd, int argc, char **argv) {
   fprintf(fd, "\n");
 }
 
+int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, const StringGraph* graph) {
+
+  int written = 0;
+
+  std::vector<StringGraphComponent*> components;
+  graph->extractComponents(components);
+
+  for (const auto& component : components) {
+    const auto& contig_walk_orig = component->longestWalk();
+
+    if (contig_walk_orig == nullptr) {
+      continue;
+    }
+
+    StringGraphWalk* contig_walk_cpy = new StringGraphWalk(*contig_walk_orig);
+    contig_walks->emplace_back(contig_walk_cpy);
+    written++;
+  }
+
+  for (auto c : components) {
+    delete c;
+  }
+
+  return written;
+}
+
+void write_contigs_to_file(const vector<StringGraphWalk*> walks, const char* filename) {
+
+  int idx = 0;
+
+  auto contigs_fast = must_fopen(filename, "w");
+  for (const auto& walk : walks) {
+    string seq;
+    walk->extractSequence(seq);
+
+    fprintf(contigs_fast, ">seq%d|len:%lu\n", idx, seq.size());
+    fprintf(contigs_fast, "%s\n", seq.c_str());
+    idx++;
+  }
+  fclose(contigs_fast);
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -403,42 +445,42 @@ int main(int argc, char **argv) {
     writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
   }
 
-  fprintf(stderr, "Simplified string graph: %d vertices, %d edges\n", graph->getNumVertices(), graph->getNumEdges());
+  std::vector<StringGraphWalk*> contig_walks;
+  extract_contig_walks(&contig_walks, graph);
 
-  std::vector<StringGraphComponent*> components;
-  graph->extractComponents(components);
+  fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
+  write_contigs_to_file(contig_walks, (output_dir + "/contigs_fast.fasta").c_str());
 
-  std::vector<Contig*> contigs;
+  std::cerr << "number of contigs " << contig_walks.size() << std::endl;
+  print_contigs_info(contig_walks, reads_mapped);
 
-  auto contigs_fast = must_fopen((output_dir + "/contigs_fast.fasta").c_str(), "w");
-  int idx = 0;
-  for (const auto& component : components) {
-    string seq;
-    component->extractSequence(seq);
-    fprintf(contigs_fast, ">seq%d\n", idx);
-    fprintf(contigs_fast, "%s\n", seq.c_str());
-    idx++;
-
-    ContigExtractor* extractor = new ContigExtractor(component);
-    const auto& contig = extractor->extractContig();
-
-    if (contig == nullptr) {
-      continue;
-    }
-
-    contigs.emplace_back(contig);
+  vector<Contig*> contigs;
+  for (const auto& contig_walk : contig_walks) {
+    Contig *contig = new Contig(contig_walk);
+    contigs.push_back(contig);
   }
-  fclose(contigs_fast);
-
-  std::cerr << "number of contigs " << contigs.size() << std::endl;
-  print_contigs_info(contigs, reads_mapped);
-
   writeAfgContigs(contigs, (output_dir + "/contigs.afg").c_str());
 
-  for (auto r: reads)      delete r;
-  for (auto o: overlaps)   delete o;
-  for (auto c: components) delete c;
-  for (auto c: contigs)    delete c;
+  graph->reduceToBOG();
+
+  std::vector<StringGraphWalk*> unitig_walks;
+  extract_contig_walks(&unitig_walks, graph);
+  fprintf(stderr, "Best overlap string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
+  write_contigs_to_file(unitig_walks, (output_dir + "/unitigs_fast.fasta").c_str());
+
+  std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
+
+  if (verbose_output) {
+    vector<Overlap*> bog_overlaps;
+    graph->extractOverlaps(bog_overlaps);
+    writeOverlaps(bog_overlaps, (output_dir + "/bog." + overlaps_format).c_str());
+  }
+
+  for (auto r: reads)           delete r;
+  for (auto o: overlaps)        delete o;
+  for (auto c: contig_walks)    delete c;
+  for (auto u: unitig_walks)    delete u;
+  for (auto c: contigs)         delete c;
 
   delete graph;
 

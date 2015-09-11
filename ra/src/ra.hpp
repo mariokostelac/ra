@@ -13,7 +13,6 @@
 #include "AfgRead.hpp"
 #include "CommonHeaders.hpp"
 #include "Contig.hpp"
-#include "ContigExtractor.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "IO.hpp"
 #include "MhapOverlap.hpp"

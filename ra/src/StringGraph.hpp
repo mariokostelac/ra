@@ -138,6 +138,7 @@ public:
      */
     const Vertex* oppositeVertex(int id) const;
 
+    // TODO
     Edge* pair() const;
 
     friend class Vertex;
@@ -677,7 +678,6 @@ private:
  */
 class StringGraphComponent {
 public:
-    friend class ContigExtractor;
 
     /*!
      * @brief StringGraphComponent constructor
@@ -703,6 +703,11 @@ public:
      */
     void extractSequence(std::string& dst);
 
+    /*
+     * TODO
+     */
+    StringGraphWalk* longestWalk();
+
 private:
 
     void extractLongestWalk();
@@ -711,5 +716,3 @@ private:
     const StringGraph* graph_;
     StringGraphWalk* walk_;
 };
-
-std::string extract_sequence(const Vertex* start, const std::vector<const Edge*> edges);

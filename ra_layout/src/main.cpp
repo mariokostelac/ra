@@ -115,10 +115,9 @@ int main(int argc, char* argv[]) {
 
     std::vector<Contig*> contigs;
 
-    for (const auto& component : components) {
+    for (auto& component : components) {
 
-        ContigExtractor* extractor = new ContigExtractor(component);
-        const auto& contig = extractor->extractContig();
+        const auto& contig = new Contig(component->longestWalk());
 
         if (contig != nullptr) {
             contigs.emplace_back(contig);

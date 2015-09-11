@@ -17,21 +17,24 @@ Contig::Contig(const StringGraphWalk* walk) {
     const Vertex* start = walk->getStart();
     const auto& edges = walk->getEdges();
 
-    int firstReversed = isReversed(edges.front(), start->getId());
-    int offset = 0;
+    if (edges.size() == 0) {
+      parts_.emplace_back(start->getId(), 0, start->getLength(), 0);
+    } else {
+      int firstReversed = isReversed(edges.front(), start->getId());
+      int offset = 0;
 
-    // 0 -> reversed complement
-    // 1 -> normal direction
-    int prefixGoesFirst = edges.front()->getOverlap()->isUsingSuffix(start->getId()) ^ firstReversed;
+      // 0 -> reversed complement
+      // 1 -> normal direction
+      int prefixGoesFirst = edges.front()->getOverlap()->isUsingSuffix(start->getId()) ^ firstReversed;
 
-    int lo = prefixGoesFirst ? 0 : start->getLength();
-    int hi = prefixGoesFirst ? start->getLength() : 0;
+      int lo = prefixGoesFirst ? 0 : start->getLength();
+      int hi = prefixGoesFirst ? start->getLength() : 0;
 
-    parts_.emplace_back(start->getId(), lo, hi, offset);
+      parts_.emplace_back(start->getId(), lo, hi, offset);
 
-    int prevReversed = firstReversed;
+      int prevReversed = firstReversed;
 
-    for (const auto& edge : edges) {
+      for (const auto& edge : edges) {
 
         const Vertex* a = edge->getSrc();
         const Vertex* b = edge->getDst();
@@ -49,6 +52,6 @@ Contig::Contig(const StringGraphWalk* walk) {
         parts_.emplace_back(b->getId(), lo, hi, offset);
 
         prevReversed = bReversed;
+      }
     }
 }
-

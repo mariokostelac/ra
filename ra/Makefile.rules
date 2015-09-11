@@ -16,7 +16,7 @@ L_CMD = $(addprefix -L, )
 CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++
 
-API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp ContigExtractor.hpp \
+API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp \
       EnhancedSuffixArray.hpp IO.hpp \
       EdgesSet.hpp MhapOverlap.hpp MhapParser.hpp \
 	    Overlap.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp \
