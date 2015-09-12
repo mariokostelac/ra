@@ -18,6 +18,7 @@
 #include "MhapOverlap.hpp"
 #include "MhapParser.hpp"
 #include "Overlap.hpp"
+#include "OverlapFunctions.hpp"
 #include "PartialOrderAlignment.hpp"
 #include "Preprocess.hpp"
 #include "Read.hpp"
