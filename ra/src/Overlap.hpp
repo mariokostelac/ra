@@ -170,7 +170,7 @@ public:
      * @brief Getter for overlap score
      * @return overlap score
      */
-    virtual double getScore() const = 0;
+    virtual double getScore() const;
 
     /*!
      * @brief Getter for overlap quality

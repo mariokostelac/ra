@@ -61,10 +61,6 @@ public:
         return bHang_;
     }
 
-    double getScore() const {
-        return 0;
-    }
-
     double getQuality() const {
         return 1;
     }
