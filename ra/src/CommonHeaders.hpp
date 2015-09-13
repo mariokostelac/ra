@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <cassert>
 #include <cstring>
