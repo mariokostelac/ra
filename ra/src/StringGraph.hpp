@@ -38,6 +38,8 @@ class StringGraphWalk;
 class StringGraphNode;
 class StringGraphComponent;
 
+typedef std::map<int, Vertex*> VerticesSet;
+
 /*!
  * @brief Edge class
  * @details Edge encapsulates Overlap in StringGraph.
@@ -362,7 +364,7 @@ public:
      * @return vertex
      */
     const Vertex* getVertex(int id) const {
-        return vertices_[verticesDict_.at(id)];
+        return vertices_.at(id);
     }
 
     /*!
@@ -463,9 +465,8 @@ private:
 
     const std::vector<Overlap*>* overlaps_;
 
-    std::vector<Vertex*> vertices_;
     std::vector<Edge*> edges_;
-    std::map<int, int> verticesDict_;
+    VerticesSet vertices_;
 
     // helper for edge removal (contains indices of vertices which have marked edges)
     std::vector<int> marked_;

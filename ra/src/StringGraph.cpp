@@ -295,11 +295,8 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
 
     overlaps_ = &overlaps;
 
-    vertices_.reserve(reads.size());
-
     for (const auto& read : reads) {
-        verticesDict_[read->getId()] = vertices_.size();
-        vertices_.emplace_back(new Vertex(read->getId(), read, this));
+        vertices_.emplace(read->getId(), new Vertex(read->getId(), read, this));
     }
 
     edges_.reserve(overlaps.size() * 2);
@@ -308,12 +305,12 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
         Edge* edgeA = new Edge(edges_.size(), overlap->getA(), overlap, this);
 
         edges_.emplace_back(edgeA);
-        vertices_[verticesDict_.at(overlap->getA())]->addEdge(edgeA);
+        vertices_[overlap->getA()]->addEdge(edgeA);
 
         Edge* edgeB = new Edge(edges_.size(), overlap->getB(), overlap, this);
 
         edges_.emplace_back(edgeB);
-        vertices_[verticesDict_.at(overlap->getB())]->addEdge(edgeB);
+        vertices_[overlap->getB()]->addEdge(edgeB);
 
         edgeA->pair_ = edgeB;
         edgeB->pair_ = edgeA;
@@ -325,8 +322,11 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Over
 
 StringGraph::~StringGraph() {
 
-    for (const auto& vertex : vertices_) delete vertex;
-    for (const auto& edge : edges_) delete edge;
+    for (const auto& vertex : vertices_) delete vertex.second;
+    for (const auto& edge : edges_)      delete edge;
+
+    vertices_.clear();
+    edges_.clear();
 }
 
 void StringGraph::trim() {
@@ -337,7 +337,8 @@ void StringGraph::trim() {
     size_t disconnectedNum = 0;
     size_t tipsNum = 0;
 
-    for (const auto& vertex : vertices_) {
+    for (const auto& kv : vertices_) {
+        const auto& vertex = kv.second;
 
         if (vertex->getLength() > READ_LEN_THRESHOLD) {
             continue;
@@ -425,7 +426,8 @@ uint32_t StringGraph::popBubbles() {
 
     size_t bubblesPoppedNum = 0;
 
-    for (const auto& vertex : vertices_) {
+    for (auto& kv : vertices_) {
+        auto& vertex = kv.second;
 
         if (vertex->isMarked()) {
             continue;
@@ -521,7 +523,8 @@ int StringGraph::reduceToBOG() {
   // overlap_id =  min(edge1, edge2); edges represent the same overlap.
   map<uint32_t, Vertex*> best_for;
 
-  for (const auto& v1 : vertices_) {
+  for (auto& kv1 : vertices_) {
+    auto& v1 = kv1.second;
 
     for (int use_end = 0; use_end < 2; ++use_end) {
 
@@ -613,13 +616,15 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
 
     int maxId = 0;
 
-    for (const auto& vertex : vertices_) {
+    for (const auto& kv : vertices_) {
+        const auto& vertex = kv.second;
         maxId = std::max(vertex->getId(), maxId);
     }
 
     std::vector<bool> used(maxId + 1, false);
 
-    for (const auto& vertex : vertices_) {
+    for (const auto& kv : vertices_) {
+        const auto& vertex = kv.second;
 
         if (used[vertex->getId()] == true) {
             continue;
@@ -971,28 +976,22 @@ void StringGraph::deleteMarked() {
 
     // remove marked edges which are marked due to deletion of their opposite edges
     for (const auto& id : marked_) {
-        vertices_[verticesDict_[id]]->removeMarkedEdges();
+        vertices_[id]->removeMarkedEdges();
     }
 
     marked_.clear();
 
     // delete vertices
-    std::vector<Vertex*> verticesNew;
-    std::map<int, int> verticesDictNew;
-
-    for (const auto& vertex : vertices_) {
+    for (VerticesSet::iterator it = vertices_.begin(); it != vertices_.end();) {
+        const auto& vertex = it->second;
 
         if (vertex->isMarked()) {
+            it = vertices_.erase(it);
             delete vertex;
-            continue;
+        } else {
+          it++;
         }
-
-        verticesDictNew[vertex->getId()] = verticesNew.size();
-        verticesNew.emplace_back(vertex);
     }
-
-    verticesDict_.swap(verticesDictNew);
-    vertices_.swap(verticesNew);
 
     // delete edges
     std::vector<Edge*> edgesNew;
