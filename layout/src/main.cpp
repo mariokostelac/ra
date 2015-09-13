@@ -373,7 +373,7 @@ int main(int argc, char **argv) {
   read_args();
 
   if (settings_file.size() > 0) {
-    FILE* settings_fd = fopen(settings_file.c_str(), "r");
+    FILE* settings_fd = must_fopen(settings_file.c_str(), "r");
     read_settings(settings_fd);
     fclose(settings_fd);
   }
