@@ -1284,7 +1284,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
         int best_len = 0;
         double best_qual = 0;
-        int qual_lo = 0;
+        double qual_lo = 0;
 
         for (const auto& edge : edges) {
           best_qual = max(best_qual, edge->getOverlap()->getScore());
@@ -1294,7 +1294,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
         for (const auto& edge : edges) {
 
-            int curr_qual = edge->getOverlap()->getScore();
+            auto curr_qual = edge->getOverlap()->getScore();
 
             if (curr_qual >= qual_lo) {
               int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
@@ -1345,7 +1345,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
 
             int best_length = 0;
             double best_qual = 0;
-            int qual_lo = 0;
+            double qual_lo = 0;
 
             for (const auto& edge : edges) {
               best_qual = max(best_qual, edge->getOverlap()->getScore());
@@ -1361,7 +1361,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                int curr_qual = edge->getOverlap()->getScore();
+                auto curr_qual = edge->getOverlap()->getScore();
                 if (curr_qual >= qual_lo) {
                   int curr_length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
                       curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
