@@ -47,6 +47,9 @@ double QUALITY_THRESHOLD = 0.2;
 // filter reads param
 size_t READS_MIN_LEN = 3000;
 
+// filter overlaps param
+double OVERLAPS_MIN_QUALITY = 0;
+
 // global vars
 cmdline::parser args;
 int thread_num;
@@ -149,6 +152,42 @@ uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
   return removed;
 }
 
+int filter_overlaps_by_min_read_len(vector<Overlap*>* overlaps, const uint32_t min_length) {
+  int skipped = 0;
+
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    const auto o = (*overlaps)[i];
+
+    if (o->getReadA()->getLength() < min_length || o->getReadB()->getLength() < min_length) {
+      skipped++;
+      continue;
+    }
+
+    (*overlaps)[i - skipped] = (*overlaps)[i];
+  }
+  overlaps->resize(overlaps->size() - skipped);
+
+  return skipped;
+}
+
+int filter_overlaps_by_min_qual(vector<Overlap*>* overlaps, const double min_qual) {
+  int skipped = 0;
+
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    const auto o = (*overlaps)[i];
+
+    if (o->getQuality() < min_qual) {
+      skipped++;
+      continue;
+    }
+
+    (*overlaps)[i - skipped] = (*overlaps)[i];
+  }
+  overlaps->resize(overlaps->size() - skipped);
+
+  return skipped;
+}
+
 void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
 
   for (uint32_t i = 0; i < walks.size(); ++i) {
@@ -239,6 +278,8 @@ void read_settings(FILE *fd) {
       debug("READ LENGTH_THRESHOLD: %lf from file\n", LENGTH_THRESHOLD);
     } else if (sscanf(buff, "QUALITY_THRESHOLD: %lf", &QUALITY_THRESHOLD)) {
       debug("READ QUALITY_THRESHOLD: %lf from file\n", QUALITY_THRESHOLD);
+    } else if (sscanf(buff, "OVERLAPS_MIN_QUALITY: %lf", &OVERLAPS_MIN_QUALITY)) {
+      debug("READ OVERLAPS_MIN_QUALITY: %lf from file\n", OVERLAPS_MIN_QUALITY);
     }
   }
 }
@@ -246,6 +287,10 @@ void read_settings(FILE *fd) {
 void write_settings(FILE *fd) {
   fprintf(fd, "# filter reads parameters\n");
   fprintf(fd, "READS_MIN_LEN: %lu\n", READS_MIN_LEN);
+  fprintf(fd, "\n");
+
+  fprintf(fd, "# filter overlaps parameters\n");
+  fprintf(fd, "OVERLAPS_MIN_QUALITY: %lf\n", OVERLAPS_MIN_QUALITY);
   fprintf(fd, "\n");
 
   fprintf(fd, "# trimming parameters\n");
@@ -348,7 +393,7 @@ int main(int argc, char **argv) {
   write_settings(stderr);
   fclose(run_args_file);
 
-  vector<Overlap*> overlaps, filtered;
+  vector<Overlap*> all_overlaps, overlaps, filtered;
   vector<Read*> reads;
   vector<Read*> reads_mapped;
 
@@ -368,18 +413,23 @@ int main(int argc, char **argv) {
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
   if (overlaps_format == "afg") {
-    readAfgOverlaps(overlaps, overlaps_filename.c_str());
+    readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
   } else if (overlaps_format == "mhap") {
     fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps_file, &overlaps);
+    MHAP::read_overlaps(overlaps_file, &all_overlaps);
     overlaps_file.close();
   } else {
     assert(false);
   }
 
+  overlaps = all_overlaps;
+
+  int had_overlaps = overlaps.size();
+  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
+
   auto filtered_duplicates = filter_best_overlap_per_pair(&overlaps);
-  cerr << "Filtered " << filtered_duplicates <<
-    " overlaps because had more than one overlap per read pair (kept best)." << endl;
+  fprintf(stderr, "%d (%.2lf%%) overlaps filtered because had more than one overlap per read pair\n",
+      filtered_duplicates, 100. * filtered_duplicates / had_overlaps);
 
   must_one_overlap_per_pair(overlaps);
 
@@ -405,20 +455,15 @@ int main(int argc, char **argv) {
     o->setReadB(reads_mapped[b]);
   }
 
-  cerr << overlaps.size() << " overlaps read" << endl;
+  had_overlaps = overlaps.size();
+  int bad_len_filtered = filter_overlaps_by_min_read_len(&overlaps, READS_MIN_LEN);
+  fprintf(stderr, "%d (%.2lf%%) overlaps filtered because incident reads shorter than %lu\n",
+      bad_len_filtered, 100. * bad_len_filtered / had_overlaps, READS_MIN_LEN);
 
-  int skipped = 0;
-  for (uint32_t i = 0; i < overlaps.size(); ++i) {
-    const auto o = overlaps[i];
-
-    if (o->getReadA()->getLength() < READS_MIN_LEN || o->getReadB()->getLength() < READS_MIN_LEN) {
-      skipped++;
-      continue;
-    }
-
-    overlaps[i - skipped] = overlaps[i];
-  }
-  overlaps.resize(overlaps.size() - skipped);
+  had_overlaps = overlaps.size();
+  int bad_qual_filtered = filter_overlaps_by_min_qual(&overlaps, OVERLAPS_MIN_QUALITY);
+  fprintf(stderr, "%d (%.2lf%%) overlaps filtered because quality worse than %0.4lf\n",
+      bad_qual_filtered, 100. * bad_qual_filtered / had_overlaps, OVERLAPS_MIN_QUALITY);
 
   vector<Overlap*> nocontainments;
   filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
@@ -445,10 +490,11 @@ int main(int argc, char **argv) {
     writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
   }
 
+  fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
+
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
 
-  fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
   write_contigs_to_file(contig_walks, (output_dir + "/contigs_fast.fasta").c_str());
 
   std::cerr << "number of contigs " << contig_walks.size() << std::endl;
@@ -477,7 +523,7 @@ int main(int argc, char **argv) {
   }
 
   for (auto r: reads)           delete r;
-  for (auto o: overlaps)        delete o;
+  for (auto o: all_overlaps)    delete o;
   for (auto c: contig_walks)    delete c;
   for (auto u: unitig_walks)    delete u;
   for (auto c: contigs)         delete c;

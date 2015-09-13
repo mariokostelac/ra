@@ -32,7 +32,9 @@ namespace MHAP {
 
       int getBHang() const;
 
-      int getScore() const;
+      double getScore() const;
+
+      double getQuality() const;
 
       bool isInnie() const;
 

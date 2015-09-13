@@ -61,8 +61,12 @@ public:
         return bHang_;
     }
 
-    int getScore() const {
+    double getScore() const {
         return 0;
+    }
+
+    double getQuality() const {
+        return 1;
     }
 
     bool isInnie() const {

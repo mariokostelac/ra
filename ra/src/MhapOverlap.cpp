@@ -8,15 +8,19 @@ using std::ostream;
 
 namespace MHAP {
 
-  int MhapOverlap::getScore() const {
+  double MhapOverlap::getScore() const {
 
-    int base_score = ((a_hi-a_lo)/(double)a_len + (b_hi-b_lo)/(double)b_len) * 1000;
+    double base_score = ((a_hi-a_lo)/(double)a_len + (b_hi-b_lo)/(double)b_len);
 
     if (jaccard_score > 0) {
       return base_score * jaccard_score;
     }
 
     return base_score;
+  }
+
+  double MhapOverlap::getQuality() const {
+    return jaccard_score;
   }
 
   bool MhapOverlap::isUsingPrefix(int read_id) const {

@@ -162,10 +162,16 @@ public:
     virtual int getBHang() const = 0;
 
     /*!
-     * @brief Getter for overlap score 
+     * @brief Getter for overlap score
      * @return overlap score
      */
-    virtual int getScore() const = 0;
+    virtual double getScore() const = 0;
+
+    /*!
+     * @brief Getter for overlap quality
+     * @return overlap quality
+     */
+    virtual double getQuality() const = 0;
 
     /*!
      * @brief Getter for overlap type

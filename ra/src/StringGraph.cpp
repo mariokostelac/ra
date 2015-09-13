@@ -1186,7 +1186,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
         Edge* best_edge = nullptr;
 
         int best_len = 0;
-        int best_qual = 0;
+        double best_qual = 0;
         int qual_lo = 0;
 
         for (const auto& edge : edges) {
@@ -1246,8 +1246,8 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
 
         } else if (edges.size() > 1) {
 
-            double best_length = 0;
-            int best_qual = 0;
+            int best_length = 0;
+            double best_qual = 0;
             int qual_lo = 0;
 
             for (const auto& edge : edges) {
