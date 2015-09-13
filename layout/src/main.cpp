@@ -492,6 +492,19 @@ int main(int argc, char **argv) {
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 
+  std::vector<StringGraphWalk*> unitig_walks;
+  graph->extract_unitigs(&unitig_walks);
+  write_contigs_to_file(unitig_walks, (output_dir + "/unitigs_fast.fasta").c_str());
+
+  std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
+
+  vector<Contig*> unitigs;
+  for (const auto& unitig_walk : unitig_walks) {
+    Contig *unitig = new Contig(unitig_walk);
+    unitigs.push_back(unitig);
+  }
+  writeAfgContigs(unitigs, (output_dir + "/unitigs.afg").c_str());
+
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
 
@@ -507,27 +520,7 @@ int main(int argc, char **argv) {
   }
   writeAfgContigs(contigs, (output_dir + "/contigs.afg").c_str());
 
-  graph->reduceToBOG();
-
-  std::vector<StringGraphWalk*> unitig_walks;
-  extract_contig_walks(&unitig_walks, graph);
-  fprintf(stderr, "Best overlap string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
-  write_contigs_to_file(unitig_walks, (output_dir + "/unitigs_fast.fasta").c_str());
-
-  std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
-
-  vector<Contig*> unitigs;
-  for (const auto& unitig_walk : unitig_walks) {
-    Contig *unitig = new Contig(unitig_walk);
-    unitigs.push_back(unitig);
-  }
-  writeAfgContigs(unitigs, (output_dir + "/unitigs.afg").c_str());
-
-  if (verbose_output) {
-    vector<Overlap*> bog_overlaps;
-    graph->extractOverlaps(bog_overlaps);
-    writeOverlaps(bog_overlaps, (output_dir + "/bog." + overlaps_format).c_str());
-  }
+  //graph->reduceToBOG();
 
   for (auto r: reads)           delete r;
   for (auto o: all_overlaps)    delete o;

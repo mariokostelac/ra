@@ -427,7 +427,15 @@ public:
      */
     void extractComponents(std::vector<StringGraphComponent*>& dst) const;
 
+    int extract_unitigs(std::vector<StringGraphWalk*>* walks) const;
+
 private:
+
+    /**
+     * TODO
+     */
+    int mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* unitig_id,
+        const int id, const Vertex* start, const int direction) const;
 
     /*!
      * @brief Method for bubble search

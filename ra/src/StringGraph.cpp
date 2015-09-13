@@ -16,6 +16,7 @@ using std::min;
 using std::swap;
 
 const int NOT_FOUND = -1;
+const int NOT_DEFINED = -1;
 
 inline std::string vertices_sequence_from_walk(const StringGraphWalk* walk);
 static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start, const int start_direction);
@@ -677,6 +678,59 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     timer.print("SG", "component extraction");
 }
 
+int StringGraph::extract_unitigs(std::vector<StringGraphWalk*>* walks) const {
+
+  int max_id = 0;
+  for (auto kv : vertices_) {
+    max_id = std::max(kv.second->getId(), max_id);
+  }
+
+  // vertex_id -> unitig_id
+  std::vector<int> unitig_id(max_id + 1, NOT_DEFINED);
+  int curr_unitig_id = 1;
+
+  for (auto kv : vertices_) {
+
+    auto vertex = kv.second;
+
+    if (unitig_id[vertex->getId()] != NOT_DEFINED) continue;
+
+    debug("UNITIGFIND %d ", vertex->getId());
+
+    std::vector<Edge*> edges;
+
+    // mark from vertex to the start of unitig
+    mark_unitig(&edges, &unitig_id, curr_unitig_id, vertex, 0);
+
+    debug("MARK %lu edges ", edges.size());
+
+    // reverse edges
+    for (int i = 0, n = edges.size(); i < n; ++i) {
+      edges[i] = edges[i]->pair();
+    }
+    std::reverse(edges.begin(), edges.end());
+
+    // mark from here to the end
+    mark_unitig(&edges, &unitig_id, curr_unitig_id, vertex, 1);
+
+    if (edges.size()) {
+
+      walks->emplace_back(new StringGraphWalk(edges.front()->getSrc()));
+
+      for (auto e : edges) {
+        walks->back()->addEdge(e);
+      }
+
+      debug("UNITIGFOUND %d edges no %lu\n", vertex->getId(), edges.size());
+
+      // create next unitig id
+      curr_unitig_id++;
+    }
+  }
+
+  return curr_unitig_id - 1;
+}
+
 uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
 
     debug("FINDBUBBLE %d\n", root->getId());
@@ -766,6 +820,7 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
 
     return popped;
 }
+
 
 bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, const uint32_t juncture_id, const int direction) {
 
@@ -970,6 +1025,49 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
     }
 
     return popped;
+}
+
+int StringGraph::mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* unitig_id,
+    const int id, const Vertex* start, const int start_direction) const {
+
+  int marked = 0;
+  int use_suffix = start_direction;
+
+  auto curr_vertex = start;
+
+  while (true) {
+
+    assert(unitig_id->at(curr_vertex->getId()) == NOT_DEFINED || unitig_id->at(curr_vertex->getId()) == id);
+    (*unitig_id)[curr_vertex->getId()] = id;
+
+    marked++;
+
+    auto edge = curr_vertex->bestEdge(use_suffix);
+
+    if (edge == nullptr) {
+      break;
+    }
+
+    if (edge->getOverlap()->isInnie()) {
+      use_suffix = 1 - use_suffix;
+    }
+
+    auto next = edge->getDst();
+
+    dst_edges->push_back(const_cast<Edge*>(edge));
+
+    if (next->bestEdge(1 - use_suffix)->getOverlap() != edge->getOverlap()) {
+      break;
+    }
+
+    if (unitig_id->at(next->getId()) != NOT_DEFINED) {
+      break;
+    }
+
+    curr_vertex = next;
+  }
+
+  return marked;
 }
 
 void StringGraph::deleteMarked() {
