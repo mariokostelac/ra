@@ -17,6 +17,10 @@ static inline bool doubleEq(double x, double y, double eps) {
     return y <= x + eps && x <= y + eps;
 }
 
+int Overlap::confirmedLength(const int read_id) const {
+    return getLength(read_id);
+}
+
 const std::string overlap("=======");
 std::string Overlap::repr() const {
   std::string a = overlap;

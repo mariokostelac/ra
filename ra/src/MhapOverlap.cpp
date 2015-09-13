@@ -81,10 +81,18 @@ namespace MHAP {
     assert(false);
   }
 
+  int MhapOverlap::confirmedLength(const int read_id) const {
+      assert(read_id == getA() || read_id == getB());
+
+      if (read_id == getA()) {
+        return a_hi - a_lo - 1;
+      }
+
+      return b_hi - b_lo - 1;
+  }
+
   int MhapOverlap::getLengthA() const {
     assert(getReadA() != nullptr);
-
-    //return a_hi - a_lo - 1;
 
     int len = getReadA()->getSequence().length();
     if (getAHang() > 0) {
@@ -99,8 +107,6 @@ namespace MHAP {
 
   int MhapOverlap::getLengthB() const {
     assert(getReadB() != nullptr);
-
-    //return b_hi - b_lo - 1;
 
     int len = getReadB()->getSequence().length();
     if (getAHang() < 0) {
