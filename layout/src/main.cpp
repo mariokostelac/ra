@@ -516,6 +516,13 @@ int main(int argc, char **argv) {
 
   std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
 
+  vector<Contig*> unitigs;
+  for (const auto& unitig_walk : unitig_walks) {
+    Contig *unitig = new Contig(unitig_walk);
+    unitigs.push_back(unitig);
+  }
+  writeAfgContigs(unitigs, (output_dir + "/unitigs.afg").c_str());
+
   if (verbose_output) {
     vector<Overlap*> bog_overlaps;
     graph->extractOverlaps(bog_overlaps);
