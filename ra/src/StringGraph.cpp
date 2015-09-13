@@ -9,7 +9,6 @@
 
 #include "EditDistance.hpp"
 #include "StringGraph.hpp"
-#include "CTPL/ctpl_stl.h"
 
 using std::map;
 using std::max;
@@ -1384,25 +1383,14 @@ StringGraphWalk* StringGraphComponent::longestWalk() {
 
 void StringGraphComponent::extractLongestWalk() {
 
-    Timer timer_sc;
-    timer_sc.start();
-
-    int threads_num = std::thread::hardware_concurrency();
-    if (threads_num <= 0) {
-      threads_num = 4;
-    }
-
-    fprintf(stderr, "[SG][finding best walk]: threads num: %d\n", threads_num);
-
-    ctpl::thread_pool workers(threads_num);
-
     typedef std::tuple<const Vertex*, int, double> Candidate;
 
-    std::vector<std::future<Candidate>> start_candidates_f;
+    // pick n start vertices based on total coverage of their chains to first branch
+    std::vector<Candidate> startCandidates;
 
-    int max_id = 0;
+    int maxId = 0;
     for (const auto& vertex : vertices_) {
-        max_id = std::max(max_id, vertex->getId());
+        maxId = std::max(maxId, vertex->getId());
     }
 
     // tips and singular chains could be good candidates
@@ -1413,13 +1401,9 @@ void StringGraphComponent::extractLongestWalk() {
             if ((direction == 0 && vertex->getEdgesB().size() == 1 && vertex->getEdgesE().size() == 0) ||
                 (direction == 1 && vertex->getEdgesE().size() == 1 && vertex->getEdgesB().size() == 0)) {
 
-                start_candidates_f.push_back(
-                    workers.push([vertex, max_id, direction] (int tid) {
-                      std::vector<bool> visited(max_id + 1, false);
-                      return Candidate(vertex, direction, longest_sequence_length(vertex, direction,
-                          visited, 0));
-                    })
-                );
+                std::vector<bool> visited(maxId + 1, false);
+                startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+                    visited, 0));
             }
         }
     }
@@ -1432,92 +1416,68 @@ void StringGraphComponent::extractLongestWalk() {
             if ((direction == 0 && vertex->getEdgesB().size() > 1) ||
                 (direction == 1 && vertex->getEdgesE().size() > 1)) {
 
-                start_candidates_f.push_back(
-                    workers.push([vertex, max_id, direction] (int tid){
-                      std::vector<bool> visited(max_id + 1, false);
-                      return Candidate(vertex, direction, longest_sequence_length(vertex, direction,
-                          visited, 0));
-                    })
-                );
+                std::vector<bool> visited(maxId + 1, false);
+                startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+                    visited, 1));
             }
         }
     }
 
-    std::vector<Candidate> start_candidates(start_candidates_f.size());
-
-    for (uint32_t i = 0; i < start_candidates_f.size(); ++i) {
-      start_candidates[i] = start_candidates_f[i].get();
-    }
-
     // circular component
-    if (start_candidates.size() == 0) {
-      std::vector<bool> visited(max_id + 1, false);
+    if (startCandidates.size() == 0) {
+      std::vector<bool> visited(maxId + 1, false);
 
       int direction = 0;
       const auto vertex = vertices_.front();
 
-      start_candidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
+      startCandidates.emplace_back(vertex, direction, longest_sequence_length(vertex, direction,
             visited, 1));
     }
 
-    std::sort(start_candidates.begin(), start_candidates.end(),
+    std::sort(startCandidates.begin(), startCandidates.end(),
         [](const Candidate& left, const Candidate& right) {
             return std::get<2>(left) > std::get<2>(right);
         }
     );
 
-    size_t n = std::min(MAX_START_NODES, start_candidates.size());
-
-    timer_sc.stop();
-    timer_sc.print("SG", "finding start candidates");
-
-    Timer timer_exp;
-    timer_exp.start();
+    int n = std::min(MAX_START_NODES, startCandidates.size());
 
     // expand each of n candidates to a full chain and pick the best one (by length)
     StringGraphWalk* selectedContig = nullptr;
     int selectedLength = 0;
 
-    std::vector<std::future<std::pair<int, std::vector<const Edge*>>>> contigs(n);
-    for (size_t i = 0; i < n; ++i) {
-        contigs[i] = workers.push([&start_candidates, &max_id, i] (int tid) {
+    Timer timer;
+    timer.start();
 
-          const Vertex* start = std::get<0>(start_candidates[i]);
-          int direction = std::get<1>(start_candidates[i]);
+    #pragma omp parallel for default(none), shared(maxId, n, MAX_BRANCHES, startCandidates, selectedLength, selectedContig), schedule(dynamic, 1)
+    for (int i = 0; i < n; ++i) {
 
-          debug("CREATECONTIG from vertex %d\n", start->getId());
+        const Vertex* start = std::get<0>(startCandidates[i]);
+        int direction = std::get<1>(startCandidates[i]);
 
-          std::vector<const Edge*> edges;
-          int length = expandVertex(edges, start, direction, max_id, MAX_BRANCHES);
+        debug("CREATECONTIG from vertex %d\n", start->getId());
 
-          return make_pair(length, edges);
-        });
-    }
+        std::vector<const Edge*> edges;
+        int length = expandVertex(edges, start, direction, maxId, MAX_BRANCHES);
 
-    for (size_t i = 0; i < n; ++i) {
-      const Vertex* start = std::get<0>(start_candidates[i]);
+        #pragma omp critical
+        if (length > selectedLength) {
 
-      auto& future_contig = contigs[i];
+            selectedLength = length;
 
-      auto contig = future_contig.get();
-      int length = contig.first;
-      auto edges = contig.second;
+            if (selectedContig != nullptr) {
+              delete selectedContig;
+            }
 
-      if (length > selectedLength) {
-
-        selectedLength = length;
-
-        delete selectedContig;
-
-        selectedContig = new StringGraphWalk(start);
-        for (const auto& edge : edges) {
-          selectedContig->addEdge(edge);
+            selectedContig = new StringGraphWalk(start);
+            for (const auto& edge : edges) {
+                selectedContig->addEdge(edge);
+            }
         }
-      }
     }
 
-    timer_exp.stop();
-    timer_exp.print("SG", "finding best walk");
+    timer.stop();
+    timer.print("SG", "extract longest walk");
 
     walk_ = selectedContig;
 }

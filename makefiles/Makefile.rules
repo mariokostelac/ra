@@ -11,8 +11,8 @@ L_CMD = $(addprefix -L, ../../lib/$(MODULE) )
 
 DEP_LIBS = ../../lib/$(MODULE)/libra.a
 
-CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall
-LD_FLAGS = $(I_CMD) $(L_CMD) $(I_CMD_V) -lra -lstdc++ -pthread
+CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp
+LD_FLAGS = $(I_CMD) $(L_CMD) $(I_CMD_V) -lra -lstdc++ -pthread -fopenmp
 
 API = $(addprefix $(SRC_DIR)/, )
 
