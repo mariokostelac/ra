@@ -216,10 +216,6 @@ void init_args(int argc, char** argv) {
 
   args.add<bool>("verbose", 'v', "verbose output", false);
 
-  // bubble popping params
-  args.add<int>("bp_max_nodes", 'm', "max nodes in bubble branch", false, MAX_NODES);
-  args.add<double>("bp_max_diff", 'n', "max difference between bubble branches", false, MAX_DIFFERENCE);
-
   args.parse_check(argc, argv);
 }
 
@@ -232,10 +228,6 @@ void read_args() {
   verbose_output = args.get<bool>("verbose");
   reads_id_offset = args.get<int>("reads_id_offset");
   settings_file = args.get<string>("settings");
-
-  MAX_NODES = args.get<int>("bp_max_nodes");
-  MAX_DISTANCE = MAX_NODES * 10000;
-  MAX_DIFFERENCE = args.get<double>("bp_max_diff");
 }
 
 FILE* must_fopen(const char* path, const char* mode) {
