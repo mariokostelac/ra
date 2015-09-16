@@ -1,17 +1,6 @@
 # overlap2dot
 Converts overlaps to dot graph.
 
-## Requirements
-- make
-- gcc
-- graphviz (for plotting part)
-
-## Installation
-
-```
-  make
-```
-
 ## Usage
 
 ```
