@@ -57,7 +57,6 @@ string reads_format;
 string reads_filename;
 string overlaps_filename;
 string overlaps_format;
-bool verbose_output;
 int reads_id_offset;
 string settings_file;
 
@@ -214,8 +213,6 @@ void init_args(int argc, char** argv) {
   args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
   args.add<string>("settings", 'b', "settings file", false);
 
-  args.add<bool>("verbose", 'v', "verbose output", false);
-
   args.parse_check(argc, argv);
 }
 
@@ -225,7 +222,6 @@ void read_args() {
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
   overlaps_format = args.get<string>("overlaps_format");
-  verbose_output = args.get<bool>("verbose");
   reads_id_offset = args.get<int>("reads_id_offset");
   settings_file = args.get<string>("settings");
 }
@@ -460,27 +456,21 @@ int main(int argc, char **argv) {
   vector<Overlap*> nocontainments;
   filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
 
-  if (verbose_output) {
-    writeOverlaps(nocontainments, (output_dir + "/nocont." + overlaps_format).c_str());
-  }
+  writeOverlaps(nocontainments, (output_dir + "/nocont." + overlaps_format).c_str());
 
   vector<Overlap*> notransitives;
   filterTransitiveOverlaps(notransitives, nocontainments, thread_num, true);
 
-  if (verbose_output) {
-    writeOverlaps(notransitives, (output_dir + "/nocont.notran." + overlaps_format).c_str());
-  }
+  writeOverlaps(notransitives, (output_dir + "/nocont.notran." + overlaps_format).c_str());
 
   createReverseComplements(reads, thread_num);
 
   StringGraph* graph = new StringGraph(reads, notransitives);
   graph->simplify();
 
-  if (verbose_output) {
-    vector<Overlap*> simplified_overlaps;
-    graph->extractOverlaps(simplified_overlaps);
-    writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
-  }
+  vector<Overlap*> simplified_overlaps;
+  graph->extractOverlaps(simplified_overlaps);
+  writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 
