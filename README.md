@@ -31,6 +31,8 @@ Currently supported modules are:
 5. [ra_correct](ra_correct/README.md) - Module is optional and is used to correct reads. If used, it should be called before ra_overlap.
 6. [to_afg](to_afg/README.md) - Module is used for converting read sets from [FASTA][1]/[FASTQ][2] to [afg][3] format. It is neccessary to convert reads because all other modules are using the afg format.
 7. [layout](layout/README.md) - Module is used to create unitigs from input overlaps.
+8. [overlap2dot](overlap2dot/README.md) - Module used for converting overlap files to dot graphs. Cool stuff!
+9. [zoom](zoom/README.md) - Module used for "zooming" a part of overlaps graph. Actually just a simple DFS with depth limit. 
 
 ## Examples
 
