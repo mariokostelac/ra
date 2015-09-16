@@ -1,10 +1,6 @@
 # zoom
 Extract overlaps around given read id, up to the given depth.
 
-## Requirements
-- make
-- gcc
-
 ## Usage
 
 ```
