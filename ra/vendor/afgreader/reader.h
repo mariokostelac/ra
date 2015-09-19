@@ -64,7 +64,7 @@ namespace AMOS {
       int skip_next();
       ObjectType next_type();
       bool next(Read** dst);
-      bool next(Overlap** dst);
+      bool next(AfgOverlap** dst);
 
     private:
       std::istream* input;
@@ -81,7 +81,7 @@ namespace AMOS {
       int buffer_double();
       int buffer_clear();
       bool read_from_buff(Read** dst);
-      bool overlap_from_buff(Overlap** dst);
+      bool overlap_from_buff(AfgOverlap** dst);
   };
 }
 

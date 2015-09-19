@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Read.hpp"
+#include "DovetailOverlap.hpp"
 #include "CommonHeaders.hpp"
 
 /*!
@@ -28,3 +29,20 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
  */
 void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     int threadLen, bool view = true);
+
+/*!
+ * @brief Method for overlaping reads
+ * @details Method creates EnhancesSuffixArray objects from reads and uses them for pattern
+ * matching, i.e. prefix-sufix overlaps. It also creates reverse complements of reads needed
+ * to get all types of overlaps.
+ *
+ * @param [out] dst vector of Overlap objects pointers
+ * @param [in] reads vector of Read objects pointers
+ * @param [in] minOverlapLen minimal length of overlaps considered
+ * @param [in] threadLen number of threads
+ * @param [in] path path to file where the EnhancedSuffixArray objects are cached to speed up
+ * future runs on the same data
+ */
+void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
+    int threadLen, const char* path);
+

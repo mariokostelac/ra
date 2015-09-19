@@ -60,7 +60,11 @@ int main(int argc, char **argv) {
   vector<Overlap*> overlaps;
 
   if (overlaps_format == "afg") {
-    readAfgOverlaps(overlaps, overlaps_filename.c_str());
+    vector<DovetailOverlap*> overlaps_;
+    readAfgOverlaps(overlaps_, overlaps_filename.c_str());
+    for (auto o : overlaps_) {
+      overlaps.push_back(o);
+    }
   } else if (overlaps_format == "mhap") {
     fstream overlaps_file(overlaps_filename);
     MHAP::read_overlaps(overlaps_file, &overlaps);

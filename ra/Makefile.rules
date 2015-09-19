@@ -17,6 +17,7 @@ CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp
 
 API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp \
+      DovetailOverlap.hpp \
       EnhancedSuffixArray.hpp IO.hpp \
       EdgesSet.hpp MhapOverlap.hpp MhapParser.hpp \
 	    Overlap.hpp OverlapFunctions.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp \

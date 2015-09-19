@@ -69,7 +69,7 @@ namespace AMOS {
     return read_from_buff(dst);
   }
 
-  bool Reader::next(Overlap** dst) {
+  bool Reader::next(AfgOverlap** dst) {
     if (!has_next()) {
       return false;
     }
@@ -275,7 +275,7 @@ namespace AMOS {
     return true;
   }
 
-  bool Reader::overlap_from_buff(Overlap** overlap) {
+  bool Reader::overlap_from_buff(AfgOverlap** overlap) {
     if (buff_written == 0) {
       return false;
     }

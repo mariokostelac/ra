@@ -25,7 +25,7 @@ static int countForks(const Vertex* start, const int start_direction, const int 
 //*****************************************************************************
 // Edge
 
-Edge::Edge(int id, int readId, const Overlap* overlap, const StringGraph* graph) {
+Edge::Edge(int id, int readId, const DovetailOverlap* overlap, const StringGraph* graph) {
 
     id_ = id;
 
@@ -289,7 +289,7 @@ const Edge* Vertex::bestEdge(const bool use_end) const {
 //*****************************************************************************
 // StringGraph
 
-StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Overlap*>& overlaps) {
+StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<DovetailOverlap*>& overlaps) {
 
     Timer timer;
     timer.start();

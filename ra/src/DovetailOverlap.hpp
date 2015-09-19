@@ -1,11 +1,11 @@
 /*!
- * @file Overlap.hpp
+ * @file DovetailOverlap.hpp
  *
- * @brief Overlap class header file
+ * @brief DovetailOverlap class header file
  * @details
  * Filtering of contained and transitive overlaps was rewritten and modified from:
  *     Github: https://github.com/mariokostelac/assembly-tools \n
- * Overlap types:
+ * DovetailOverlap types:
  *     (found at sourceforge.net/p/amos/mailman/message/19965222/) \n
  *
  *     Normal: \n\n
@@ -41,99 +41,33 @@
 #pragma once
 
 #include "Read.hpp"
+#include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
 /*!
- * @brief Overlap class
+ * @brief DovetailOverlap class
  */
-class Overlap {
+class DovetailOverlap : public Overlap {
 public:
 
     /*!
-     * @brief Overlap constructor
+     * @brief DovetailOverlap constructor
      */
-    Overlap(const int read_id_a, const int read_id_b): a_(read_id_a), b_(read_id_b) {}
-
-    /*!
-     * @brief Overlap constructor
-     */
-    Overlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b):
-      a_(read_id_a), ra_(read_a), b_(read_id_b), rb_(read_b) {}
-
-    /*!
-     * @brief Overlap destructor
-     */
-    virtual ~Overlap() {}
-
-    /*!
-     * @brief Getter for read A identifier
-     * @return read A identifier
-     */
-    int getA() const {
-      return a_;
+    DovetailOverlap(const int read_id_a, const int read_id_b): Overlap(read_id_a, read_id_b) {
     }
 
     /*!
-     * @brief Setter for read A identifier
-     * @return
+     * @brief DovetailOverlap constructor
      */
-    void setA(int read_id) {
-      if (read_id != a_) {
-        debug("OVLCHID %d %d A\n", a_, read_id);
-      }
-      a_ =  read_id;
-    }
+    DovetailOverlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b):
+      Overlap(read_id_a, read_a, read_id_b, read_b) {}
 
     /*!
-     * @brief Getter for read A
-     * @return read A
+     * @brief DovetailOverlap destructor
      */
-    Read* getReadA() const {
-      return ra_;
-    }
+    virtual ~DovetailOverlap() {}
 
-    /*!
-     * @brief Setter for read A
-     * @return
-     */
-    void setReadA(Read* read) {
-      ra_ = read;
-    }
-
-    /*!
-     * @brief Getter for read B identifier
-     * @return read B identifier
-     */
-    int getB() const {
-      return b_;
-    }
-
-    /*!
-     * @brief Setter for read B identifier
-     * @return
-     */
-    void setB(int read_id) {
-      if (read_id != b_) {
-        debug("OVLCHID %d %d B\n", b_, read_id);
-      }
-      b_ = read_id;
-    }
-
-    /*!
-     * @brief Getter for read B
-     * @return read B
-     */
-    Read* getReadB() const {
-      return rb_;
-    }
-
-    /*!
-     * @brief Setter for read B identifier
-     * @return
-     */
-    void setReadB(Read* read) {
-      rb_ = read;
-    }
+    virtual double getScore() const;
 
     /*!
      * @brief Getter for overlap length
@@ -167,24 +101,6 @@ public:
     virtual int getBHang() const = 0;
 
     /*!
-     * @brief Getter for overlap score
-     * @return overlap score
-     */
-    virtual double getScore() const;
-
-    /*!
-     * @brief Getter for overlap quality
-     * @return overlap quality
-     */
-    virtual double getQuality() const = 0;
-
-    /*!
-     * @brief Getter for overlap type
-     * @return true if overlap is innie
-     */
-    virtual bool isInnie() const = 0;
-
-    /*!
      * @brief Method for prefix check
      * @detals Method checks whether the start of the read is contained in overlap.
      * It respects the direction of read (important for reverse complements)!
@@ -212,7 +128,7 @@ public:
      * @param [in] o3 overlap 3
      * @return true if this is transitive
      */
-    virtual bool isTransitive(const Overlap* o2, const Overlap* o3) const;
+    virtual bool isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const;
 
     /*!
      * @brief Getter for hanging length of a read
@@ -226,19 +142,9 @@ public:
     /*!
      * @brief Method for object cloning
      *
-     * @return new Overlap object which equals this
+     * @return new DovetailOverlap object which equals this
      */
-    virtual Overlap* clone() const = 0;
-
-    /*!
-     * @brief Method for overlap update
-     * @details Method updates read identifiers in overlap to match real read identifiers.
-     * This method will be removed in near future!
-     *
-     * @param [in] overlaps vector of Overlap objets pointers
-     * @param [in] reads vector of Read objets pointers
-     */
-    friend void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads);
+    virtual DovetailOverlap* clone() const = 0;
 
 
     /*!
@@ -256,20 +162,28 @@ public:
      * @param [in] output stream.
      * @param [in] overlap.
      */
-    friend std::ostream& operator<<(std::ostream& str, Overlap const& data)
+    friend std::ostream& operator<<(std::ostream& str, DovetailOverlap const& data)
     {
       data.print(str);
       return str;
     }
 
     std::string repr() const;
-
-protected:
-
-    int a_;
-    Read* ra_;
-
-    int b_;
-    Read* rb_;
 };
+
+/*!
+ * @brief Method for overlaping reads
+ * @details Method creates EnhancesSuffixArray objects from reads and uses them for pattern
+ * matching, i.e. prefix-sufix overlaps. It also creates reverse complements of reads needed
+ * to get all types of overlaps.
+ *
+ * @param [out] dst vector of DovetailOverlap objects pointers
+ * @param [in] reads vector of Read objects pointers
+ * @param [in] minDovetailOverlapLen minimal length of overlaps considered
+ * @param [in] threadLen number of threads
+ * @param [in] path path to file where the EnhancedSuffixArray objects are cached to speed up
+ * future runs on the same data
+ */
+void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads, int minDovetailOverlapLen,
+    int threadLen, const char* path);
 

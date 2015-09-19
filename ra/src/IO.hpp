@@ -83,7 +83,7 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path);
  * @param [out] overlaps vector of Overlap objects pointers
  * @param [in] path path to file where the Overlap objects are stored
  */
-void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path);
+void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path);
 
 /*!
  * @brief Method for Overlap input
@@ -93,7 +93,7 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path);
  * @param [out] overlaps vector of Overlap objects pointers
  * @param [in] input stream where Overlap objects flow through
  */
-void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input);
+void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& input);
 
 /*!
  * @brief Method for Overlap output

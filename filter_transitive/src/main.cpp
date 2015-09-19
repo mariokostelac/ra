@@ -168,7 +168,11 @@ int main(int argc, char **argv) {
   vector<Overlap*> all_overlaps, overlaps;
 
   if (overlaps_format == "afg") {
-    readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
+    vector<DovetailOverlap*> afg_overlaps;
+    readAfgOverlaps(afg_overlaps, overlaps_filename.c_str());
+    for (auto o : afg_overlaps) {
+      all_overlaps.push_back(o);
+    }
   } else if (overlaps_format == "mhap") {
     fstream overlaps_file(overlaps_filename);
     MHAP::read_overlaps(overlaps_file, &all_overlaps);

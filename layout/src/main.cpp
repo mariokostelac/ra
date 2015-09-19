@@ -60,7 +60,7 @@ string overlaps_format;
 string settings_file;
 string assembly_directory;
 
-void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
+void must_one_overlap_per_pair(const vector<DovetailOverlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
 
   for (const auto& overlap: overlaps) {
@@ -76,8 +76,8 @@ void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
   }
 }
 
-uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
-  map<pair<uint32_t, uint32_t>, Overlap*> best;
+uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
+  map<pair<uint32_t, uint32_t>, DovetailOverlap*> best;
 
   for (const auto& overlap: *overlaps) {
     uint32_t a = min(overlap->getA(), overlap->getB());
@@ -118,7 +118,7 @@ uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
   return removed;
 }
 
-int filter_overlaps_by_min_read_len(vector<Overlap*>* overlaps, const uint32_t min_length) {
+int filter_overlaps_by_min_read_len(vector<DovetailOverlap*>* overlaps, const uint32_t min_length) {
   int skipped = 0;
 
   for (uint32_t i = 0; i < overlaps->size(); ++i) {
@@ -136,7 +136,7 @@ int filter_overlaps_by_min_read_len(vector<Overlap*>* overlaps, const uint32_t m
   return skipped;
 }
 
-int filter_overlaps_by_min_qual(vector<Overlap*>* overlaps, const double min_qual) {
+int filter_overlaps_by_min_qual(vector<DovetailOverlap*>* overlaps, const double min_qual) {
   int skipped = 0;
 
   for (uint32_t i = 0; i < overlaps->size(); ++i) {
@@ -176,7 +176,6 @@ void init_args(int argc, char** argv) {
   args.add<string>("reads", 'r', "reads file", true);
   args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
   args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
   args.add<string>("settings", 'b', "settings file", false);
   args.add<string>("directory", 'd', "assembly_directory", false, ".");
 
@@ -188,7 +187,6 @@ void read_args() {
   reads_filename = args.get<string>("reads");
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
-  overlaps_format = args.get<string>("overlaps_format");
   settings_file = args.get<string>("settings");
   assembly_directory = args.get<string>("directory");
 }
@@ -343,7 +341,7 @@ int main(int argc, char **argv) {
   write_settings(stderr);
   fclose(run_args_file);
 
-  vector<Overlap*> all_overlaps, overlaps, filtered;
+  vector<DovetailOverlap*> all_overlaps, overlaps, filtered;
   vector<Read*> reads;
 
   if (reads_format == "fasta") {
@@ -358,15 +356,7 @@ int main(int argc, char **argv) {
 
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
-  if (overlaps_format == "afg") {
-    readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
-  } else if (overlaps_format == "mhap") {
-    fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps_file, &all_overlaps);
-    overlaps_file.close();
-  } else {
-    assert(false);
-  }
+  readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
 
   overlaps = all_overlaps;
 
@@ -412,7 +402,7 @@ int main(int argc, char **argv) {
 
   vector<Overlap*> simplified_overlaps;
   graph->extractOverlaps(simplified_overlaps);
-  writeOverlaps(simplified_overlaps, (assembly_directory + "/simplified." + overlaps_format).c_str());
+  writeOverlaps(simplified_overlaps, (assembly_directory + "/simplified.afg").c_str());
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 

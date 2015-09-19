@@ -39,11 +39,11 @@
 
 #pragma once
 
-#include "Overlap.hpp"
+#include "DovetailOverlap.hpp"
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
-class AfgOverlap: public Overlap {
+class AfgOverlap: public DovetailOverlap {
 public:
 
     AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
@@ -79,7 +79,7 @@ public:
 
     uint hangingLength(int readId) const;
 
-    Overlap* clone() const;
+    DovetailOverlap* clone() const;
 
     void print(std::ostream& str) const;
 

@@ -215,7 +215,7 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "afg output");
 }
 
-void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path) {
+void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path) {
 
     Timer timer;
     timer.start();
@@ -230,13 +230,13 @@ void readAfgOverlaps(std::vector<Overlap*>& overlaps, const char* path) {
     timer.print("IO", "afg input");
 }
 
-void readAfgOverlaps(std::vector<Overlap*>& overlaps, std::istream& input) {
+void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& input) {
 
     AMOS::Reader* reader = new AMOS::Reader(input);
 
     while (reader->has_next()) {
 
-        Overlap* overlap = nullptr;
+        AfgOverlap* overlap = nullptr;
 
         if (reader->next(&overlap)) {
             overlaps.emplace_back(overlap);
