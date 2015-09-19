@@ -30,7 +30,7 @@ Edge::Edge(int id, int readId, const DovetailOverlap* overlap, const StringGraph
     id_ = id;
 
     src_ = graph->getVertex(readId);
-    dst_ = graph->getVertex(overlap->getA() == readId ? overlap->getB() : overlap->getA());
+    dst_ = graph->getVertex(overlap->a() == readId ? overlap->b() : overlap->a());
 
     overlap_ = overlap;
 
@@ -42,32 +42,32 @@ Edge::Edge(int id, int readId, const DovetailOverlap* overlap, const StringGraph
 
 void Edge::label(std::string& dst) const {
 
-    if (src_->getId() == overlap_->getA()) {
+    if (src_->getId() == overlap_->a()) {
         // from A to B
         int start, len;
 
-        if (overlap_->isInnie()) {
+        if (overlap_->innie()) {
 
             if (overlap_->isUsingSuffix(dst_->getId())) {
-                start = overlap_->getLength(dst_->getId());
-                len = overlap_->getBHang();
+                start = overlap_->length(dst_->getId());
+                len = overlap_->b_hang();
             } else {
                 start = 0;
-                len = -1 * overlap_->getAHang();
+                len = -1 * overlap_->a_hang();
             }
 
         } else {
 
             if (overlap_->isUsingSuffix(dst_->getId())) {
                 start = 0;
-                len = -1 * overlap_->getAHang();
+                len = -1 * overlap_->a_hang();
             } else {
-                start = overlap_->getLength(dst_->getId());
-                len = overlap_->getBHang();
+                start = overlap_->length(dst_->getId());
+                len = overlap_->b_hang();
             }
         }
 
-        dst = (overlap_->isInnie() ? dst_->getReverseComplement() : dst_->getSequence()).substr(start, len);
+        dst = (overlap_->innie() ? dst_->getReverseComplement() : dst_->getSequence()).substr(start, len);
 
     } else {
         // from B to A
@@ -75,10 +75,10 @@ void Edge::label(std::string& dst) const {
 
         if (overlap_->isUsingSuffix(dst_->getId())) {
             start = 0;
-            len = overlap_->getAHang();
+            len = overlap_->a_hang();
         } else {
-            start = overlap_->getLength(dst_->getId());
-            len = -1 * overlap_->getBHang();
+            start = overlap_->length(dst_->getId());
+            len = -1 * overlap_->b_hang();
         }
 
         dst = dst_->getSequence().substr(start, len);
@@ -95,7 +95,7 @@ int Edge::labelLength() {
     label(l);
     labelLength_ = l.length();
 
-    assert(labelLength_ == abs(overlap_->getAHang()) || labelLength_ == abs(overlap_->getBHang()));
+    assert(labelLength_ == abs(overlap_->a_hang()) || labelLength_ == abs(overlap_->b_hang()));
 
     return labelLength_;
 }
@@ -267,11 +267,11 @@ const Edge* Vertex::bestEdge(const bool use_end) const {
   }
 
   Edge* best_edge = edges.front();
-  int best_length = best_edge->getOverlap()->getLength(this->getReadId());
+  int best_length = best_edge->getOverlap()->length(this->getReadId());
 
   for (auto& edge : edges) {
 
-    int curr_length = edge->getOverlap()->getLength(this->getReadId());
+    int curr_length = edge->getOverlap()->length(this->getReadId());
 
     if (curr_length > best_length) {
       best_edge = edge;
@@ -303,15 +303,15 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Dove
     edges_.reserve(overlaps.size() * 2);
 
     for (const auto& overlap : overlaps) {
-        Edge* edgeA = new Edge(edges_.size(), overlap->getA(), overlap, this);
+        Edge* edgeA = new Edge(edges_.size(), overlap->a(), overlap, this);
 
         edges_.emplace_back(edgeA);
-        vertices_[overlap->getA()]->addEdge(edgeA);
+        vertices_[overlap->a()]->addEdge(edgeA);
 
-        Edge* edgeB = new Edge(edges_.size(), overlap->getB(), overlap, this);
+        Edge* edgeB = new Edge(edges_.size(), overlap->b(), overlap, this);
 
         edges_.emplace_back(edgeB);
-        vertices_[overlap->getB()]->addEdge(edgeB);
+        vertices_[overlap->b()]->addEdge(edgeB);
 
         edgeA->pair_ = edgeB;
         edgeB->pair_ = edgeA;
@@ -547,7 +547,7 @@ int StringGraph::reduceToBOG() {
         debug("RMBADEDGES %d\n", v2->getReadId());
 
         const auto& edges_v1 = use_end ? v1->getEdgesE() : v1->getEdgesB();
-        const auto& edges_v2 = use_end ^ overlap->isInnie() ? v2->getEdgesB() : v2->getEdgesE();
+        const auto& edges_v2 = use_end ^ overlap->innie() ? v2->getEdgesB() : v2->getEdgesE();
 
         int kept = 0;
 
@@ -826,8 +826,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
 
     // types: 0 - normal, 1 - reverse complement
     auto getType = [](const Edge* edge, int id) -> int {
-        if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
-        if (!edge->getOverlap()->isInnie()) return 0;
+        if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
+        if (!edge->getOverlap()->innie()) return 0;
         return 1;
     };
 
@@ -913,13 +913,13 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
         {
           const auto& startEdge = walk->getEdges().front();
           const auto& overlap = startEdge->overlap_;
-          overlapStart = std::min(overlapStart, overlap->getLength(startEdge->getSrc()->getId()));
+          overlapStart = std::min(overlapStart, overlap->length(startEdge->getSrc()->getId()));
         }
 
         {
           const auto& endEdge = walk->getEdges().back();
           const auto& overlap = endEdge->overlap_;
-          overlapEnd = std::min(overlapEnd, overlap->getLength(endEdge->getDst()->getId()));
+          overlapEnd = std::min(overlapEnd, overlap->length(endEdge->getDst()->getId()));
         }
 
         ++i;
@@ -1048,7 +1048,7 @@ int StringGraph::mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* un
       break;
     }
 
-    if (edge->getOverlap()->isInnie()) {
+    if (edge->getOverlap()->innie()) {
       use_suffix = 1 - use_suffix;
     }
 
@@ -1129,8 +1129,8 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 
   // types: 0 - normal, 1 - reverse complement
   auto getType = [](const Edge* edge, int id) -> int {
-    if (edge->getOverlap()->getA() == id) return 0; // due to possible overlap types
-    if (!edge->getOverlap()->isInnie()) return 0;
+    if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
+    if (!edge->getOverlap()->innie()) return 0;
     return 1;
   };
 
@@ -1210,7 +1210,7 @@ size_t StringGraphNode::expand(std::vector<StringGraphNode*>& queue) const {
         }
 
         queue.emplace_back(new StringGraphNode(edge->getDst(), edge, this,
-            edge->getOverlap()->isInnie() ? (direction_ ^ 1) : direction_,
+            edge->getOverlap()->innie() ? (direction_ ^ 1) : direction_,
             edge->labelLength()));
         added++;
     }
@@ -1275,7 +1275,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
 
         const auto& edge = edges.front();
         res_length += edge->labelLength();
-        res_length += longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ?
+        res_length += longest_sequence_length(edge->getDst(), edge->getOverlap()->innie() ?
             (direction ^ 1) : direction, visited, forks_left);
 
     } else if (edges.size() > 1) {
@@ -1287,17 +1287,17 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
         double qual_lo = 0;
 
         for (const auto& edge : edges) {
-          best_qual = max(best_qual, edge->getOverlap()->getScore());
+          best_qual = max(best_qual, edge->getOverlap()->score());
         }
 
         qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
 
         for (const auto& edge : edges) {
 
-            auto curr_qual = edge->getOverlap()->getScore();
+            auto curr_qual = edge->getOverlap()->score();
 
             if (curr_qual >= qual_lo) {
-              int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->isInnie() ? (direction ^ 1) :
+              int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->innie() ? (direction ^ 1) :
                   direction, visited, forks_left - 1);
 
               if (curr_len > best_len) {
@@ -1348,7 +1348,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
             double qual_lo = 0;
 
             for (const auto& edge : edges) {
-              best_qual = max(best_qual, edge->getOverlap()->getScore());
+              best_qual = max(best_qual, edge->getOverlap()->score());
             }
 
             qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
@@ -1361,9 +1361,9 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                auto curr_qual = edge->getOverlap()->getScore();
+                auto curr_qual = edge->getOverlap()->score();
                 if (curr_qual >= qual_lo) {
-                  int curr_length = longest_sequence_length(next, edge->getOverlap()->isInnie() ? (curr_direction ^ 1) :
+                  int curr_length = longest_sequence_length(next, edge->getOverlap()->innie() ? (curr_direction ^ 1) :
                       curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
 
                   if (curr_length > best_length) {
@@ -1383,7 +1383,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
 
         totalLength += best_edge->labelLength();
 
-        if (best_edge->getOverlap()->isInnie()) {
+        if (best_edge->getOverlap()->innie()) {
             curr_direction ^= 1;
         }
     }
@@ -1418,7 +1418,7 @@ static int findSingularChain(std::vector<const Edge*>* dst, const Vertex* start,
 
         totalLength += selectedEdge->labelLength();
 
-        if (selectedEdge->getOverlap()->isInnie()) {
+        if (selectedEdge->getOverlap()->innie()) {
             curr_direction ^= 1;
         }
     }
@@ -1444,7 +1444,7 @@ static int countForks(const Vertex* start, const int start_direction, const int 
 
     for (auto e: edges) {
       curr_vertex = e->getDst();
-      if (e->getOverlap()->isInnie()) {
+      if (e->getOverlap()->innie()) {
         curr_direction ^= 1;
       }
 

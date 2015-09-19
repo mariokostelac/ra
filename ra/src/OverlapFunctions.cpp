@@ -23,8 +23,8 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Dov
 
         const DovetailOverlap* overlap = overlaps[i];
 
-        const auto& v1 = edges.at(overlap->getA());
-        const auto& v2 = edges.at(overlap->getB());
+        const auto& v1 = edges.at(overlap->a());
+        const auto& v2 = edges.at(overlap->b());
 
         auto it1 = v1.begin();
         auto it2 = v2.begin();
@@ -33,12 +33,12 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Dov
 
         while (!transitive && it1 != v1.end() && it2 != v2.end()) {
 
-            if (it1->first == overlap->getA() || it1->first == overlap->getB()) {
+            if (it1->first == overlap->a() || it1->first == overlap->b()) {
                 ++it1;
                 continue;
             }
 
-            if (it2->first == overlap->getA() || it2->first == overlap->getB()) {
+            if (it2->first == overlap->a() || it2->first == overlap->b()) {
                 ++it2;
                 continue;
             }
@@ -88,7 +88,7 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
     int maxId = 0;
 
     for (const auto& overlap : overlaps) {
-        maxId = std::max(std::max(overlap->getA(), overlap->getB()), maxId);
+        maxId = std::max(std::max(overlap->a(), overlap->b()), maxId);
     }
 
     std::vector<bool> contained(maxId + 1, false);
@@ -96,8 +96,8 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
     for (const auto& overlap : overlaps) {
         // A    --------->
         // B -----------------
-        const auto a = overlap->getA();
-        const auto b = overlap->getB();
+        const auto a = overlap->a();
+        const auto b = overlap->b();
         if (overlap->isUsingPrefix(a) && overlap->isUsingSuffix(a)) {
             // readA is contained
             contained[a] = true;
@@ -120,8 +120,8 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
     }
 
     for (const auto& overlap : overlaps) {
-        if (contained[overlap->getA()] || contained[overlap->getB()]) {
-          debug("SKIPCONT %d %d\n", overlap->getA(), overlap->getB());
+        if (contained[overlap->a()] || contained[overlap->b()]) {
+          debug("SKIPCONT %d %d\n", overlap->a(), overlap->b());
           continue;
         }
 
@@ -144,8 +144,8 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
     std::map<int, std::vector<std::pair<int, DovetailOverlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
-        edges[overlap->getA()].emplace_back(overlap->getB(), overlap);
-        edges[overlap->getB()].emplace_back(overlap->getA(), overlap);
+        edges[overlap->a()].emplace_back(overlap->b(), overlap);
+        edges[overlap->b()].emplace_back(overlap->a(), overlap);
     }
 
     for (auto& edge : edges) {
@@ -176,7 +176,7 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
         if (!transitive[i]) {
             dst.push_back(view ? overlaps[i] : overlaps[i]->clone());
         } else {
-            debug("SKIPTRAN %d %d\n", overlaps[i]->getA(), overlaps[i]->getB());
+            debug("SKIPTRAN %d %d\n", overlaps[i]->a(), overlaps[i]->b());
         }
     }
 
@@ -208,8 +208,8 @@ void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads,
 
     for (size_t i = 0; i < overlaps.size(); ++i) {
 
-        if (i > 0 && overlaps[i]->getA() == overlaps[i - 1]->getA() &&
-            overlaps[i]->getB() == overlaps[i - 1]->getB()) {
+        if (i > 0 && overlaps[i]->a() == overlaps[i - 1]->a() &&
+            overlaps[i]->b() == overlaps[i - 1]->b()) {
 
             duplicates.emplace_back(overlaps[i]);
             continue;
@@ -288,10 +288,10 @@ static void threadOverlapReads(std::vector<DovetailOverlap*>& dst, const std::ve
 }
 
 static bool compareOverlaps(const DovetailOverlap* left, const DovetailOverlap* right) {
-    if (left->getA() != right->getA()) return left->getA() < right->getA();
-    if (left->getB() != right->getB()) return left->getB() < right->getB();
+    if (left->a() != right->a()) return left->a() < right->a();
+    if (left->b() != right->b()) return left->b() < right->b();
 
-    return left->getLength() > right->getLength();
+    return left->length() > right->length();
 }
 
 static bool compareMatches(const std::pair<int, int>& left, const std::pair<int, int>& right) {

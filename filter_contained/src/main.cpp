@@ -224,8 +224,8 @@ int main(int argc, char **argv) {
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
   for (auto o: overlaps) {
-    const auto a = o->getA();
-    const auto b = o->getB();
+    const auto a = o->a();
+    const auto b = o->b();
     if (reads_mapped[a] == nullptr) {
       cerr << "Read " << a << " not found" << endl;
       exit(1);
@@ -235,8 +235,8 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    o->setReadA(reads_mapped[a]);
-    o->setReadB(reads_mapped[b]);
+    o->set_read_a(reads_mapped[a]);
+    o->set_read_b(reads_mapped[b]);
   }
 
   vector<DovetailOverlap*> nocontainments;

@@ -23,22 +23,22 @@ std::string DovetailOverlap::repr() const {
   std::string b = overlap;
 
   char buff[256];
-  if (getAHang() > 0) {
-    sprintf(buff, "%-7d", getAHang());
+  if (a_hang() > 0) {
+    sprintf(buff, "%-7d", a_hang());
     a = "=======" + a;
     b = std::string(buff) + b;
-  } else if (getAHang() < 0) {
-    sprintf(buff, "%-7d", getAHang());
+  } else if (a_hang() < 0) {
+    sprintf(buff, "%-7d", a_hang());
     a = std::string(buff) + a;
     b = "=======" + b;
   }
 
-  if (getBHang() > 0) {
-    sprintf(buff, "%7d", getBHang());
+  if (b_hang() > 0) {
+    sprintf(buff, "%7d", b_hang());
     a = a + std::string(buff);
     b = b + "=======";
-  } else if  (getBHang() < 0) {
-    sprintf(buff, "%7d", getBHang());
+  } else if  (b_hang() < 0) {
+    sprintf(buff, "%7d", b_hang());
     a = a + "=======";
     b = b + std::string(buff);
   }
@@ -50,7 +50,7 @@ std::string DovetailOverlap::repr() const {
     }
   }
 
-  if (isInnie()) {
+  if (innie()) {
     for (uint32_t i = 0; i < b.size(); i++) {
       if (b[i] == '=') {
         b[i] = '<';
@@ -66,16 +66,16 @@ std::string DovetailOverlap::repr() const {
     }
   }
 
-  return a + " " + std::to_string(getA()) + "\n" + b + " " + std::to_string(getB()) + "\n";
+  return a + " " + std::to_string(this->a()) + "\n" + b + " " + std::to_string(this->b()) + "\n";
 }
 
 bool DovetailOverlap::isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const {
 
     auto o1 = this;
 
-    int a_id = o1->getA();
-    int b_id = o1->getB();
-    int c_id = o2->getA() != a_id ? o2->getA() : o2->getB();
+    int a_id = o1->a();
+    int b_id = o1->b();
+    int c_id = o2->a() != a_id ? o2->a() : o2->b();
 
     if (o2->isUsingSuffix(c_id) == o3->isUsingSuffix(c_id)) return false;
     if (o1->isUsingSuffix(a_id) != o2->isUsingSuffix(a_id)) return false;
@@ -84,24 +84,24 @@ bool DovetailOverlap::isTransitive(const DovetailOverlap* o2, const DovetailOver
     if (!doubleEq(
             o2->hangingLength(a_id) + o3->hangingLength(c_id),
             o1->hangingLength(a_id),
-            EPSILON * o1->getLength() + ALPHA)) {
+            EPSILON * o1->length() + ALPHA)) {
         return false;
     }
 
     if (!doubleEq(
             o2->hangingLength(c_id) + o3->hangingLength(b_id),
             o1->hangingLength(b_id),
-            EPSILON * o1->getLength() + ALPHA)) {
+            EPSILON * o1->length() + ALPHA)) {
         return false;
     }
 
     debug("ISTRAN %d %d because of %d %d and %d %d\n",
-        o1->getA(),
-        o1->getB(),
-        o2->getA(),
-        o2->getB(),
-        o3->getA(),
-        o3->getB()
+        o1->a(),
+        o1->b(),
+        o2->a(),
+        o2->b(),
+        o3->a(),
+        o3->b()
     );
 
     return true;

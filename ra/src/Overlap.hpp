@@ -46,7 +46,7 @@ public:
      * @brief Getter for read A identifier
      * @return read A identifier
      */
-    int getA() const {
+    int a() const {
       return a_id_;
     }
 
@@ -54,7 +54,7 @@ public:
      * @brief Getter for read A
      * @return read A
      */
-    Read* getReadA() const {
+    Read* read_a() const {
       return read_a_;
     }
 
@@ -62,7 +62,7 @@ public:
      * @brief Setter for read A
      * @return
      */
-    void setReadA(Read* read) {
+    void set_read_a(Read* read) {
       read_a_ = read;
     }
 
@@ -70,7 +70,7 @@ public:
      * @brief Getter for read B identifier
      * @return read B identifier
      */
-    int getB() const {
+    int b() const {
       return b_id_;
     }
 
@@ -78,7 +78,7 @@ public:
      * @brief Getter for read B
      * @return read B
      */
-    Read* getReadB() const {
+    Read* read_b() const {
       return read_b_;
     }
 
@@ -86,7 +86,7 @@ public:
      * @brief Setter for read B identifier
      * @return
      */
-    void setReadB(Read* read) {
+    void set_read_b(Read* read) {
       read_b_ = read;
     }
 
@@ -94,7 +94,7 @@ public:
      * @brief Getter for overlap length
      * @return length
      */
-    virtual int getLength() const = 0;
+    virtual int length() const = 0;
 
     /*!
      * @brief Getter for overlap length in given read
@@ -102,25 +102,25 @@ public:
      * @param [in] readId read identifier
      * @return length
      */
-    virtual int getLength(int read_id) const = 0;
+    virtual int length(int read_id) const = 0;
 
     /*!
      * @brief Getter for overlap score
      * @return overlap score
      */
-    virtual double getScore() const;
+    virtual double score() const;
 
     /*!
      * @brief Getter for overlap quality
      * @return overlap quality
      */
-    virtual double getQuality() const = 0;
+    virtual double quality() const = 0;
 
     /*!
      * @brief Getter for overlap type
      * @return true if overlap is innie
      */
-    bool isInnie() const {
+    bool innie() const {
       return innie_;
     }
 

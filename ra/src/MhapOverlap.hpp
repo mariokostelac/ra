@@ -24,13 +24,13 @@ namespace MHAP {
 
       ~MhapOverlap() {};
 
-      int getLength() const;
+      int length() const;
 
-      int getLength(int read_id) const;
+      int length(int read_id) const;
 
-      double getScore() const;
+      double score() const;
 
-      double getQuality() const;
+      double quality() const;
 
       Overlap* clone() const;
 

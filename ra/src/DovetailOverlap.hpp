@@ -74,7 +74,7 @@ public:
      * @brief Getter for overlap length
      * @return length
      */
-    virtual int getLength() const = 0;
+    virtual int length() const = 0;
 
     /*!
      * @brief Getter for overlap length in given read
@@ -82,13 +82,13 @@ public:
      * @param [in] readId read identifier
      * @return length
      */
-    virtual int getLength(int read_id) const = 0;
+    virtual int length(int read_id) const = 0;
 
     /*!
      * @brief Getter for read A hang
      * @return read A hang
      */
-    int getAHang() const {
+    int a_hang() const {
       return a_hang_;
     }
 
@@ -96,7 +96,7 @@ public:
      * @brief Getter for read B hang
      * @return read B hang
      */
-    int getBHang() const {
+    int b_hang() const {
       return b_hang_;
     }
 

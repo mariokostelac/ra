@@ -13,12 +13,12 @@ AfgOverlap::AfgOverlap(int a, int b, int length, int aHang, int bHang, bool inni
 
 bool AfgOverlap::isUsingPrefix(int readId) const {
 
-    if (readId == getA()) {
-        if (getAHang() <= 0) return true;
+    if (readId == a()) {
+        if (a_hang() <= 0) return true;
 
-    } else if (readId == getB()) {
-        if (innie_ == false && getAHang() >= 0) return true;
-        if (innie_ == true && getBHang() <= 0) return true;
+    } else if (readId == b()) {
+        if (innie_ == false && a_hang() >= 0) return true;
+        if (innie_ == true && b_hang() <= 0) return true;
     }
 
     return false;
@@ -26,12 +26,12 @@ bool AfgOverlap::isUsingPrefix(int readId) const {
 
 bool AfgOverlap::isUsingSuffix(int readId) const {
 
-    if (readId == getA()) {
-        if (getBHang() >= 0) return true;
+    if (readId == a()) {
+        if (b_hang() >= 0) return true;
 
-    } else if (readId == getB()) {
-        if (innie_ == false && getBHang() <= 0) return true;
-        if (innie_ == true && getAHang() >= 0) return true;
+    } else if (readId == b()) {
+        if (innie_ == false && b_hang() <= 0) return true;
+        if (innie_ == true && a_hang() >= 0) return true;
     }
 
     return false;
@@ -40,65 +40,65 @@ bool AfgOverlap::isUsingSuffix(int readId) const {
 
 uint AfgOverlap::hangingLength(int readId) const {
 
-    if (readId == getA()) return abs(getAHang());
-    if (readId == getB()) return abs(getBHang());
+    if (readId == a()) return abs(a_hang());
+    if (readId == b()) return abs(b_hang());
 
     ASSERT(false, "Overlap", "wrong read id");
 }
 
-int AfgOverlap::getLength() const {
-    return (getLengthA() + getLengthB())/2;
+int AfgOverlap::length() const {
+    return (length_a() + length_b())/2;
 }
 
-int AfgOverlap::getLength(int read_id) const {
-    assert(read_id == getA() || read_id == getB());
+int AfgOverlap::length(int read_id) const {
+    assert(read_id == a() || read_id == b());
 
-    if (read_id == getA()) {
-        return getLengthA();
+    if (read_id == a()) {
+        return length_a();
     }
 
-    return getLengthB();
+    return length_b();
 }
 
-int AfgOverlap::getLengthA() const {
-    ASSERT(getReadA() != nullptr, "Overlap", "Read* a is nullptr");
+int AfgOverlap::length_a() const {
+    ASSERT(read_a() != nullptr, "Overlap", "Read* a is nullptr");
 
-    int len = getReadA()->getSequence().length();
-    if (getAHang() > 0) {
-      len -= getAHang();
+    int len = read_a()->getSequence().length();
+    if (a_hang() > 0) {
+      len -= a_hang();
     }
-    if (getBHang() < 0) {
-      len -= abs(getBHang());
+    if (b_hang() < 0) {
+      len -= abs(b_hang());
     }
 
     return len;
 }
 
-int AfgOverlap::getLengthB() const {
-    ASSERT(getReadB() != nullptr, "Overlap", "Read* b is nullptr");
+int AfgOverlap::length_b() const {
+    ASSERT(read_b() != nullptr, "Overlap", "Read* b is nullptr");
 
-    int len = getReadB()->getSequence().length();
-    if (getAHang() < 0) {
-      len -= abs(getAHang());
+    int len = read_b()->getSequence().length();
+    if (a_hang() < 0) {
+      len -= abs(a_hang());
     }
-    if (getBHang() > 0) {
-      len -= getBHang();
+    if (b_hang() > 0) {
+      len -= b_hang();
     }
 
     return len;
 }
 
 DovetailOverlap* AfgOverlap::clone() const {
-    return new AfgOverlap(getA(), getB(), length_, getAHang(), getBHang(), innie_);
+    return new AfgOverlap(a(), b(), length_, a_hang(), b_hang(), innie_);
 }
 
 void AfgOverlap::print(std::ostream& o) const {
   o << "{OVL" << std::endl;
   o << "adj:" << (innie_ ? 'I' : 'N') << std::endl;
-  o << "rds:" << getA() << "," << getB() << std::endl;
-  o << "ahg:" << getAHang() << std::endl;
-  o << "bhg:" << getBHang() << std::endl;
-  o << "scr:" << getScore() << std::endl;
+  o << "rds:" << a() << "," << b() << std::endl;
+  o << "ahg:" << a_hang() << std::endl;
+  o << "bhg:" << b_hang() << std::endl;
+  o << "scr:" << score() << std::endl;
   o << "}" << std::endl;
 }
 

@@ -49,16 +49,12 @@ public:
     AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
     ~AfgOverlap() {}
 
-    int getLength() const;
+    int length() const;
 
-    int getLength(int read_id) const;
+    int length(int read_id) const;
 
-    double getQuality() const {
+    double quality() const {
         return 1;
-    }
-
-    bool isInnie() const {
-        return innie_;
     }
 
     // checks whether the start of read is contained in overlap
@@ -80,6 +76,6 @@ private:
     int length_;
     bool innie_;
 
-    int getLengthA() const;
-    int getLengthB() const;
+    int length_a() const;
+    int length_b() const;
 };

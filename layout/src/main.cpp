@@ -64,8 +64,8 @@ void must_one_overlap_per_pair(const vector<DovetailOverlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
 
   for (const auto& overlap: overlaps) {
-    uint32_t a = min(overlap->getA(), overlap->getB());
-    uint32_t b = max(overlap->getA(), overlap->getB());
+    uint32_t a = min(overlap->a(), overlap->b());
+    uint32_t b = max(overlap->a(), overlap->b());
 
     if (seen.count(make_pair(a, b)) > 0) {
       fprintf(stderr, "Read pair (%d, %d) has more than one overlap\n", a, b);
@@ -80,12 +80,12 @@ uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
   map<pair<uint32_t, uint32_t>, DovetailOverlap*> best;
 
   for (const auto& overlap: *overlaps) {
-    uint32_t a = min(overlap->getA(), overlap->getB());
-    uint32_t b = max(overlap->getA(), overlap->getB());
+    uint32_t a = min(overlap->a(), overlap->b());
+    uint32_t b = max(overlap->a(), overlap->b());
 
     auto key = make_pair(a, b);
     if (best.count(key)) {
-      if (overlap->getScore() > best[key]->getScore()) {
+      if (overlap->score() > best[key]->score()) {
         best[key] = overlap;
       }
 
@@ -97,8 +97,8 @@ uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
   int removed = 0;
   for (uint32_t i = 0; i < overlaps->size(); ++i) {
     const auto& overlap = (*overlaps)[i];
-    uint32_t a = min(overlap->getA(), overlap->getB());
-    uint32_t b = max(overlap->getA(), overlap->getB());
+    uint32_t a = min(overlap->a(), overlap->b());
+    uint32_t b = max(overlap->a(), overlap->b());
 
     auto key = make_pair(a, b);
     if (best[key] != overlap) {
@@ -124,7 +124,7 @@ int filter_overlaps_by_min_read_len(vector<DovetailOverlap*>* overlaps, const ui
   for (uint32_t i = 0; i < overlaps->size(); ++i) {
     const auto o = (*overlaps)[i];
 
-    if (o->getReadA()->getLength() < min_length || o->getReadB()->getLength() < min_length) {
+    if (o->read_a()->getLength() < min_length || o->read_b()->getLength() < min_length) {
       skipped++;
       continue;
     }
@@ -142,7 +142,7 @@ int filter_overlaps_by_min_qual(vector<DovetailOverlap*>* overlaps, const double
   for (uint32_t i = 0; i < overlaps->size(); ++i) {
     const auto o = (*overlaps)[i];
 
-    if (o->getQuality() < min_qual) {
+    if (o->quality() < min_qual) {
       skipped++;
       continue;
     }
@@ -370,8 +370,8 @@ int main(int argc, char **argv) {
   must_one_overlap_per_pair(overlaps);
 
   for (auto o: overlaps) {
-    const auto a = o->getA();
-    const auto b = o->getB();
+    const auto a = o->a();
+    const auto b = o->b();
     if (reads[a] == nullptr) {
       cerr << "Read " << a << " not found" << endl;
       exit(1);
@@ -381,8 +381,8 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    o->setReadA(reads[a]);
-    o->setReadB(reads[b]);
+    o->set_read_a(reads[a]);
+    o->set_read_b(reads[b]);
   }
 
   had_overlaps = overlaps.size();

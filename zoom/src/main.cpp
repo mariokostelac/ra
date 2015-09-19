@@ -29,7 +29,7 @@ void dfs(vector<Overlap*>* neighborhood, map<Overlap*, bool>* used, const int no
   }
 
   for (auto e: edges[node]) {
-    auto next = e->getA() == node ? e->getB() : e->getA();
+    auto next = e->a() == node ? e->b() : e->a();
     if (used->count(e)) {
       continue;
     }
@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
   cerr << overlaps.size() << " overlaps read" << endl;
 
   for (auto o: overlaps) {
-    edges[o->getA()].push_back(o);
-    edges[o->getB()].push_back(o);
+    edges[o->a()].push_back(o);
+    edges[o->b()].push_back(o);
   }
 
   vector<Overlap*> neighborhood;
