@@ -53,14 +53,6 @@ public:
 
     int getLength(int read_id) const;
 
-    int getAHang() const {
-        return aHang_;
-    }
-
-    int getBHang() const {
-        return bHang_;
-    }
-
     double getQuality() const {
         return 1;
     }
@@ -86,8 +78,6 @@ public:
 private:
 
     int length_;
-    int aHang_;
-    int bHang_;
     bool innie_;
 
     int getLengthA() const;

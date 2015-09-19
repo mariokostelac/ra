@@ -53,14 +53,17 @@ public:
     /*!
      * @brief DovetailOverlap constructor
      */
-    DovetailOverlap(const int read_id_a, const int read_id_b): Overlap(read_id_a, read_id_b) {
+    DovetailOverlap(const int a_id, const int b_id, const int a_hang, const int b_hang)
+      : Overlap(a_id, b_id) {
+        a_hang_ = a_hang;
+        b_hang_ = b_hang;
     }
 
     /*!
      * @brief DovetailOverlap constructor
      */
-    DovetailOverlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b):
-      Overlap(read_id_a, read_a, read_id_b, read_b) {}
+    DovetailOverlap(const int a_id, Read* a, const int b_id, Read* b):
+      Overlap(a_id, a, b_id, b) {}
 
     /*!
      * @brief DovetailOverlap destructor
@@ -87,13 +90,17 @@ public:
      * @brief Getter for read A hang
      * @return read A hang
      */
-    virtual int getAHang() const = 0;
+    int getAHang() const {
+      return a_hang_;
+    }
 
     /*!
      * @brief Getter for read B hang
      * @return read B hang
      */
-    virtual int getBHang() const = 0;
+    int getBHang() const {
+      return b_hang_;
+    }
 
     /*!
      * @brief Method for prefix check
@@ -164,6 +171,11 @@ public:
     }
 
     std::string repr() const;
+
+protected:
+
+    int a_hang_;
+    int b_hang_;
 };
 
 /*!
