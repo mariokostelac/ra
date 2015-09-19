@@ -24,10 +24,6 @@ double DovetailOverlap::getScore() const {
   return base_score;
 }
 
-int DovetailOverlap::confirmedLength(const int read_id) const {
-    return getLength(read_id);
-}
-
 const std::string overlap("=======");
 std::string DovetailOverlap::repr() const {
   std::string a = overlap;

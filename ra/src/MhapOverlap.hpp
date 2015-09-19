@@ -28,8 +28,6 @@ namespace MHAP {
 
       int getLength(int read_id) const;
 
-      int confirmedLength(const int read_id) const;
-
       int getAHang() const;
 
       int getBHang() const;

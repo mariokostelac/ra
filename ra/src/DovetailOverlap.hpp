@@ -75,11 +75,6 @@ public:
      */
     virtual int getLength() const = 0;
 
-    /*
-     * TODO
-     */
-    virtual int confirmedLength(const int read_id) const;
-
     /*!
      * @brief Getter for overlap length in given read
      *

@@ -267,11 +267,11 @@ const Edge* Vertex::bestEdge(const bool use_end) const {
   }
 
   Edge* best_edge = edges.front();
-  int best_length = best_edge->getOverlap()->confirmedLength(this->getReadId());
+  int best_length = best_edge->getOverlap()->getLength(this->getReadId());
 
   for (auto& edge : edges) {
 
-    int curr_length = edge->getOverlap()->confirmedLength(this->getReadId());
+    int curr_length = edge->getOverlap()->getLength(this->getReadId());
 
     if (curr_length > best_length) {
       best_edge = edge;

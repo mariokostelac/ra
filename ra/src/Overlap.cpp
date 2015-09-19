@@ -24,10 +24,6 @@ double Overlap::getScore() const {
   return base_score;
 }
 
-int Overlap::confirmedLength(const int read_id) const {
-    return getLength(read_id);
-}
-
 void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads) {
 
     for (const auto& overlap : overlaps) {
