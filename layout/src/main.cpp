@@ -57,41 +57,8 @@ string reads_format;
 string reads_filename;
 string overlaps_filename;
 string overlaps_format;
-int reads_id_offset;
 string settings_file;
-
-// map reads so we can access reads with mapped[read_id]
-void map_reads(vector<Read*>* mapped, vector<Read*>& reads) {
-
-  int max_id = -1;
-  for (auto r: reads) {
-    max_id = max(max_id, r->getId());
-  }
-
-  mapped->resize(max_id + 1, nullptr);
-  for (auto r: reads) {
-    (*mapped)[r->getId()] = r;
-  }
-}
-
-string output_dir_name() {
-  time_t rawtime;
-  struct tm* timeinfo;
-  char buffer[80];
-
-  time(&rawtime);
-  timeinfo = localtime(&rawtime);
-
-  strftime(buffer, 80, "layout_%Y%m%d_%H%M%S", timeinfo);
-  return string(buffer);
-}
-
-void must_mkdir(const string& path) {
-    if (mkdir(path.c_str(), 0755) == -1) {
-        fprintf(stderr, "Can't create directory %s\n", path.c_str());
-        exit(1);
-    }
-}
+string assembly_directory;
 
 void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
@@ -208,10 +175,10 @@ void init_args(int argc, char** argv) {
   // input params
   args.add<string>("reads", 'r', "reads file", true);
   args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
-  args.add<int>("reads_id_offset", 'a', "reads id offset (first read id)", false, 0);
   args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
   args.add<string>("settings", 'b', "settings file", false);
+  args.add<string>("directory", 'd', "assembly_directory", false, ".");
 
   args.parse_check(argc, argv);
 }
@@ -222,8 +189,8 @@ void read_args() {
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
   overlaps_format = args.get<string>("overlaps_format");
-  reads_id_offset = args.get<int>("reads_id_offset");
   settings_file = args.get<string>("settings");
+  assembly_directory = args.get<string>("directory");
 }
 
 FILE* must_fopen(const char* path, const char* mode) {
@@ -366,12 +333,7 @@ int main(int argc, char **argv) {
     fclose(settings_fd);
   }
 
-  string output_dir = output_dir_name();
-
-  must_mkdir(output_dir);
-  std::cerr << "Output dir: " << output_dir << std::endl;
-
-  auto run_args_file = must_fopen((output_dir + "/run_args.txt").c_str(), "w");
+  auto run_args_file = must_fopen((assembly_directory + "/run_args.txt").c_str(), "w");
   write_version(run_args_file);
   write_call_cmd(run_args_file, argc, argv);
   write_settings(run_args_file);
@@ -383,7 +345,6 @@ int main(int argc, char **argv) {
 
   vector<Overlap*> all_overlaps, overlaps, filtered;
   vector<Read*> reads;
-  vector<Read*> reads_mapped;
 
   if (reads_format == "fasta") {
     readFastaReads(reads, reads_filename.c_str());
@@ -394,9 +355,6 @@ int main(int argc, char **argv) {
   } else {
     assert(false);
   }
-
-  // map reads so we have reads_mapped[read_id] -> read
-  map_reads(&reads_mapped, reads);
 
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
@@ -421,26 +379,20 @@ int main(int argc, char **argv) {
 
   must_one_overlap_per_pair(overlaps);
 
-  // fix overlap read ids
-  for (auto o: overlaps) {
-    o->setA(o->getA() - reads_id_offset);
-    o->setB(o->getB() - reads_id_offset);
-  }
-
   for (auto o: overlaps) {
     const auto a = o->getA();
     const auto b = o->getB();
-    if (reads_mapped[a] == nullptr) {
+    if (reads[a] == nullptr) {
       cerr << "Read " << a << " not found" << endl;
       exit(1);
     }
-    if (reads_mapped[b] == nullptr) {
+    if (reads[b] == nullptr) {
       cerr << "Read " << b << " not found" << endl;
       exit(1);
     }
 
-    o->setReadA(reads_mapped[a]);
-    o->setReadB(reads_mapped[b]);
+    o->setReadA(reads[a]);
+    o->setReadB(reads[b]);
   }
 
   had_overlaps = overlaps.size();
@@ -453,30 +405,20 @@ int main(int argc, char **argv) {
   fprintf(stderr, "%d (%.2lf%%) overlaps filtered because quality worse than %0.4lf\n",
       bad_qual_filtered, 100. * bad_qual_filtered / had_overlaps, OVERLAPS_MIN_QUALITY);
 
-  vector<Overlap*> nocontainments;
-  filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
-
-  writeOverlaps(nocontainments, (output_dir + "/nocont." + overlaps_format).c_str());
-
-  vector<Overlap*> notransitives;
-  filterTransitiveOverlaps(notransitives, nocontainments, thread_num, true);
-
-  writeOverlaps(notransitives, (output_dir + "/nocont.notran." + overlaps_format).c_str());
-
   createReverseComplements(reads, thread_num);
 
-  StringGraph* graph = new StringGraph(reads, notransitives);
+  StringGraph* graph = new StringGraph(reads, overlaps);
   graph->simplify();
 
   vector<Overlap*> simplified_overlaps;
   graph->extractOverlaps(simplified_overlaps);
-  writeOverlaps(simplified_overlaps, (output_dir + "/simplified." + overlaps_format).c_str());
+  writeOverlaps(simplified_overlaps, (assembly_directory + "/simplified." + overlaps_format).c_str());
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 
   std::vector<StringGraphWalk*> unitig_walks;
   graph->extract_unitigs(&unitig_walks);
-  write_contigs_to_file(unitig_walks, (output_dir + "/unitigs_fast.fasta").c_str());
+  write_contigs_to_file(unitig_walks, (assembly_directory + "/unitigs_fast.fasta").c_str());
 
   std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
 
@@ -485,24 +427,22 @@ int main(int argc, char **argv) {
     Contig *unitig = new Contig(unitig_walk);
     unitigs.push_back(unitig);
   }
-  writeAfgContigs(unitigs, (output_dir + "/unitigs.afg").c_str());
+  writeAfgContigs(unitigs, (assembly_directory + "/unitigs.afg").c_str());
 
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
 
-  write_contigs_to_file(contig_walks, (output_dir + "/contigs_fast.fasta").c_str());
+  write_contigs_to_file(contig_walks, (assembly_directory + "/contigs_fast.fasta").c_str());
 
   std::cerr << "number of contigs " << contig_walks.size() << std::endl;
-  print_contigs_info(contig_walks, reads_mapped);
+  print_contigs_info(contig_walks, reads);
 
   vector<Contig*> contigs;
   for (const auto& contig_walk : contig_walks) {
     Contig *contig = new Contig(contig_walk);
     contigs.push_back(contig);
   }
-  writeAfgContigs(contigs, (output_dir + "/contigs.afg").c_str());
-
-  //graph->reduceToBOG();
+  writeAfgContigs(contigs, (assembly_directory + "/contigs.afg").c_str());
 
   for (auto r: reads)           delete r;
   for (auto o: all_overlaps)    delete o;
