@@ -74,7 +74,7 @@ public:
      * @brief Getter for overlap length
      * @return length
      */
-    virtual int length() const = 0;
+    int length() const;
 
     /*!
      * @brief Getter for overlap length in given read
@@ -82,7 +82,7 @@ public:
      * @param [in] readId read identifier
      * @return length
      */
-    virtual int length(int read_id) const = 0;
+    int length(int read_id) const;
 
     /*!
      * @brief Getter for read A hang
@@ -153,7 +153,7 @@ public:
      *
      * @param [in] output stream.
      */
-    virtual void print(std::ostream& str) const = 0;
+    void print(std::ostream& str) const = 0;
 
     /*!
      * @brief Operator prints overlap representation.
@@ -171,6 +171,9 @@ public:
     std::string repr() const;
 
 protected:
+
+    int length_a() const;
+    int length_b() const;
 
     int a_hang_;
     int b_hang_;

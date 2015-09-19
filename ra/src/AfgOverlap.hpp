@@ -18,10 +18,6 @@ public:
     AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
     ~AfgOverlap() {}
 
-    int length() const;
-
-    int length(int read_id) const;
-
     // TODO
     double quality() const {
         return 1;
