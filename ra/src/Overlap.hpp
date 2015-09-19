@@ -10,30 +10,6 @@
  *
  *     Normal: \n\n
  *
- *     read a  ---------------------------------->   bHang     \n
- *     read b      aHang  -----------------------------------> \n\n
- *
- *     read a     -aHang  -----------------------------------> \n
- *     read b  ---------------------------------->  -bHang     \n\n
- *
- *     Innie: \n\n
- *
- *     read a  ---------------------------------->   bHang     \n
- *     read b      aHang  <----------------------------------- \n\n
- *
- *     read a     -aHang  -----------------------------------> \n
- *     read b  <----------------------------------  -bHang     \n\n
- *
- *     Containment: \n\n
- *
- *     read a  ----------------------------------------------> \n
- *     read b      aHang  ----------------------->  -bHang     \n\n
- *
- *     read a     -aHang  ----------------------->   bHang     \n
- *     read b  ----------------------------------------------> \n\n
- *
- *     (same if read b is reversed)
- *
  * @author rvaser (robert.vaser@gmail.com)
  * @date May 14, 2015
  */
@@ -153,18 +129,6 @@ public:
      * @return length
      */
     virtual int getLength(int read_id) const = 0;
-
-    /*!
-     * @brief Getter for read A hang
-     * @return read A hang
-     */
-    virtual int getAHang() const = 0;
-
-    /*!
-     * @brief Getter for read B hang
-     * @return read B hang
-     */
-    virtual int getBHang() const = 0;
 
     /*!
      * @brief Getter for overlap score
