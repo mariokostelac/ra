@@ -162,7 +162,7 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
         if (!transitive[i]) {
             dst.push_back(view ? overlaps[i] : overlaps[i]->clone());
         } else {
-            debug("SKIPTRAN %d %d\n", overlaps[i]->getReadA()->getId(), overlaps[i]->getReadB()->getId());
+            debug("SKIPTRAN %d %d\n", overlaps[i]->getA(), overlaps[i]->getB());
         }
     }
 
