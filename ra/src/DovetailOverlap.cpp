@@ -17,13 +17,6 @@ static inline bool doubleEq(double x, double y, double eps) {
     return y <= x + eps && x <= y + eps;
 }
 
-double DovetailOverlap::getScore() const {
-
-  double base_score = (getLength(a_)/(double)ra_->getLength() + getLength(b_)/(double)rb_->getLength());
-
-  return base_score;
-}
-
 const std::string overlap("=======");
 std::string DovetailOverlap::repr() const {
   std::string a = overlap;

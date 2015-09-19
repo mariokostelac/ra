@@ -28,14 +28,14 @@ public:
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int read_id_a, const int read_id_b, const bool innie)
-      : a_(read_id_a), b_(read_id_b), innie_(innie) {}
+    Overlap(const int a_id, const int b_id, const bool innie)
+      : a_id_(a_id), b_id_(b_id), innie_(innie) {}
 
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b, const bool innie):
-      a_(read_id_a), ra_(read_a), b_(read_id_b), rb_(read_b), innie_(innie) {}
+    Overlap(const int a_id, Read* read_a, const int b_id, Read* read_b, const bool innie):
+      a_id_(a_id), read_a_(read_a), b_id_(b_id), read_b_(read_b), innie_(innie) {}
 
     /*!
      * @brief Overlap destructor
@@ -47,7 +47,7 @@ public:
      * @return read A identifier
      */
     int getA() const {
-      return a_;
+      return a_id_;
     }
 
     /*!
@@ -55,7 +55,7 @@ public:
      * @return read A
      */
     Read* getReadA() const {
-      return ra_;
+      return read_a_;
     }
 
     /*!
@@ -63,7 +63,7 @@ public:
      * @return
      */
     void setReadA(Read* read) {
-      ra_ = read;
+      read_a_ = read;
     }
 
     /*!
@@ -71,7 +71,7 @@ public:
      * @return read B identifier
      */
     int getB() const {
-      return b_;
+      return b_id_;
     }
 
     /*!
@@ -79,7 +79,7 @@ public:
      * @return read B
      */
     Read* getReadB() const {
-      return rb_;
+      return read_b_;
     }
 
     /*!
@@ -87,7 +87,7 @@ public:
      * @return
      */
     void setReadB(Read* read) {
-      rb_ = read;
+      read_b_ = read;
     }
 
     /*!
@@ -156,11 +156,11 @@ public:
 
 protected:
 
-    int a_;
-    Read* ra_;
+    int a_id_;
+    Read* read_a_;
 
-    int b_;
-    Read* rb_;
+    int b_id_;
+    Read* read_b_;
 
     bool innie_;
 };

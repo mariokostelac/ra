@@ -70,8 +70,6 @@ public:
      */
     virtual ~DovetailOverlap() {}
 
-    virtual double getScore() const;
-
     /*!
      * @brief Getter for overlap length
      * @return length
