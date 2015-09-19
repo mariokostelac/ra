@@ -15,7 +15,7 @@ namespace MHAP {
       MhapOverlap(uint32_t a_id, uint32_t b_id, double jaccard_score, uint32_t shared_minmers,
           bool a_rc, uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
           bool b_rc, uint32_t b_lo, uint32_t b_hi, uint32_t b_len)
-        : Overlap(a_id, b_id), jaccard_score(jaccard_score), shared_minmers(shared_minmers),
+        : Overlap(a_id, b_id, a_rc != b_rc), jaccard_score(jaccard_score), shared_minmers(shared_minmers),
         a_rc(a_rc), a_lo(a_lo), a_hi(a_hi), a_len(a_len),
         b_rc(b_rc), b_lo(b_lo), b_hi(b_hi), b_len(b_len) {
 
@@ -31,8 +31,6 @@ namespace MHAP {
       double getScore() const;
 
       double getQuality() const;
-
-      bool isInnie() const;
 
       Overlap* clone() const;
 

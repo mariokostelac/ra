@@ -35,10 +35,6 @@ namespace MHAP {
     return (getLength(getA()) + getLength(getB()))/2;
   }
 
-  bool MhapOverlap::isInnie() const {
-    return b_rc;
-  }
-
   Overlap* MhapOverlap::clone() const {
     auto copy = new MhapOverlap(getA(), getB(), jaccard_score, shared_minmers,
           a_rc, a_lo, a_hi, a_len,

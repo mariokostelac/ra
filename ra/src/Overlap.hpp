@@ -28,13 +28,14 @@ public:
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int read_id_a, const int read_id_b): a_(read_id_a), b_(read_id_b) {}
+    Overlap(const int read_id_a, const int read_id_b, const bool innie)
+      : a_(read_id_a), b_(read_id_b), innie_(innie) {}
 
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b):
-      a_(read_id_a), ra_(read_a), b_(read_id_b), rb_(read_b) {}
+    Overlap(const int read_id_a, Read* read_a, const int read_id_b, Read* read_b, const bool innie):
+      a_(read_id_a), ra_(read_a), b_(read_id_b), rb_(read_b), innie_(innie) {}
 
     /*!
      * @brief Overlap destructor
@@ -119,7 +120,9 @@ public:
      * @brief Getter for overlap type
      * @return true if overlap is innie
      */
-    virtual bool isInnie() const = 0;
+    bool isInnie() const {
+      return innie_;
+    }
 
     /*!
      * @brief Method for object cloning
@@ -158,5 +161,7 @@ protected:
 
     int b_;
     Read* rb_;
+
+    bool innie_;
 };
 

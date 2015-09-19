@@ -8,7 +8,7 @@
 #include "AfgOverlap.hpp"
 
 AfgOverlap::AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie) :
-    DovetailOverlap(a, b, aHang, bHang), length_(length), innie_(innie) {
+    DovetailOverlap(a, b, aHang, bHang, innie), length_(length), innie_(innie) {
 }
 
 bool AfgOverlap::isUsingPrefix(int readId) const {

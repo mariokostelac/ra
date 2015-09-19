@@ -53,8 +53,8 @@ public:
     /*!
      * @brief DovetailOverlap constructor
      */
-    DovetailOverlap(const int a_id, const int b_id, const int a_hang, const int b_hang)
-      : Overlap(a_id, b_id) {
+    DovetailOverlap(const int a_id, const int b_id, const int a_hang, const int b_hang, const bool innie)
+      : Overlap(a_id, b_id, innie) {
         a_hang_ = a_hang;
         b_hang_ = b_hang;
     }
@@ -62,8 +62,8 @@ public:
     /*!
      * @brief DovetailOverlap constructor
      */
-    DovetailOverlap(const int a_id, Read* a, const int b_id, Read* b):
-      Overlap(a_id, a, b_id, b) {}
+    DovetailOverlap(const int a_id, Read* a, const int b_id, Read* b, const bool innie):
+      Overlap(a_id, a, b_id, b, innie) {}
 
     /*!
      * @brief DovetailOverlap destructor
