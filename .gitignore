@@ -22,3 +22,5 @@ to_afg/debug/to_afg
 to_afg/release/to_afg
 zoom/debug/zoom
 zoom/release/zoom
+filter_contained/debug/filter_contained
+filter_contained/release/filter_contained
