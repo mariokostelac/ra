@@ -165,30 +165,29 @@ int main(int argc, char **argv) {
     fclose(settings_fd);
   }
 
-  vector<Overlap*> all_overlaps, overlaps;
+  vector<DovetailOverlap*> all_overlaps, overlaps;
 
-  if (overlaps_format == "afg") {
-    vector<DovetailOverlap*> afg_overlaps;
-    readAfgOverlaps(afg_overlaps, overlaps_filename.c_str());
-    for (auto o : afg_overlaps) {
-      all_overlaps.push_back(o);
-    }
-  } else if (overlaps_format == "mhap") {
-    fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps_file, &all_overlaps);
-    overlaps_file.close();
-  } else {
-    assert(false);
+  vector<DovetailOverlap*> afg_overlaps;
+  readAfgOverlaps(afg_overlaps, overlaps_filename.c_str());
+  for (auto o : afg_overlaps) {
+    all_overlaps.push_back(o);
   }
 
   overlaps = all_overlaps;
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
-  vector<Overlap*> notransitives;
+  vector<DovetailOverlap*> notransitives;
   filterTransitiveOverlaps(notransitives, all_overlaps, thread_num, true);
 
-  writeOverlaps(notransitives, (assembly_directory + "/nocont.notran." + overlaps_format).c_str());
+  // TODO
+  {
+    vector<Overlap*> overlaps;
+    for (auto o : notransitives) {
+      overlaps.push_back(o);
+    }
+    writeOverlaps(overlaps, (assembly_directory + "/nocont.notran.afg").c_str());
+  }
 
   for (auto o: all_overlaps)    delete o;
 

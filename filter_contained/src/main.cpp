@@ -56,7 +56,6 @@ int thread_num;
 string reads_format;
 string reads_filename;
 string overlaps_filename;
-string overlaps_format;
 int reads_id_offset;
 string settings_file;
 string assembly_directory;
@@ -89,7 +88,6 @@ void init_args(int argc, char** argv) {
   args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
   args.add<int>("reads_id_offset", 'a', "reads id offset (first read id)", false, 0);
   args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
   args.add<string>("settings", 'b', "settings file", false);
 
   args.parse_check(argc, argv);
@@ -100,7 +98,6 @@ void read_args() {
   reads_filename = args.get<string>("reads");
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
-  overlaps_format = args.get<string>("overlaps_format");
   reads_id_offset = args.get<int>("reads_id_offset");
   settings_file = args.get<string>("settings");
   assembly_directory = args.get<string>("directory");
@@ -204,7 +201,7 @@ int main(int argc, char **argv) {
     fclose(settings_fd);
   }
 
-  vector<Overlap*> all_overlaps, overlaps, filtered;
+  vector<DovetailOverlap*> all_overlaps, overlaps, filtered;
   vector<Read*> reads;
   vector<Read*> reads_mapped;
 
@@ -223,19 +220,7 @@ int main(int argc, char **argv) {
 
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
-  if (overlaps_format == "afg") {
-    vector<DovetailOverlap*> afg_overlaps;
-    readAfgOverlaps(afg_overlaps, overlaps_filename.c_str());
-    for (auto o : afg_overlaps) {
-      all_overlaps.push_back(o);
-    }
-  } else if (overlaps_format == "mhap") {
-    fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps_file, &all_overlaps);
-    overlaps_file.close();
-  } else {
-    assert(false);
-  }
+  readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
 
   overlaps = all_overlaps;
 
@@ -263,10 +248,17 @@ int main(int argc, char **argv) {
     o->setReadB(reads_mapped[b]);
   }
 
-  vector<Overlap*> nocontainments;
+  vector<DovetailOverlap*> nocontainments;
   filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
 
-  writeOverlaps(nocontainments, (assembly_directory + "/nocont." + overlaps_format).c_str());
+  // TODO
+  {
+    vector<Overlap*> overlaps;
+    for (auto o : nocontainments) {
+      overlaps.push_back(o);
+    }
+    writeOverlaps(overlaps, (assembly_directory + "/nocont.afg").c_str());
+  }
 
   for (auto r: reads)           delete r;
   for (auto o: all_overlaps)    delete o;

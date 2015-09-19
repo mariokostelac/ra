@@ -14,7 +14,7 @@
  * @param [in] reads vector of Read object pointers (their coverage is updated if they contain other reads)
  * @param [in] view if true Overlap objects are not cloned to dst
  */
-void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
     std::vector<Read*>& reads, bool view = true);
 
 /*!
@@ -27,7 +27,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
  * @param [in] threadLen number of threads
  * @param [in] view if true Overlap objects are not cloned to dst
  */
-void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
     int threadLen, bool view = true);
 
 /*!

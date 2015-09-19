@@ -28,44 +28,6 @@ int Overlap::confirmedLength(const int read_id) const {
     return getLength(read_id);
 }
 
-bool Overlap::isTransitive(const Overlap* o2, const Overlap* o3) const {
-
-    auto o1 = this;
-
-    int a = o1->getA();
-    int b = o1->getB();
-    int c = o2->getA() != a ? o2->getA() : o2->getB();
-
-    if (o2->isUsingSuffix(c) == o3->isUsingSuffix(c)) return false;
-    if (o1->isUsingSuffix(a) != o2->isUsingSuffix(a)) return false;
-    if (o1->isUsingSuffix(b) != o3->isUsingSuffix(b)) return false;
-
-    if (!doubleEq(
-            o2->hangingLength(a) + o3->hangingLength(c),
-            o1->hangingLength(a),
-            EPSILON * o1->getLength() + ALPHA)) {
-        return false;
-    }
-
-    if (!doubleEq(
-            o2->hangingLength(c) + o3->hangingLength(b),
-            o1->hangingLength(b),
-            EPSILON * o1->getLength() + ALPHA)) {
-        return false;
-    }
-
-    debug("ISTRAN %d %d because of %d %d and %d %d\n",
-        o1->getA(),
-        o1->getB(),
-        o2->getA(),
-        o2->getB(),
-        o3->getA(),
-        o3->getB()
-    );
-
-    return true;
-}
-
 void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads) {
 
     for (const auto& overlap : overlaps) {

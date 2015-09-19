@@ -149,45 +149,6 @@ public:
     virtual bool isInnie() const = 0;
 
     /*!
-     * @brief Method for prefix check
-     * @detals Method checks whether the start of the read is contained in overlap.
-     * It respects the direction of read (important for reverse complements)!
-     *
-     * @param [in] readId read identifier
-     * @return true if prefix is in overlap
-     */
-    virtual bool isUsingPrefix(int readId) const = 0;
-
-    /*!
-     * @brief Method for suffix check
-     * @detals Method checks whether the end of the read is contained in overlap.
-     * It respects the direction of read (important for reverse complements)!
-     *
-     * @param [in] readId read identifier
-     * @return true if suffix is in overlap
-     */
-    virtual bool isUsingSuffix(int readId) const = 0;
-
-    /*!
-     * @brief Method for transitive overlap check
-     * @details Method checks whether this (o1) is transitive considering overlaps o2 and o3.
-     *
-     * @param [in] o2 overlap 2
-     * @param [in] o3 overlap 3
-     * @return true if this is transitive
-     */
-    virtual bool isTransitive(const Overlap* o2, const Overlap* o3) const;
-
-    /*!
-     * @brief Getter for hanging length of a read
-     * @details Method returns the absolute value of the read hang.
-     *
-     * @param [in] readId read identifier
-     * @return hanging length
-     */
-    virtual uint hangingLength(int readId) const = 0;
-
-    /*!
      * @brief Method for object cloning
      *
      * @return new Overlap object which equals this

@@ -16,12 +16,12 @@ static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<s
     int type, const std::vector<Read*>& reads);
 
 
-static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Overlap*>& overlaps,
-    const std::map<int, std::vector<std::pair<int, Overlap*>>>& edges, size_t start, size_t end) {
+static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<DovetailOverlap*>& overlaps,
+    const std::map<int, std::vector<std::pair<int, DovetailOverlap*>>>& edges, size_t start, size_t end) {
 
     for (size_t i = start; i < end; ++i) {
 
-        const Overlap* overlap = overlaps[i];
+        const DovetailOverlap* overlap = overlaps[i];
 
         const auto& v1 = edges.at(overlap->getA());
         const auto& v2 = edges.at(overlap->getB());
@@ -79,7 +79,7 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Ove
     }
 }
 
-void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
     std::vector<Read*>& reads, bool view) {
 
     Timer timer;
@@ -135,13 +135,13 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
     timer.print("Overlap", "filter contained");
 }
 
-void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
+void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
     int threadLen, bool view) {
 
     Timer timer;
     timer.start();
 
-    std::map<int, std::vector<std::pair<int, Overlap*>>> edges;
+    std::map<int, std::vector<std::pair<int, DovetailOverlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
         edges[overlap->getA()].emplace_back(overlap->getB(), overlap);
