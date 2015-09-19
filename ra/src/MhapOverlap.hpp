@@ -28,27 +28,11 @@ namespace MHAP {
 
       int getLength(int read_id) const;
 
-      int getAHang() const;
-
-      int getBHang() const;
-
       double getScore() const;
 
       double getQuality() const;
 
       bool isInnie() const;
-
-      // checks whether the start of read is contained in overlap
-      // - respects direction of read (important for reverse complements)!
-      // at least one of isUsingPrefix/isUsingSuffix returns true (heuristics included)
-      bool isUsingPrefix(int readId) const;
-
-      // checks whether the end of read is contained in overlap
-      // - respects direction of read (important for reverse complements)!
-      // at least one of isUsingPrefix/isUsingSuffix returns true (heuristics included)
-      bool isUsingSuffix(int readId) const;
-
-      uint hangingLength(int readId) const;
 
       Overlap* clone() const;
 
@@ -65,19 +49,6 @@ namespace MHAP {
       uint32_t b_lo;
       uint32_t b_hi;
       uint32_t b_len;
-
-      uint32_t hangingLengthA() const;
-      uint32_t hangingLengthB() const;
-
-      // returns if overlap really uses prefix of given read
-      bool isReallyUsingPrefix(int readId) const;
-
-      // returns if overlap really uses suffix of given read
-      bool isReallyUsingSuffix(int readId) const;
-
-      int getLengthA() const;
-
-      int getLengthB() const;
   };
 }
 
