@@ -153,7 +153,7 @@ public:
      *
      * @param [in] output stream.
      */
-    void print(std::ostream& str) const = 0;
+    void print(std::ostream& str) const;
 
     /*!
      * @brief Operator prints overlap representation.

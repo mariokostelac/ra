@@ -185,3 +185,13 @@ int DovetailOverlap::length_b() const {
     return len;
 }
 
+
+void DovetailOverlap::print(std::ostream& o) const {
+  o << "{OVL" << std::endl;
+  o << "adj:" << (innie_ ? 'I' : 'N') << std::endl;
+  o << "rds:" << a() << "," << b() << std::endl;
+  o << "ahg:" << a_hang() << std::endl;
+  o << "bhg:" << b_hang() << std::endl;
+  o << "scr:" << score() << std::endl;
+  o << "}" << std::endl;
+}

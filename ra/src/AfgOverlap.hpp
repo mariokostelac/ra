@@ -23,15 +23,5 @@ public:
         return 1;
     }
 
-    DovetailOverlap* clone() const;
-
-    void print(std::ostream& str) const;
-
-private:
-
-    int length_;
-    bool innie_;
-
-    int length_a() const;
-    int length_b() const;
+    virtual AfgOverlap* clone() const;
 };
