@@ -151,17 +151,6 @@ public:
     virtual Overlap* clone() const = 0;
 
     /*!
-     * @brief Method for overlap update
-     * @details Method updates read identifiers in overlap to match real read identifiers.
-     * This method will be removed in near future!
-     *
-     * @param [in] overlaps vector of Overlap objets pointers
-     * @param [in] reads vector of Read objets pointers
-     */
-    friend void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads);
-
-
-    /*!
      * @brief Method for overlap representation
      * @details Method prints overlap representation to the given stream.
      *

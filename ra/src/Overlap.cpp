@@ -23,11 +23,3 @@ double Overlap::getScore() const {
 
   return base_score;
 }
-
-void updateOverlapIds(std::vector<Overlap*>& overlaps, std::vector<Read*>& reads) {
-
-    for (const auto& overlap : overlaps) {
-        overlap->setA(reads[overlap->getA()]->getId());
-        overlap->setB(reads[overlap->getB()]->getId());
-    }
-}
