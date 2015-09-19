@@ -108,7 +108,7 @@ public:
      * @param [in] readId read identifier
      * @return true if prefix is in overlap
      */
-    virtual bool isUsingPrefix(int readId) const = 0;
+    bool isUsingPrefix(int readId) const;
 
     /*!
      * @brief Method for suffix check
@@ -118,7 +118,7 @@ public:
      * @param [in] readId read identifier
      * @return true if suffix is in overlap
      */
-    virtual bool isUsingSuffix(int readId) const = 0;
+    bool isUsingSuffix(int readId) const;
 
     /*!
      * @brief Method for transitive overlap check
@@ -128,7 +128,7 @@ public:
      * @param [in] o3 overlap 3
      * @return true if this is transitive
      */
-    virtual bool isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const;
+    bool isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const;
 
     /*!
      * @brief Getter for hanging length of a read
@@ -137,7 +137,7 @@ public:
      * @param [in] readId read identifier
      * @return hanging length
      */
-    virtual uint hangingLength(int readId) const = 0;
+    uint hangingLength(int readId) const;
 
     /*!
      * @brief Method for object cloning

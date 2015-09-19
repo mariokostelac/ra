@@ -11,41 +11,6 @@ AfgOverlap::AfgOverlap(int a, int b, int length, int aHang, int bHang, bool inni
     DovetailOverlap(a, b, aHang, bHang, innie), length_(length), innie_(innie) {
 }
 
-bool AfgOverlap::isUsingPrefix(int readId) const {
-
-    if (readId == a()) {
-        if (a_hang() <= 0) return true;
-
-    } else if (readId == b()) {
-        if (innie_ == false && a_hang() >= 0) return true;
-        if (innie_ == true && b_hang() <= 0) return true;
-    }
-
-    return false;
-}
-
-bool AfgOverlap::isUsingSuffix(int readId) const {
-
-    if (readId == a()) {
-        if (b_hang() >= 0) return true;
-
-    } else if (readId == b()) {
-        if (innie_ == false && b_hang() <= 0) return true;
-        if (innie_ == true && a_hang() >= 0) return true;
-    }
-
-    return false;
-}
-
-
-uint AfgOverlap::hangingLength(int readId) const {
-
-    if (readId == a()) return abs(a_hang());
-    if (readId == b()) return abs(b_hang());
-
-    ASSERT(false, "Overlap", "wrong read id");
-}
-
 int AfgOverlap::length() const {
     return (length_a() + length_b())/2;
 }

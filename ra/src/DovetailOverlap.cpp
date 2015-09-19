@@ -69,6 +69,42 @@ std::string DovetailOverlap::repr() const {
   return a + " " + std::to_string(this->a()) + "\n" + b + " " + std::to_string(this->b()) + "\n";
 }
 
+bool DovetailOverlap::isUsingPrefix(int readId) const {
+
+    if (readId == a()) {
+        if (a_hang() <= 0) return true;
+
+    } else if (readId == b()) {
+        if (innie_ == false && a_hang() >= 0) return true;
+        if (innie_ == true && b_hang() <= 0) return true;
+    }
+
+    return false;
+}
+
+bool DovetailOverlap::isUsingSuffix(int readId) const {
+
+    if (readId == a()) {
+        if (b_hang() >= 0) return true;
+
+    } else if (readId == b()) {
+        if (innie_ == false && b_hang() <= 0) return true;
+        if (innie_ == true && a_hang() >= 0) return true;
+    }
+
+    return false;
+}
+
+
+uint DovetailOverlap::hangingLength(int readId) const {
+
+    if (readId == a()) return abs(a_hang());
+    if (readId == b()) return abs(b_hang());
+
+    ASSERT(false, "Overlap", "wrong read id");
+}
+
+
 bool DovetailOverlap::isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const {
 
     auto o1 = this;
