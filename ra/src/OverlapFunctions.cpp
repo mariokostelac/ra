@@ -59,7 +59,7 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Dov
 
                 for (auto i = iStart; i != iEnd; ++i) {
                   for (auto j = jStart; j != jEnd; ++j) {
-                    if (overlap->isTransitive(i->second, j->second)) {
+                    if (overlap->is_transitive(i->second, j->second)) {
                       transitive = true;
                       break;
                     }
@@ -98,7 +98,7 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
         // B -----------------
         const auto a = overlap->a();
         const auto b = overlap->b();
-        if (overlap->isUsingPrefix(a) && overlap->isUsingSuffix(a)) {
+        if (overlap->is_using_prefix(a) && overlap->is_using_suffix(a)) {
             // readA is contained
             contained[a] = true;
             debug("ISCONT %d\n", a);
@@ -110,7 +110,7 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
 
         // A ---------------->
         // B      ------
-        if (overlap->isUsingPrefix(b) && overlap->isUsingSuffix(b)) {
+        if (overlap->is_using_prefix(b) && overlap->is_using_suffix(b)) {
             // readB is contained
             contained[b] = true;
             debug("ISCONT %d\n", b);

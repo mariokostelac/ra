@@ -25,7 +25,7 @@ Contig::Contig(const StringGraphWalk* walk) {
 
       // 0 -> reversed complement
       // 1 -> normal direction
-      int prefixGoesFirst = edges.front()->getOverlap()->isUsingSuffix(start->getId()) ^ firstReversed;
+      int prefixGoesFirst = edges.front()->getOverlap()->is_using_suffix(start->getId()) ^ firstReversed;
 
       int lo = prefixGoesFirst ? 0 : start->getLength();
       int hi = prefixGoesFirst ? start->getLength() : 0;

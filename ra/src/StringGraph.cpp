@@ -48,7 +48,7 @@ void Edge::label(std::string& dst) const {
 
         if (overlap_->innie()) {
 
-            if (overlap_->isUsingSuffix(dst_->getId())) {
+            if (overlap_->is_using_suffix(dst_->getId())) {
                 start = overlap_->length(dst_->getId());
                 len = overlap_->b_hang();
             } else {
@@ -58,7 +58,7 @@ void Edge::label(std::string& dst) const {
 
         } else {
 
-            if (overlap_->isUsingSuffix(dst_->getId())) {
+            if (overlap_->is_using_suffix(dst_->getId())) {
                 start = 0;
                 len = -1 * overlap_->a_hang();
             } else {
@@ -73,7 +73,7 @@ void Edge::label(std::string& dst) const {
         // from B to A
         int start, len;
 
-        if (overlap_->isUsingSuffix(dst_->getId())) {
+        if (overlap_->is_using_suffix(dst_->getId())) {
             start = 0;
             len = overlap_->a_hang();
         } else {
@@ -180,7 +180,7 @@ bool Vertex::isBubbleRootCandidate(int direction) const {
 
 void Vertex::addEdge(Edge* edge) {
 
-    if (edge->getOverlap()->isUsingSuffix(this->getId())) {
+    if (edge->getOverlap()->is_using_suffix(this->getId())) {
         edgesE_.emplace_back(edge);
     } else {
         edgesB_.emplace_back(edge);
@@ -190,7 +190,7 @@ void Vertex::addEdge(Edge* edge) {
 
 const bool Vertex::isBeginEdge(const Edge* e) const {
   if (e == nullptr) return false;
-  if (e->getOverlap()->isUsingSuffix(this->getId())) return false;
+  if (e->getOverlap()->is_using_suffix(this->getId())) return false;
   return true;
 }
 
@@ -368,7 +368,7 @@ void StringGraph::trim() {
 
                 const auto& opposite = edge->oppositeVertex(vertex->getId());
 
-                const auto& oppositeEdges = edge->getOverlap()->isUsingSuffix(opposite->getId()) ?
+                const auto& oppositeEdges = edge->getOverlap()->is_using_suffix(opposite->getId()) ?
                     opposite->getEdgesE() : opposite->getEdgesB();
 
                 for (const auto& oedge : oppositeEdges) {
@@ -1136,7 +1136,7 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
 
   int startType = getType(edges_.front(), start_->getId());
 
-  bool appendToPrefix = edges_.front()->getOverlap()->isUsingPrefix(start_->getId()) ^ startType;
+  bool appendToPrefix = edges_.front()->getOverlap()->is_using_prefix(start_->getId()) ^ startType;
 
   std::string startSequence = std::string(startType ? start_->getReverseComplement() : start_->getSequence());
 

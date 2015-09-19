@@ -108,7 +108,7 @@ public:
      * @param [in] readId read identifier
      * @return true if prefix is in overlap
      */
-    bool isUsingPrefix(int readId) const;
+    bool is_using_prefix(int readId) const;
 
     /*!
      * @brief Method for suffix check
@@ -118,7 +118,7 @@ public:
      * @param [in] readId read identifier
      * @return true if suffix is in overlap
      */
-    bool isUsingSuffix(int readId) const;
+    bool is_using_suffix(int readId) const;
 
     /*!
      * @brief Method for transitive overlap check
@@ -128,7 +128,7 @@ public:
      * @param [in] o3 overlap 3
      * @return true if this is transitive
      */
-    bool isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const;
+    bool is_transitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const;
 
     /*!
      * @brief Getter for hanging length of a read

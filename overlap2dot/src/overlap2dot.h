@@ -27,8 +27,8 @@ int dot_graph(ostream& output, vector<V>& overlaps) {
     uint32_t b_id = overlap->b();
     output << a_id << " -- " << b_id << " [";
 
-    string tail_style = get_edge_style(overlap->isUsingPrefix(a_id), overlap->isUsingSuffix(a_id));
-    string head_style = get_edge_style(overlap->isUsingPrefix(b_id), overlap->isUsingSuffix(b_id));
+    string tail_style = get_edge_style(overlap->is_using_prefix(a_id), overlap->is_using_suffix(a_id));
+    string head_style = get_edge_style(overlap->is_using_prefix(b_id), overlap->is_using_suffix(b_id));
 
     output << "dir=both arrowtail=" << tail_style << " arrowhead=" << head_style << ", label=\"" << overlap->quality() << "\"];" << endl;
     lines++;

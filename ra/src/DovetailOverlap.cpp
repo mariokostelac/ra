@@ -69,7 +69,7 @@ std::string DovetailOverlap::repr() const {
   return a + " " + std::to_string(this->a()) + "\n" + b + " " + std::to_string(this->b()) + "\n";
 }
 
-bool DovetailOverlap::isUsingPrefix(int readId) const {
+bool DovetailOverlap::is_using_prefix(int readId) const {
 
     if (readId == a()) {
         if (a_hang() <= 0) return true;
@@ -82,7 +82,7 @@ bool DovetailOverlap::isUsingPrefix(int readId) const {
     return false;
 }
 
-bool DovetailOverlap::isUsingSuffix(int readId) const {
+bool DovetailOverlap::is_using_suffix(int readId) const {
 
     if (readId == a()) {
         if (b_hang() >= 0) return true;
@@ -105,7 +105,7 @@ uint DovetailOverlap::hangingLength(int readId) const {
 }
 
 
-bool DovetailOverlap::isTransitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const {
+bool DovetailOverlap::is_transitive(const DovetailOverlap* o2, const DovetailOverlap* o3) const {
 
     auto o1 = this;
 
@@ -113,9 +113,9 @@ bool DovetailOverlap::isTransitive(const DovetailOverlap* o2, const DovetailOver
     int b_id = o1->b();
     int c_id = o2->a() != a_id ? o2->a() : o2->b();
 
-    if (o2->isUsingSuffix(c_id) == o3->isUsingSuffix(c_id)) return false;
-    if (o1->isUsingSuffix(a_id) != o2->isUsingSuffix(a_id)) return false;
-    if (o1->isUsingSuffix(b_id) != o3->isUsingSuffix(b_id)) return false;
+    if (o2->is_using_suffix(c_id) == o3->is_using_suffix(c_id)) return false;
+    if (o1->is_using_suffix(a_id) != o2->is_using_suffix(a_id)) return false;
+    if (o1->is_using_suffix(b_id) != o3->is_using_suffix(b_id)) return false;
 
     if (!doubleEq(
             o2->hangingLength(a_id) + o3->hangingLength(c_id),
