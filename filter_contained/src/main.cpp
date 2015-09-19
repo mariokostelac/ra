@@ -56,7 +56,6 @@ int thread_num;
 string reads_format;
 string reads_filename;
 string overlaps_filename;
-int reads_id_offset;
 string settings_file;
 string assembly_directory;
 
@@ -86,7 +85,6 @@ void init_args(int argc, char** argv) {
   args.add<string>("directory", 'd', "assembly directory", false, ".");
   args.add<string>("reads", 'r', "reads file", true);
   args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
-  args.add<int>("reads_id_offset", 'a', "reads id offset (first read id)", false, 0);
   args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("settings", 'b', "settings file", false);
 
@@ -98,7 +96,6 @@ void read_args() {
   reads_filename = args.get<string>("reads");
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
-  reads_id_offset = args.get<int>("reads_id_offset");
   settings_file = args.get<string>("settings");
   assembly_directory = args.get<string>("directory");
 }
@@ -225,12 +222,6 @@ int main(int argc, char **argv) {
   overlaps = all_overlaps;
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
-
-  // fix overlap read ids
-  for (auto o: overlaps) {
-    o->setA(o->getA() - reads_id_offset);
-    o->setB(o->getB() - reads_id_offset);
-  }
 
   for (auto o: overlaps) {
     const auto a = o->getA();

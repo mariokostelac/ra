@@ -50,17 +50,6 @@ public:
     }
 
     /*!
-     * @brief Setter for read A identifier
-     * @return
-     */
-    void setA(int read_id) {
-      if (read_id != a_) {
-        debug("OVLCHID %d %d A\n", a_, read_id);
-      }
-      a_ =  read_id;
-    }
-
-    /*!
      * @brief Getter for read A
      * @return read A
      */
@@ -82,17 +71,6 @@ public:
      */
     int getB() const {
       return b_;
-    }
-
-    /*!
-     * @brief Setter for read B identifier
-     * @return
-     */
-    void setB(int read_id) {
-      if (read_id != b_) {
-        debug("OVLCHID %d %d B\n", b_, read_id);
-      }
-      b_ = read_id;
     }
 
     /*!
