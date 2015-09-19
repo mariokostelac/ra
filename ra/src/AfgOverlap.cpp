@@ -51,13 +51,13 @@ int AfgOverlap::getLength() const {
 }
 
 int AfgOverlap::getLength(int read_id) const {
+    assert(read_id == getA() || read_id == getB());
+
     if (read_id == getA()) {
         return getLengthA();
-    } else if (read_id == getB()) {
-        return getLengthB();
     }
 
-    assert(false);
+    return getLengthB();
 }
 
 int AfgOverlap::getLengthA() const {
