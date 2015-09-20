@@ -177,9 +177,8 @@ int main(int argc, char **argv) {
     fclose(settings_fd);
   }
 
-  vector<DovetailOverlap*> all_overlaps, overlaps, filtered;
+  vector<Overlap*> overlaps;
   vector<Read*> reads;
-  vector<Read*> reads_mapped;
 
   if (reads_format == "fasta") {
     readFastaReads(reads, reads_filename.c_str());
@@ -191,26 +190,33 @@ int main(int argc, char **argv) {
     assert(false);
   }
 
-  std::cerr << "Read " << reads.size() << " reads" << std::endl;
+  fprintf(stderr, "Read %lu reads\n", reads.size());
 
-  readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
+  fstream overlaps_file(overlaps_filename);
+  MHAP::read_overlaps(overlaps_file, &overlaps);
+  overlaps_file.close();
 
-  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
+  fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
+
+  for (auto o : overlaps) {
+    o->set_read_a(reads[o->a()]);
+    o->set_read_b(reads[o->b()]);
+  }
 
   vector<Overlap*> nocontainments;
   {
     vector<Overlap*> input;
-    for (auto o : all_overlaps) {
+    for (auto o : overlaps) {
       input.push_back(o);
     }
 
-    filterContainedOverlaps(nocontainments, input, reads_mapped, true);
+    filterContainedOverlaps(nocontainments, input, reads, true);
   }
 
   writeOverlaps(nocontainments, (assembly_directory + "/nocont.afg").c_str());
 
   for (auto r: reads)           delete r;
-  for (auto o: all_overlaps)    delete o;
+  for (auto o: overlaps)    delete o;
 
   return 0;
 }

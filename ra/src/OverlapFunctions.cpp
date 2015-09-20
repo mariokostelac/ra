@@ -94,19 +94,28 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
 
     std::vector<bool> contained(maxId + 1, false);
 
-    for (const auto& overlap : overlaps) {
+    for (const auto& o : overlaps) {
         // A    --------->
         // B -----------------
-        const auto a = overlap->a();
-        const auto b = overlap->b();
+        const auto a = o->a();
+        const auto b = o->b();
 
-        const auto a_len = overlap->read_a()->getLength();
-        const auto b_len = overlap->read_b()->getLength();
+        if (contained[a] || contained[b]) continue;
 
-        if (overlap->a_lo() <= MAX_HANG_CONTAINED * a_len && (a_len - overlap->a_hi()) >= MAX_HANG_CONTAINED * a_len) {
+        const auto a_lo = o->a_lo(), a_hi = o->a_hi();
+        const auto a_rc = 0;
+        const auto a_len = o->read_a()->getLength();
+
+        const auto b_lo = o->b_lo(), b_hi = o->b_hi();
+        const auto b_rc = o->innie();
+        const auto b_len = o->read_b()->getLength();
+
+        const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
+
+        if (hangs.first <= 0 && hangs.second >= 0) {
             // read_a is contained
             contained[a] = true;
-            debug("ISCONT %d\n", a);
+            debug("ISCONT %d in %d,%d\n", a, a, b);
 
             reads[b]->addCoverage(reads[a]->getLength() / (double) reads[b]->getLength());
 
@@ -115,10 +124,10 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
 
         // A ---------------->
         // B      ------
-        if (overlap->b_lo() <= MAX_HANG_CONTAINED * b_len && (b_len - overlap->b_hi()) >= MAX_HANG_CONTAINED * b_len) {
-            // readB is contained
+        if (hangs.first >= 0 && hangs.second <= 0) {
+            // read_b is contained
             contained[b] = true;
-            debug("ISCONT %d\n", b);
+            debug("ISCONT %d in %d,%d\n", b, a, b);
 
             reads[a]->addCoverage(reads[b]->getLength() / (double) reads[a]->getLength());
         }
@@ -349,3 +358,48 @@ static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<s
     matches.clear();
 }
 
+std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len, bool a_rc,
+    uint32_t b_lo, uint32_t b_hi, uint32_t b_len, bool b_rc) {
+
+  assert("first read has to be normal" && a_rc == 0);
+
+  std::pair<int, int> hangs;
+
+  if (!a_rc && !b_rc) {
+    // -----|------|---->
+    //  ah -|------|---->
+    //
+    // -ah -|------|---->
+    // -----|------|---->
+    hangs.first = a_lo - b_lo;
+  } else if (!a_rc && b_rc) {
+    // -----|------|---->
+    //  ah <|------|-----
+    //
+    // -ah -|------|---->
+    // <----|------|-----
+    hangs.first = a_lo - (b_len - b_hi);
+  }
+
+  if (!a_rc && !b_rc) {
+    //     -|------|-> bh
+    // -----|------|------>
+    //
+    // -----|------|------>
+    //     -|------|-> -bh
+    int b_after = b_len - b_hi;
+    int a_after = a_len - a_hi;
+    hangs.second = b_after - a_after;
+  } else if (!a_rc && b_rc) {
+    //     -|------|-> bh
+    // <----|------|-------
+    //
+    // -----|------|------>
+    //     <|------|-- -bh
+    int a_after = a_len - a_hi;
+    int b_after = b_lo;
+    hangs.second = b_after - a_after;
+  }
+
+  return hangs;
+}
