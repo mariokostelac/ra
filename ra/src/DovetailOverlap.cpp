@@ -109,24 +109,24 @@ bool DovetailOverlap::is_transitive(const DovetailOverlap* o2, const DovetailOve
 
     auto o1 = this;
 
-    auto a_id = o1->a();
-    auto b_id = o1->b();
-    auto c_id = o2->a() != a_id ? o2->a() : o2->b();
+    auto a = o1->a();
+    auto b = o1->b();
+    auto c = o2->a() != a ? o2->a() : o2->b();
 
-    if (o2->is_using_suffix(c_id) == o3->is_using_suffix(c_id)) return false;
-    if (o1->is_using_suffix(a_id) != o2->is_using_suffix(a_id)) return false;
-    if (o1->is_using_suffix(b_id) != o3->is_using_suffix(b_id)) return false;
+    if (o2->is_using_suffix(c) == o3->is_using_suffix(c)) return false;
+    if (o1->is_using_suffix(a) != o2->is_using_suffix(a)) return false;
+    if (o1->is_using_suffix(b) != o3->is_using_suffix(b)) return false;
 
     if (!doubleEq(
-            o2->hanging_length(a_id) + o3->hanging_length(c_id),
-            o1->hanging_length(a_id),
+            o2->hanging_length(a) + o3->hanging_length(c),
+            o1->hanging_length(a),
             EPSILON * o1->length() + ALPHA)) {
         return false;
     }
 
     if (!doubleEq(
-            o2->hanging_length(c_id) + o3->hanging_length(b_id),
-            o1->hanging_length(b_id),
+            o2->hanging_length(c) + o3->hanging_length(b),
+            o1->hanging_length(b),
             EPSILON * o1->length() + ALPHA)) {
         return false;
     }
