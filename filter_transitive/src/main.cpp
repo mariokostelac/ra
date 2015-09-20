@@ -79,16 +79,6 @@ void read_args() {
   settings_file = args.get<string>("settings");
 }
 
-FILE* must_fopen(const char* path, const char* mode) {
-  FILE* res = fopen(path, mode);
-  if (res == nullptr) {
-    fprintf(stderr, "Cannot open %s with mode %s\n", path, mode);
-    exit(1);
-  }
-
-  return res;
-}
-
 void read_settings(FILE *fd) {
   char buff[4096];
 

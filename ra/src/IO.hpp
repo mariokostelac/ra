@@ -170,3 +170,21 @@ void fileRead(char** bytes, const char* path);
  * @param [in] path path to file
  */
 void fileWrite(const char* bytes, size_t bytesLen, const char* path);
+
+/*!
+ * @brief Method for opening a file
+ * @details Method tries to open a file and screams on fail.
+ *
+ * @param [in] path file to open
+ * @param [in] mode file open mode
+ */
+FILE* must_fopen(const std::string path, const char* mode);
+
+/*!
+ * @brief Method for opening a file
+ * @details Method tries to open a file and screams on fail.
+ *
+ * @param [in] path file to open
+ * @param [in] mode file open mode
+ */
+FILE* must_fopen(const char* path, const char* mode);

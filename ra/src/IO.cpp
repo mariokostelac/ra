@@ -399,3 +399,18 @@ void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd) {
     overlaps->emplace_back(new DovetailOverlap(a, b, a_hang, b_hang, type == 'I'));
   }
 }
+
+FILE* must_fopen(const std::string path, const char* mode) {
+  return must_fopen(path.c_str(), mode);
+}
+
+FILE* must_fopen(const char* path, const char* mode) {
+  FILE* res = fopen(path, mode);
+  if (res == nullptr) {
+    fprintf(stderr, "Cannot open %s with mode %s\n", path, mode);
+    exit(1);
+  }
+
+  return res;
+}
+

@@ -191,16 +191,6 @@ void read_args() {
   assembly_directory = args.get<string>("directory");
 }
 
-FILE* must_fopen(const char* path, const char* mode) {
-  FILE* res = fopen(path, mode);
-  if (res == nullptr) {
-    fprintf(stderr, "Cannot open %s with mode %s\n", path, mode);
-    exit(1);
-  }
-
-  return res;
-}
-
 void read_settings(FILE *fd) {
   char buff[4096];
 
@@ -326,12 +316,12 @@ int main(int argc, char **argv) {
   read_args();
 
   if (settings_file.size() > 0) {
-    FILE* settings_fd = must_fopen(settings_file.c_str(), "r");
+    FILE* settings_fd = must_fopen(settings_file, "r");
     read_settings(settings_fd);
     fclose(settings_fd);
   }
 
-  auto run_args_file = must_fopen((assembly_directory + "/run_args.txt").c_str(), "w");
+  auto run_args_file = must_fopen(assembly_directory + "/run_args.txt", "w");
   write_version(run_args_file);
   write_call_cmd(run_args_file, argc, argv);
   write_settings(run_args_file);
