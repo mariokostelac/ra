@@ -215,3 +215,55 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries4) {
   ASSERT_EQ(read1->getLength(), overlap->a_hi());
   ASSERT_EQ(3, overlap->b_hi());
 }
+
+TEST(DovetailOverlap, ReturnsRightHangingLength) {
+  auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
+  ASSERT_EQ(3, overlap->hanging_length(1));
+  ASSERT_EQ(4, overlap->hanging_length(2));
+}
+
+TEST(DovetailOverlap, ReturnsRightHangingLength2) {
+  auto overlap = new DovetailOverlap(1, 2, -3, -4, false);
+  ASSERT_EQ(3, overlap->hanging_length(1));
+  ASSERT_EQ(4, overlap->hanging_length(2));
+}
+
+TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues) {
+  // AAACGT
+  //    CGTTTT
+  auto a = 1;
+  auto b = 2;
+  auto overlap = new DovetailOverlap(a, b, 3, 3, false);
+
+  auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
+  auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
+
+  overlap->set_read_a(read_a);
+  overlap->set_read_b(read_b);
+
+  ASSERT_EQ(false, overlap->is_using_prefix(a));
+  ASSERT_EQ(true, overlap->is_using_suffix(a));
+  ASSERT_EQ(true, overlap->is_using_prefix(b));
+  ASSERT_EQ(false, overlap->is_using_suffix(b));
+}
+
+TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues2) {
+  //    CGTTTT
+  // AAACGT
+  auto a = 2;
+  auto b = 1;
+  auto overlap = new DovetailOverlap(a, b, -3, -3, false);
+
+  auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
+  auto read2 = new AfgRead(2, "read2", "CGTTTT", "", 1);
+
+  overlap->set_read_a(read2);
+  overlap->set_read_b(read1);
+
+  ASSERT_EQ(true, overlap->is_using_prefix(a));
+  ASSERT_EQ(false, overlap->is_using_suffix(a));
+  ASSERT_EQ(false, overlap->is_using_prefix(b));
+  ASSERT_EQ(true, overlap->is_using_suffix(b));
+}
+
+// TODO: add tests for innie
