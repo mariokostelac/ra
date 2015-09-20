@@ -29,7 +29,7 @@ uint32_t Overlap::length(uint32_t read_id) const {
     return a_hi() - a_lo();
   }
 
-  return a_hi() - a_lo();
+  return b_hi() - b_lo();
 }
 
 uint32_t Overlap::length() const {
