@@ -133,12 +133,18 @@ public:
      */
     uint hangingLength(int readId) const;
 
+    virtual double quality() const {
+      return 1;
+    }
+
     /*!
      * @brief Method for object cloning
      *
      * @return new DovetailOverlap object which equals this
      */
-    virtual DovetailOverlap* clone() const = 0;
+    virtual DovetailOverlap* clone() const {
+      return new DovetailOverlap(*this);
+    }
 
 
     /*!
