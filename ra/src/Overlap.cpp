@@ -26,10 +26,10 @@ uint32_t Overlap::length(uint32_t read_id) const {
   assert(read_id == a() || read_id == b());
 
   if (read_id == a()) {
-    return a_hi() - a_lo() + 1;
+    return a_hi() - a_lo();
   }
 
-  return a_hi() - a_lo() + 1;
+  return a_hi() - a_lo();
 }
 
 uint32_t Overlap::length() const {
