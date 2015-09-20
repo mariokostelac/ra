@@ -53,18 +53,15 @@ double OVERLAPS_MIN_QUALITY = 0;
 // global vars
 cmdline::parser args;
 int thread_num;
-string reads_format;
 string reads_filename;
 string overlaps_filename;
-string overlaps_format;
-int reads_id_offset;
 string settings_file;
 string assembly_directory;
 
 void init_args(int argc, char** argv) {
   // input params
+  args.add<string>("reads", 'r', "reads file", true);
   args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
   args.add<string>("settings", 'b', "settings file", false);
   args.add<string>("directory", 'd', "assembly_directory", false, ".");
 
@@ -75,7 +72,7 @@ void read_args() {
   assembly_directory = args.get<string>("directory");
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
   overlaps_filename = args.get<string>("overlaps");
-  overlaps_format = args.get<string>("overlaps_format");
+  reads_filename = args.get<string>("reads");
   settings_file = args.get<string>("settings");
 }
 
@@ -150,36 +147,32 @@ int main(int argc, char **argv) {
   read_args();
 
   if (settings_file.size() > 0) {
-    FILE* settings_fd = must_fopen(settings_file.c_str(), "r");
+    FILE* settings_fd = must_fopen(settings_file, "r");
     read_settings(settings_fd);
     fclose(settings_fd);
   }
 
-  vector<DovetailOverlap*> all_overlaps, overlaps;
+  vector<Read*> reads;
+  readFastaReads(reads, reads_filename.c_str());
 
-  vector<DovetailOverlap*> afg_overlaps;
-  readAfgOverlaps(afg_overlaps, overlaps_filename.c_str());
-  for (auto o : afg_overlaps) {
-    all_overlaps.push_back(o);
-  }
-
-  overlaps = all_overlaps;
+  vector<DovetailOverlap*> overlaps;
+  FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
+  read_dovetail_overlaps(&overlaps, overlaps_fd);
+  fclose(overlaps_fd);
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
-  vector<DovetailOverlap*> notransitives;
-  filterTransitiveOverlaps(notransitives, all_overlaps, thread_num, true);
-
-  // TODO
-  {
-    vector<Overlap*> overlaps;
-    for (auto o : notransitives) {
-      overlaps.push_back(o);
-    }
-    write_overlaps(overlaps, assembly_directory + "/overlaps.notran");
+  for (auto o : overlaps) {
+    o->set_read_a(reads[o->a()]);
+    o->set_read_b(reads[o->b()]);
   }
 
-  for (auto o: all_overlaps)    delete o;
+  vector<DovetailOverlap*> notransitives;
+  filterTransitiveOverlaps(notransitives, overlaps, thread_num, true);
+
+  write_overlaps(notransitives, assembly_directory + "/overlaps.notran");
+
+  for (auto o: overlaps)    delete o;
 
   return 0;
 }
