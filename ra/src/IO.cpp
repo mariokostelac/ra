@@ -385,3 +385,17 @@ void fileWrite(const char* bytes, size_t bytesLen, const char* path) {
 
     fclose(f);
 }
+
+void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd) {
+  int a, b, a_hang, b_hang;
+  char type;
+
+  while (fscanf(fd, "%d %d %c %d %d", &a, &b, &type, &a_hang, &b_hang) == 5) {
+
+    assert(a > 0);
+    assert(b > 0);
+    assert(type == 'N' || type == 'I');
+
+    overlaps->emplace_back(new DovetailOverlap(a, b, a_hang, b_hang, type == 'I'));
+  }
+}

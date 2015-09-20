@@ -116,6 +116,15 @@ void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path);
 void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path);
 
 /*!
+ * @brief Method for reading dovetail overlaps
+ * @details Method reads DovetailOverlaps from file
+ *
+ * @param [in] overlaps vector of Overlap objects pointers
+ * @param [in] fd file descriptor
+ */
+void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd);
+
+/*!
  * @brief Method for Contig input
  * @details Method reads from file in AFG format and creates
  * Contig objects
