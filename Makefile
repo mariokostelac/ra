@@ -12,6 +12,9 @@ install: TARGETS=install
 
 all: $(CORE) $(MODULES)
 
+test: ra
+	@make -C ra test
+
 clean: $(CORE) $(MODULES)
 	@echo [RM] removing
 	@rm $(INC_DIR) $(LIB_DIR) $(BIN_DIR) -rf

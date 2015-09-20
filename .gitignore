@@ -30,3 +30,5 @@ unitigger/debug/unitigger
 unitigger/release/unitigger
 widen_overlaps/debug/widen_overlaps
 widen_overlaps/release/widen_overlaps
+ra/debug/run_tests
+ra/release/run_tests

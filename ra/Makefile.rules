@@ -1,9 +1,10 @@
-LD = g++
+LD = $(CXX)
 
 NAME = ra
 
 OBJ_DIR = obj
 SRC_DIR = ../src
+TST_DIR = ../src/tests
 VND_DIR = ../vendor
 INC_DIR = ../../include/$(NAME)
 LIB_DIR = ../../lib/$(MODULE)
@@ -32,10 +33,12 @@ INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
 LIB = $(LIB_DIR)/lib$(NAME).a
 EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
+TST_EXC = run_tests
+TST_BIN = $(EXC_DIR)/$(TST_EXC)
 
-all: $(OBJ) include lib $(OBJ_DIR)/googletest/gtest.a
+all: $(OBJ) include lib $(TST_BIN)
 
-include ../Makefile.googletests
+include ../Makefile.googletest
 
 install: bin include lib
 
@@ -71,6 +74,16 @@ $(LIB): $(OBJ)
 	@ar rcs $(LIB) $(OBJ)
 
 $(BIN): $(EXC)
+	@echo [CXX] $@
+	@mkdir -p $(dir $@)
+	@cp $< $@
+
+$(TST_EXC): $(OBJ_DIR)/googletest/gtest.a $(OBJ)
+	@echo [LD] $@
+	@mkdir -p $(dir $@)
+	@$(LD) -o $@ $^ $(LD_FLAGS)
+
+$(TST_BIN): $(TST_EXC)
 	@echo [CXX] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@

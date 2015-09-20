@@ -7,6 +7,9 @@ all: debug release
 
 install: all
 
+test: release
+	@./release/run_tests
+
 debug:
 	@echo [MAKE] $(NAME) $@
 	@$(MAKE) -C debug
