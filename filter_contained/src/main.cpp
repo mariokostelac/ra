@@ -59,27 +59,6 @@ string overlaps_filename;
 string settings_file;
 string assembly_directory;
 
-// map reads so we can access reads with mapped[read_id]
-void map_reads(vector<Read*>* mapped, vector<Read*>& reads) {
-
-  int max_id = -1;
-  for (auto r: reads) {
-    max_id = max(max_id, r->getId());
-  }
-
-  mapped->resize(max_id + 1, nullptr);
-  for (auto r: reads) {
-    (*mapped)[r->getId()] = r;
-  }
-}
-
-void must_mkdir(const string& path) {
-    if (mkdir(path.c_str(), 0755) == -1) {
-        fprintf(stderr, "Can't create directory %s\n", path.c_str());
-        exit(1);
-    }
-}
-
 void init_args(int argc, char** argv) {
   // input params
   args.add<string>("directory", 'd', "assembly directory", false, ".");
@@ -212,44 +191,23 @@ int main(int argc, char **argv) {
     assert(false);
   }
 
-  // map reads so we have reads_mapped[read_id] -> read
-  map_reads(&reads_mapped, reads);
-
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
   readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
 
-  overlaps = all_overlaps;
-
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
-  for (auto o: overlaps) {
-    const auto a = o->a();
-    const auto b = o->b();
-    if (reads_mapped[a] == nullptr) {
-      cerr << "Read " << a << " not found" << endl;
-      exit(1);
-    }
-    if (reads_mapped[b] == nullptr) {
-      cerr << "Read " << b << " not found" << endl;
-      exit(1);
-    }
-
-    o->set_read_a(reads_mapped[a]);
-    o->set_read_b(reads_mapped[b]);
-  }
-
-  vector<DovetailOverlap*> nocontainments;
-  filterContainedOverlaps(nocontainments, overlaps, reads_mapped, true);
-
-  // TODO
+  vector<Overlap*> nocontainments;
   {
-    vector<Overlap*> overlaps;
-    for (auto o : nocontainments) {
-      overlaps.push_back(o);
+    vector<Overlap*> input;
+    for (auto o : all_overlaps) {
+      input.push_back(o);
     }
-    writeOverlaps(overlaps, (assembly_directory + "/nocont.afg").c_str());
+
+    filterContainedOverlaps(nocontainments, input, reads_mapped, true);
   }
+
+  writeOverlaps(nocontainments, (assembly_directory + "/nocont.afg").c_str());
 
   for (auto r: reads)           delete r;
   for (auto o: all_overlaps)    delete o;

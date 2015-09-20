@@ -5,6 +5,8 @@
 #include "DovetailOverlap.hpp"
 #include "CommonHeaders.hpp"
 
+const double MAX_HANG_CONTAINED = 0.08;
+
 /*!
  * @brief Method for containment overlaps filtering
  * @details Method picks overlaps in which both reads are not contained in some other reads.
@@ -14,7 +16,7 @@
  * @param [in] reads vector of Read object pointers (their coverage is updated if they contain other reads)
  * @param [in] view if true Overlap objects are not cloned to dst
  */
-void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
+void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     std::vector<Read*>& reads, bool view = true);
 
 /*!

@@ -2,6 +2,7 @@
 #include "AfgOverlap.hpp"
 #include "CommonHeaders.hpp"
 #include "Overlap.hpp"
+#include "OverlapFunctions.hpp"
 #include "ReadIndex.hpp"
 
 static void overlapReadsPart(std::vector<DovetailOverlap*>& dst, const std::vector<Read*>& reads,
@@ -79,7 +80,7 @@ static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<Dov
     }
 }
 
-void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
+void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     std::vector<Read*>& reads, bool view) {
 
     Timer timer;
@@ -98,8 +99,12 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
         // B -----------------
         const auto a = overlap->a();
         const auto b = overlap->b();
-        if (overlap->is_using_prefix(a) && overlap->is_using_suffix(a)) {
-            // readA is contained
+
+        const auto a_len = overlap->read_a()->getLength();
+        const auto b_len = overlap->read_b()->getLength();
+
+        if (overlap->a_lo() <= MAX_HANG_CONTAINED * a_len && (a_len - overlap->a_hi()) >= MAX_HANG_CONTAINED * a_len) {
+            // read_a is contained
             contained[a] = true;
             debug("ISCONT %d\n", a);
 
@@ -110,7 +115,7 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
 
         // A ---------------->
         // B      ------
-        if (overlap->is_using_prefix(b) && overlap->is_using_suffix(b)) {
+        if (overlap->b_lo() <= MAX_HANG_CONTAINED * b_len && (b_len - overlap->b_hi()) >= MAX_HANG_CONTAINED * b_len) {
             // readB is contained
             contained[b] = true;
             debug("ISCONT %d\n", b);
