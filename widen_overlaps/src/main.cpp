@@ -218,7 +218,7 @@ int main(int argc, char **argv) {
     dovetail_overlaps.push_back(new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie()));
   }
 
-  writeOverlaps(dovetail_overlaps, (assembly_directory + "/overlaps.widen").c_str());
+  writeOverlaps(dovetail_overlaps, (assembly_directory + "/overlaps.dovetail").c_str());
 
   for (auto r: reads)               delete r;
   for (auto o: overlaps)            delete o;
