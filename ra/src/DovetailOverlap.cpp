@@ -177,11 +177,6 @@ uint32_t DovetailOverlap::b_hi() const {
 }
 
 void DovetailOverlap::print(std::ostream& o) const {
-  o << "{OVL" << std::endl;
-  o << "adj:" << (innie_ ? 'I' : 'N') << std::endl;
-  o << "rds:" << a() << "," << b() << std::endl;
-  o << "ahg:" << a_hang() << std::endl;
-  o << "bhg:" << b_hang() << std::endl;
-  o << "scr:" << score() << std::endl;
-  o << "}" << std::endl;
+  o << a() << "\t" << b() << "\t" << (innie_ ? 'I' : 'N') << "\t";
+  o << a_hang() << "\t" << b_hang() << std::endl;
 }
