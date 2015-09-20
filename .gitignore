@@ -26,3 +26,5 @@ filter_contained/debug/filter_contained
 filter_contained/release/filter_contained
 filter_transitive/debug/filter_transitive
 filter_transitive/release/filter_transitive
+unitigger/debug/unitigger
+unitigger/release/unitigger
