@@ -203,8 +203,26 @@ int main(int argc, char **argv) {
     o->set_read_b(reads[o->b()]);
   }
 
-  for (auto r: reads)           delete r;
-  for (auto o: overlaps)    delete o;
+  vector<Overlap*> dovetail_overlaps;
+  for (auto o : overlaps) {
+    const auto a_lo = o->a_lo(), a_hi = o->a_hi();
+    const auto a_rc = 0;
+    const auto a_len = o->read_a()->getLength();
+
+    const auto b_lo = o->b_lo(), b_hi = o->b_hi();
+    const auto b_rc = o->innie();
+    const auto b_len = o->read_b()->getLength();
+
+    const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
+
+    dovetail_overlaps.push_back(new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie()));
+  }
+
+  writeOverlaps(dovetail_overlaps, (assembly_directory + "/overlaps.widen").c_str());
+
+  for (auto r: reads)               delete r;
+  for (auto o: overlaps)            delete o;
+  for (auto do_: dovetail_overlaps) delete do_;
 
   return 0;
 }
