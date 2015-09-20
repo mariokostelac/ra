@@ -40,10 +40,6 @@ namespace MHAP {
         return b_hi_;
       }
 
-      int length() const;
-
-      int length(int read_id) const;
-
       double score() const;
 
       double quality() const;

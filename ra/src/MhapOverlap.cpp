@@ -21,20 +21,6 @@ namespace MHAP {
     return jaccard_score;
   }
 
-  int MhapOverlap::length(int read_id) const {
-    assert(read_id == a() || read_id == b());
-
-    if (read_id == (int) a()) {
-      return a_hi() - a_lo() + 1;
-    }
-
-    return a_hi() - a_lo() + 1;
-  }
-
-  int MhapOverlap::length() const {
-    return (length(a()) + length(b()))/2;
-  }
-
   Overlap* MhapOverlap::clone() const {
     return new MhapOverlap(*this);
   }

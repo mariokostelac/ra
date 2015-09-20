@@ -143,48 +143,6 @@ bool DovetailOverlap::is_transitive(const DovetailOverlap* o2, const DovetailOve
     return true;
 }
 
-int DovetailOverlap::length() const {
-    return (length_a() + length_b())/2;
-}
-
-int DovetailOverlap::length(int read_id) const {
-    assert(read_id == a() || read_id == b());
-
-    if (read_id == a()) {
-        return length_a();
-    }
-
-    return length_b();
-}
-
-int DovetailOverlap::length_a() const {
-    ASSERT(read_a() != nullptr, "Overlap", "Read* a is nullptr");
-
-    int len = read_a()->getSequence().length();
-    if (a_hang() > 0) {
-      len -= a_hang();
-    }
-    if (b_hang() < 0) {
-      len -= abs(b_hang());
-    }
-
-    return len;
-}
-
-int DovetailOverlap::length_b() const {
-    ASSERT(read_b() != nullptr, "Overlap", "Read* b is nullptr");
-
-    int len = read_b()->getSequence().length();
-    if (a_hang() < 0) {
-      len -= abs(a_hang());
-    }
-    if (b_hang() > 0) {
-      len -= b_hang();
-    }
-
-    return len;
-}
-
 uint32_t DovetailOverlap::a_lo() const {
   if (a_hang() <= 0) {
     return 0;

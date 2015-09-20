@@ -85,7 +85,7 @@ void filterContainedOverlaps(std::vector<DovetailOverlap*>& dst, const std::vect
     Timer timer;
     timer.start();
 
-    int maxId = 0;
+    uint32_t maxId = 0;
 
     for (const auto& overlap : overlaps) {
         maxId = std::max(std::max(overlap->a(), overlap->b()), maxId);

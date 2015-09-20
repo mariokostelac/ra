@@ -8,7 +8,7 @@ Contig::Contig(const StringGraphWalk* walk) {
     ASSERT(walk, "Contig", "invalid walk");
 
     // isReversed returns if read with given id is reversed in edge
-    auto isReversed = [](const Edge* edge, int id) -> int {
+    auto isReversed = [](const Edge* edge, uint32_t id) -> int {
         if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
         if (!edge->getOverlap()->innie()) return 0;
         return 1;

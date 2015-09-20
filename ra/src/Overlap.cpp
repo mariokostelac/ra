@@ -21,3 +21,18 @@ double Overlap::score() const {
   return (length(a())/(double)read_a()->getLength() +
       length(b())/(double)read_b()->getLength());
 }
+
+uint32_t Overlap::length(uint32_t read_id) const {
+  assert(read_id == a() || read_id == b());
+
+  if (read_id == a()) {
+    return a_hi() - a_lo() + 1;
+  }
+
+  return a_hi() - a_lo() + 1;
+}
+
+uint32_t Overlap::length() const {
+  return (length(a()) + length(b()))/2;
+}
+

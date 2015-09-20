@@ -28,13 +28,13 @@ public:
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int a_id, const int b_id, const bool innie)
+    Overlap(const uint32_t a_id, const uint32_t b_id, const bool innie)
       : a_id_(a_id), b_id_(b_id), innie_(innie) {}
 
     /*!
      * @brief Overlap constructor
      */
-    Overlap(const int a_id, Read* read_a, const int b_id, Read* read_b, const bool innie):
+    Overlap(const uint32_t a_id, Read* read_a, const uint32_t b_id, Read* read_b, const bool innie):
       a_id_(a_id), read_a_(read_a), b_id_(b_id), read_b_(read_b), innie_(innie) {}
 
     /*!
@@ -46,7 +46,7 @@ public:
      * @brief Getter for read A identifier
      * @return read A identifier
      */
-    int a() const {
+    uint32_t a() const {
       return a_id_;
     }
 
@@ -70,7 +70,7 @@ public:
      * @brief Getter for read B identifier
      * @return read B identifier
      */
-    int b() const {
+    uint32_t b() const {
       return b_id_;
     }
 
@@ -94,7 +94,7 @@ public:
      * @brief Getter for overlap length
      * @return length
      */
-    virtual int length() const = 0;
+    virtual uint32_t length() const;
 
     /*!
      * @brief Getter for overlap length in given read
@@ -102,7 +102,7 @@ public:
      * @param [in] readId read identifier
      * @return length
      */
-    virtual int length(int read_id) const = 0;
+    virtual uint32_t length(uint32_t read_id) const;
 
     virtual uint32_t a_lo() const = 0;
 
@@ -164,10 +164,10 @@ public:
 
 protected:
 
-    int a_id_;
+    uint32_t a_id_;
     Read* read_a_;
 
-    int b_id_;
+    uint32_t b_id_;
     Read* read_b_;
 
     bool innie_;

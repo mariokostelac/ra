@@ -79,20 +79,6 @@ public:
     uint32_t b_hi() const;
 
     /*!
-     * @brief Getter for overlap length
-     * @return length
-     */
-    int length() const;
-
-    /*!
-     * @brief Getter for overlap length in given read
-     *
-     * @param [in] readId read identifier
-     * @return length
-     */
-    int length(int read_id) const;
-
-    /*!
      * @brief Getter for read A hang
      * @return read A hang
      */

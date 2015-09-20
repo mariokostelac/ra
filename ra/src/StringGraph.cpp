@@ -913,13 +913,13 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
         {
           const auto& startEdge = walk->getEdges().front();
           const auto& overlap = startEdge->overlap_;
-          overlapStart = std::min(overlapStart, overlap->length(startEdge->getSrc()->getId()));
+          overlapStart = std::min(overlapStart, (int) overlap->length(startEdge->getSrc()->getId()));
         }
 
         {
           const auto& endEdge = walk->getEdges().back();
           const auto& overlap = endEdge->overlap_;
-          overlapEnd = std::min(overlapEnd, overlap->length(endEdge->getDst()->getId()));
+          overlapEnd = std::min(overlapEnd, (int) overlap->length(endEdge->getDst()->getId()));
         }
 
         ++i;
