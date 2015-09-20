@@ -69,12 +69,12 @@ std::string DovetailOverlap::repr() const {
   return a + " " + std::to_string(this->a()) + "\n" + b + " " + std::to_string(this->b()) + "\n";
 }
 
-bool DovetailOverlap::is_using_prefix(int readId) const {
+bool DovetailOverlap::is_using_prefix(uint32_t read_id) const {
 
-    if (readId == a()) {
+    if (read_id == a()) {
         if (a_hang() <= 0) return true;
 
-    } else if (readId == b()) {
+    } else if (read_id == b()) {
         if (innie_ == false && a_hang() >= 0) return true;
         if (innie_ == true && b_hang() <= 0) return true;
     }
@@ -82,12 +82,12 @@ bool DovetailOverlap::is_using_prefix(int readId) const {
     return false;
 }
 
-bool DovetailOverlap::is_using_suffix(int readId) const {
+bool DovetailOverlap::is_using_suffix(uint32_t read_id) const {
 
-    if (readId == a()) {
+    if (read_id == a()) {
         if (b_hang() >= 0) return true;
 
-    } else if (readId == b()) {
+    } else if (read_id == b()) {
         if (innie_ == false && b_hang() <= 0) return true;
         if (innie_ == true && a_hang() >= 0) return true;
     }
@@ -96,10 +96,10 @@ bool DovetailOverlap::is_using_suffix(int readId) const {
 }
 
 
-uint DovetailOverlap::hangingLength(int readId) const {
+uint DovetailOverlap::hanging_length(uint32_t read_id) const {
 
-    if (readId == a()) return abs(a_hang());
-    if (readId == b()) return abs(b_hang());
+    if (read_id == a()) return abs(a_hang());
+    if (read_id == b()) return abs(b_hang());
 
     ASSERT(false, "Overlap", "wrong read id");
 }
@@ -109,24 +109,24 @@ bool DovetailOverlap::is_transitive(const DovetailOverlap* o2, const DovetailOve
 
     auto o1 = this;
 
-    int a_id = o1->a();
-    int b_id = o1->b();
-    int c_id = o2->a() != a_id ? o2->a() : o2->b();
+    auto a_id = o1->a();
+    auto b_id = o1->b();
+    auto c_id = o2->a() != a_id ? o2->a() : o2->b();
 
     if (o2->is_using_suffix(c_id) == o3->is_using_suffix(c_id)) return false;
     if (o1->is_using_suffix(a_id) != o2->is_using_suffix(a_id)) return false;
     if (o1->is_using_suffix(b_id) != o3->is_using_suffix(b_id)) return false;
 
     if (!doubleEq(
-            o2->hangingLength(a_id) + o3->hangingLength(c_id),
-            o1->hangingLength(a_id),
+            o2->hanging_length(a_id) + o3->hanging_length(c_id),
+            o1->hanging_length(a_id),
             EPSILON * o1->length() + ALPHA)) {
         return false;
     }
 
     if (!doubleEq(
-            o2->hangingLength(c_id) + o3->hangingLength(b_id),
-            o1->hangingLength(b_id),
+            o2->hanging_length(c_id) + o3->hanging_length(b_id),
+            o1->hanging_length(b_id),
             EPSILON * o1->length() + ALPHA)) {
         return false;
     }

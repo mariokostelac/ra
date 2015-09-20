@@ -16,70 +16,6 @@ static void threadOverlapReads(std::vector<DovetailOverlap*>& dst, const std::ve
 static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
     int type, const std::vector<Read*>& reads);
 
-
-static void threadFilterTransitive(std::vector<bool>& dst, const std::vector<DovetailOverlap*>& overlaps,
-    const std::map<int, std::vector<std::pair<int, DovetailOverlap*>>>& edges, size_t start, size_t end) {
-
-    for (size_t i = start; i < end; ++i) {
-
-        const DovetailOverlap* overlap = overlaps[i];
-
-        const auto& v1 = edges.at(overlap->a());
-        const auto& v2 = edges.at(overlap->b());
-
-        auto it1 = v1.begin();
-        auto it2 = v2.begin();
-
-        bool transitive = false;
-
-        while (!transitive && it1 != v1.end() && it2 != v2.end()) {
-
-            if (it1->first == overlap->a() || it1->first == overlap->b()) {
-                ++it1;
-                continue;
-            }
-
-            if (it2->first == overlap->a() || it2->first == overlap->b()) {
-                ++it2;
-                continue;
-            }
-
-            if (it1->first == it2->first) {
-
-                auto iStart = it1;
-                auto iEnd = iStart;
-                for (auto i = iStart; i != v1.end() && i->first == iStart->first; ++i) {
-                  iEnd++;
-                }
-
-                auto jStart = it2;
-                auto jEnd = jStart;
-                for (auto j = jStart; j != v2.end() && j->first == jStart->first; ++j) {
-                  jEnd++;
-                }
-
-                for (auto i = iStart; i != iEnd; ++i) {
-                  for (auto j = jStart; j != jEnd; ++j) {
-                    if (overlap->is_transitive(i->second, j->second)) {
-                      transitive = true;
-                      break;
-                    }
-                  }
-                }
-
-                it1 = iEnd;
-                it2 = jEnd;
-            } else if (it1->first < it2->first) {
-                ++it1;
-            } else {
-                ++it2;
-            }
-        }
-
-        dst[i] = transitive;
-    }
-}
-
 void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     std::vector<Read*>& reads, bool view) {
 
@@ -164,24 +100,65 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
         std::sort(edge.second.begin(), edge.second.end());
     }
 
-    size_t taskLen = std::ceil((double) overlaps.size() / threadLen);
-    size_t start = 0;
-    size_t end = taskLen;
-
-    std::vector<std::thread> threads;
-
     std::vector<bool> transitive(overlaps.size(), false);
 
-    for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(threadFilterTransitive, std::ref(transitive), std::ref(overlaps),
-            std::ref(edges), start, end);
+    for (size_t i = 0; i < edges.size(); ++i) {
 
-        start = end;
-        end = std::min(end + taskLen, overlaps.size());
-    }
+        const DovetailOverlap* overlap = overlaps[i];
 
-    for (auto& it : threads) {
-        it.join();
+        const auto& v1 = edges.at(overlap->a());
+        const auto& v2 = edges.at(overlap->b());
+
+        auto it1 = v1.begin();
+        auto it2 = v2.begin();
+
+        bool is_tran = false;
+
+        while (!is_tran && it1 != v1.end() && it2 != v2.end()) {
+
+            if (it1->first == overlap->a() || it1->first == overlap->b()) {
+                ++it1;
+                continue;
+            }
+
+            if (it2->first == overlap->a() || it2->first == overlap->b()) {
+                ++it2;
+                continue;
+            }
+
+            if (it1->first == it2->first) {
+
+                auto iStart = it1;
+                auto iEnd = iStart;
+                for (auto i = iStart; i != v1.end() && i->first == iStart->first; ++i) {
+                  iEnd++;
+                }
+
+                auto jStart = it2;
+                auto jEnd = jStart;
+                for (auto j = jStart; j != v2.end() && j->first == jStart->first; ++j) {
+                  jEnd++;
+                }
+
+                for (auto i = iStart; i != iEnd; ++i) {
+                  for (auto j = jStart; j != jEnd; ++j) {
+                    if (overlap->is_transitive(i->second, j->second)) {
+                      is_tran = true;
+                      break;
+                    }
+                  }
+                }
+
+                it1 = iEnd;
+                it2 = jEnd;
+            } else if (it1->first < it2->first) {
+                ++it1;
+            } else {
+                ++it2;
+            }
+        }
+
+        transitive[i] = is_tran;
     }
 
     for (size_t i = 0; i < overlaps.size(); ++i) {

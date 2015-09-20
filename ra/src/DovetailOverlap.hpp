@@ -102,7 +102,7 @@ public:
      * @param [in] readId read identifier
      * @return true if prefix is in overlap
      */
-    bool is_using_prefix(int readId) const;
+    bool is_using_prefix(uint32_t read_id) const;
 
     /*!
      * @brief Method for suffix check
@@ -112,7 +112,7 @@ public:
      * @param [in] readId read identifier
      * @return true if suffix is in overlap
      */
-    bool is_using_suffix(int readId) const;
+    bool is_using_suffix(uint32_t read_id) const;
 
     /*!
      * @brief Method for transitive overlap check
@@ -131,7 +131,7 @@ public:
      * @param [in] readId read identifier
      * @return hanging length
      */
-    uint hangingLength(int readId) const;
+    uint32_t hanging_length(uint32_t read_id) const;
 
     virtual double quality() const {
       return 1;
