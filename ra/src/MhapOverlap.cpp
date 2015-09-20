@@ -8,7 +8,7 @@ namespace MHAP {
 
   double MhapOverlap::score() const {
 
-    double base_score = ((a_hi-a_lo)/(double)a_len + (b_hi-b_lo)/(double)b_len);
+    double base_score = ((a_hi()-a_lo())/(double)a_len + (b_hi()-b_lo())/(double)b_len);
 
     if (jaccard_score > 0) {
       return base_score * jaccard_score;
@@ -25,10 +25,10 @@ namespace MHAP {
     assert(read_id == a() || read_id == b());
 
     if (read_id == (int) a()) {
-      return a_hi - a_lo - 1;
+      return a_hi() - a_lo() + 1;
     }
 
-    return a_hi - a_lo - 1;
+    return a_hi() - a_lo() + 1;
   }
 
   int MhapOverlap::length() const {
@@ -36,21 +36,14 @@ namespace MHAP {
   }
 
   Overlap* MhapOverlap::clone() const {
-    auto copy = new MhapOverlap(a(), b(), jaccard_score, shared_minmers,
-          a_rc, a_lo, a_hi, a_len,
-          b_rc, b_lo, b_hi, b_len);
-
-    copy->set_read_a(read_a());
-    copy->set_read_b(read_b());
-
-    return copy;
+    return new MhapOverlap(*this);
   }
 
   void MhapOverlap::print(std::ostream& o) const {
     o << a() << " " << b() << " " << jaccard_score << " ";
     o << (double) (shared_minmers) << " ";
-    o << (int) (a_rc) << " " << a_lo << " " << a_hi << " " << a_len << " ";
-    o << (int) (b_rc) << " " << b_lo << " " << b_hi << " " << b_len << " ";
+    o << (int) (a_rc) << " " << a_lo() << " " << a_hi() << " " << a_len << " ";
+    o << (int) (b_rc) << " " << b_lo() << " " << b_hi() << " " << b_len << " ";
     o << endl;
   }
 

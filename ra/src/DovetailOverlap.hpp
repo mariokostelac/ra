@@ -70,6 +70,14 @@ public:
      */
     virtual ~DovetailOverlap() {}
 
+    uint32_t a_lo() const;
+
+    uint32_t a_hi() const;
+
+    uint32_t b_lo() const;
+
+    uint32_t b_hi() const;
+
     /*!
      * @brief Getter for overlap length
      * @return length

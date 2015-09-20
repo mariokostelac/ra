@@ -104,6 +104,14 @@ public:
      */
     virtual int length(int read_id) const = 0;
 
+    virtual uint32_t a_lo() const = 0;
+
+    virtual uint32_t a_hi() const = 0;
+
+    virtual uint32_t b_lo() const = 0;
+
+    virtual uint32_t b_hi() const = 0;
+
     /*!
      * @brief Getter for overlap score
      * @return overlap score
