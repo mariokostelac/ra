@@ -100,8 +100,6 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         const auto a = o->a();
         const auto b = o->b();
 
-        if (contained[a] || contained[b]) continue;
-
         const auto a_lo = o->a_lo(), a_hi = o->a_hi();
         const auto a_rc = 0;
         const auto a_len = o->read_a()->getLength();
