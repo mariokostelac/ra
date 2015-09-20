@@ -1,4 +1,4 @@
-NAME = layout
+NAME = unitigger
 MODULE = release
 
 include ../Makefile.rules

@@ -1,4 +1,4 @@
-NAME = layout
+NAME = unitigger
 MODULE = debug
 
 include ../Makefile.rules

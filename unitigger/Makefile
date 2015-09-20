@@ -1,4 +1,4 @@
-NAME = layout
+NAME = unitigger
 
 all: debug release
 
