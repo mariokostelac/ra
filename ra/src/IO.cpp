@@ -246,6 +246,20 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& inpu
     delete reader;
 }
 
+void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const char* path) {
+  std::vector<Overlap*> converted(overlaps.size());
+
+  for (int i = 0, n = overlaps.size(); i < n; ++i) {
+    converted[i] = overlaps[i];
+  }
+
+  write_overlaps(converted, path);
+}
+
+void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const std::string path) {
+  write_overlaps(overlaps, path.c_str());
+}
+
 void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path) {
     write_overlaps(overlaps, path.c_str());
 }
