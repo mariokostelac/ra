@@ -33,7 +33,9 @@ LIB = $(LIB_DIR)/lib$(NAME).a
 EXC = $(NAME)
 BIN = $(EXC_DIR)/$(EXC)
 
-all: $(OBJ) include lib
+all: $(OBJ) include lib $(OBJ_DIR)/googletest/gtest.a
+
+include ../Makefile.googletests
 
 install: bin include lib
 

@@ -3,7 +3,7 @@ DOC = doc/Doxyfile
 
 NAME = ra
 
-all: debug release tests
+all: debug release
 
 install: all
 
@@ -24,8 +24,4 @@ clean:
 	@$(MAKE) -C debug clean
 	@$(MAKE) -C release clean
 
-tests:
-	@echo [MAKE]  tests
-	@$(MAKE) -C tests
-
-.PHONY: default all debug release docs clean uninstall remove tests
+.PHONY: default all debug release docs clean uninstall remove
