@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     for (auto o : notransitives) {
       overlaps.push_back(o);
     }
-    writeOverlaps(overlaps, (assembly_directory + "/nocont.notran.afg").c_str());
+    write_overlaps(overlaps, assembly_directory + "/overlaps.notran");
   }
 
   for (auto o: all_overlaps)    delete o;

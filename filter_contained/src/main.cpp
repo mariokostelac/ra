@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
     filterContainedOverlaps(nocontainments, input, reads, true);
   }
 
-  writeOverlaps(nocontainments, (assembly_directory + "/nocont.afg").c_str());
+  write_overlaps(nocontainments, assembly_directory + "/overlaps.nocont");
 
   for (auto r: reads)           delete r;
   for (auto o: overlaps)    delete o;

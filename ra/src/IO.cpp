@@ -246,7 +246,11 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& inpu
     delete reader;
 }
 
-void writeOverlaps(const std::vector<Overlap*>& overlaps, const char* path) {
+void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path) {
+    write_overlaps(overlaps, path.c_str());
+}
+
+void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path) {
 
     Timer timer;
     timer.start();

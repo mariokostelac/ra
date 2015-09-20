@@ -103,7 +103,17 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& inpu
  * @param [in] path path to file where the Overlap objects will be stored
  * (if null, stdout is used)
  */
-void writeOverlaps(const std::vector<Overlap*>& overlaps, const char* path);
+void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path);
+
+/*!
+ * @brief Method for Overlap output
+ * @details Method writes Overlap objects to file
+ *
+ * @param [in] reads vector of Overlap objects pointers
+ * @param [in] path path to file where the Overlap objects will be stored
+ * (if null, stdout is used)
+ */
+void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path);
 
 /*!
  * @brief Method for Contig input
