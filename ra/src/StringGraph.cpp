@@ -560,8 +560,6 @@ int StringGraph::reduceToBOG() {
 
           edge->mark();
           edge->pair()->mark();
-          marked_.push_back(edge->getSrc()->getId());
-          marked_.push_back(edge->getDst()->getId());
 
           removed += 2;
         }
@@ -576,8 +574,6 @@ int StringGraph::reduceToBOG() {
 
           edge->mark();
           edge->pair()->mark();
-          marked_.push_back(edge->getSrc()->getId());
-          marked_.push_back(edge->getDst()->getId());
 
           removed += 2;
         }
@@ -1012,9 +1008,6 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
             edge->mark();
             edge->pair()->mark();
 
-            marked_.push_back(edge->getSrc()->getId());
-            marked_.push_back(edge->getDst()->getId());
-
             popped = true;
           }
         }
@@ -1071,40 +1064,65 @@ int StringGraph::mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* un
 }
 
 void StringGraph::deleteMarked() {
+  delete_marked_vertices();
+  delete_marked_edges();
+}
 
-    // remove marked edges which are marked due to deletion of their opposite edges
-    for (const auto& id : marked_) {
-        vertices_[id]->removeMarkedEdges();
+void StringGraph::delete_marked_edges() {
+  std::set<int> dirty_vertices;
+  std::vector<Edge*> removed_edges;
+
+  int confirmed = 0;
+  for (int i = 0, n = edges_.size(); i < n; ++i) {
+    Edge* edge = edges_[i];
+    if (edge->isMarked()) {
+      dirty_vertices.insert(edge->getSrc()->getId());
+      dirty_vertices.insert(edge->getDst()->getId());
+      removed_edges.push_back(edge);
+      continue;
     }
 
-    marked_.clear();
+    edges_[confirmed] = edges_[i];
+    confirmed++;
+  }
+  edges_.resize(confirmed);
 
-    // delete vertices
-    for (VerticesSet::iterator it = vertices_.begin(); it != vertices_.end();) {
-        const auto& vertex = it->second;
+  for (auto idx : dirty_vertices) {
+      auto vertex = getVertex(idx);
+      if (vertex != nullptr) {
+        getVertex(idx)->removeMarkedEdges();
+      }
+  }
 
-        if (vertex->isMarked()) {
-            it = vertices_.erase(it);
-            delete vertex;
-        } else {
-          it++;
+  for (Edge* edge : removed_edges) {
+    delete edge;
+  }
+}
+
+void StringGraph::delete_marked_vertices() {
+    std::vector<int> for_removal;
+
+    for (auto it : vertices_) {
+        Vertex* v = it.second;
+        if (!v->isMarked()) {
+          continue;
         }
-    }
 
-    // delete edges
-    std::vector<Edge*> edgesNew;
-
-    for (const auto& edge : edges_) {
-
-        if (edge->isMarked()) {
-            delete edge;
-            continue;
+        for (auto edge : v->getEdgesB()) {
+          edge->mark();
         }
-
-        edgesNew.emplace_back(edge);
+        for (auto edge : v->getEdgesE()) {
+          edge->mark();
+        }
+        for_removal.push_back(v->getId());
     }
 
-    edges_.swap(edgesNew);
+    for (int idx : for_removal) {
+      auto it = vertices_.find(idx);
+      auto v = it->second;
+      vertices_.erase(it);
+      delete v;
+    }
 }
 
 // StringGraphWalk

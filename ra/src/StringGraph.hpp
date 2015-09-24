@@ -364,6 +364,18 @@ public:
      * @return vertex
      */
     const Vertex* getVertex(int id) const {
+        if (!vertices_.count(id)) {
+          return nullptr;
+        }
+
+        return vertices_.at(id);
+    }
+
+    Vertex* getVertex(int id) {
+        if (!vertices_.count(id)) {
+          return nullptr;
+        }
+
         return vertices_.at(id);
     }
 
@@ -429,6 +441,9 @@ public:
 
     int extract_unitigs(std::vector<StringGraphWalk*>* walks) const;
 
+    void delete_marked_edges();
+    void delete_marked_vertices();
+
 private:
 
     /**
@@ -475,9 +490,6 @@ private:
 
     std::vector<Edge*> edges_;
     VerticesSet vertices_;
-
-    // helper for edge removal (contains indices of vertices which have marked edges)
-    std::vector<int> marked_;
 };
 
 /*!
