@@ -331,7 +331,7 @@ int main(int argc, char **argv) {
   write_settings(stderr);
   fclose(run_args_file);
 
-  vector<DovetailOverlap*> all_overlaps, overlaps, filtered;
+  vector<DovetailOverlap*> overlaps;
   vector<Read*> reads;
 
   if (reads_format == "fasta") {
@@ -346,12 +346,13 @@ int main(int argc, char **argv) {
 
   std::cerr << "Read " << reads.size() << " reads" << std::endl;
 
-  readAfgOverlaps(all_overlaps, overlaps_filename.c_str());
+  FILE* overlaps_fd = must_fopen(overlaps_filename, "r");
+  read_dovetail_overlaps(&overlaps, overlaps_fd);
+  fclose(overlaps_fd);
 
-  overlaps = all_overlaps;
+  fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   int had_overlaps = overlaps.size();
-  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
   auto filtered_duplicates = filter_best_overlap_per_pair(&overlaps);
   fprintf(stderr, "%d (%.2lf%%) overlaps filtered because had more than one overlap per read pair\n",
@@ -425,7 +426,7 @@ int main(int argc, char **argv) {
   writeAfgContigs(contigs, (assembly_directory + "/contigs.afg").c_str());
 
   for (auto r: reads)           delete r;
-  for (auto o: all_overlaps)    delete o;
+  for (auto o: overlaps)        delete o;
   for (auto c: contig_walks)    delete c;
   for (auto u: unitig_walks)    delete u;
   for (auto c: contigs)         delete c;
