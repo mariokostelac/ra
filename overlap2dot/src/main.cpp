@@ -1,6 +1,7 @@
 #include <fstream>
-#include <vector>
+#include <iostream>
 #include <string>
+#include <vector>
 #include "overlap2dot.h"
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
@@ -30,8 +31,9 @@ int main(int argc, char **argv) {
 
   for (auto stream_name : input_streams) {
     cerr << "Starting reading from " << stream_name << endl;
-    istream* input = stream_name == "-" ? &cin : new fstream(stream_name);
-    readAfgOverlaps(overlaps, *input);
+    FILE* fd = stream_name == "-" ? stdin : must_fopen(stream_name, "r");
+    read_dovetail_overlaps(&overlaps, fd);
+    fclose(fd);
   }
 
   cerr <<  "Read " << overlaps.size() << " overlaps." << endl;
