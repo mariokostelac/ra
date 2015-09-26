@@ -98,8 +98,27 @@ bool DovetailOverlap::is_using_suffix(uint32_t read_id) const {
 
 uint DovetailOverlap::hanging_length(uint32_t read_id) const {
 
-    if (read_id == a()) return abs(a_hang());
-    if (read_id == b()) return abs(b_hang());
+    if (read_id == a()) {
+      int hanging = 0;
+      if (a_hang() > 0) {
+        hanging += a_hang();
+      }
+      if (b_hang() < 0) {
+        hanging += abs(b_hang());
+      }
+
+      return hanging;
+    } else if (read_id == b()) {
+      int hanging = 0;
+      if (a_hang() < 0) {
+        hanging += abs(a_hang());
+      }
+      if (b_hang() > 0) {
+        hanging += b_hang();
+      }
+
+      return hanging;
+    }
 
     ASSERT(false, "Overlap", "wrong read id");
 }

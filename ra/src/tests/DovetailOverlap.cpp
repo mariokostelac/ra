@@ -217,15 +217,35 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries4) {
 }
 
 TEST(DovetailOverlap, ReturnsRightHangingLength) {
+  // ---|-->
+  //    |--|--->
   auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
   ASSERT_EQ(3, overlap->hanging_length(1));
   ASSERT_EQ(4, overlap->hanging_length(2));
 }
 
 TEST(DovetailOverlap, ReturnsRightHangingLength2) {
+  //    |--|--->
+  // ---|-->
   auto overlap = new DovetailOverlap(1, 2, -3, -4, false);
-  ASSERT_EQ(3, overlap->hanging_length(1));
-  ASSERT_EQ(4, overlap->hanging_length(2));
+  ASSERT_EQ(4, overlap->hanging_length(1));
+  ASSERT_EQ(3, overlap->hanging_length(2));
+}
+
+TEST(DovetailOverlap, ReturnsRightHangingLength3) {
+  // ---|--|-->
+  //    |--|
+  auto overlap = new DovetailOverlap(1, 2, 3, -3, false);
+  ASSERT_EQ(6, overlap->hanging_length(1));
+  ASSERT_EQ(0, overlap->hanging_length(2));
+}
+
+TEST(DovetailOverlap, ReturnsRightHangingLength4) {
+  //    |--|
+  // ---|--|-->
+  auto overlap = new DovetailOverlap(1, 2, -3, 3, false);
+  ASSERT_EQ(0, overlap->hanging_length(1));
+  ASSERT_EQ(6, overlap->hanging_length(2));
 }
 
 TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues) {
