@@ -42,8 +42,6 @@ namespace MHAP {
 
       double score() const;
 
-      double quality() const;
-
       Overlap* clone() const;
 
       void print(std::ostream& str) const;

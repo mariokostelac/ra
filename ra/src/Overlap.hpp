@@ -119,12 +119,6 @@ public:
     virtual double score() const;
 
     /*!
-     * @brief Getter for overlap quality
-     * @return overlap quality
-     */
-    virtual double quality() const = 0;
-
-    /*!
      * @brief Getter for overlap type
      * @return true if overlap is innie
      */

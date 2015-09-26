@@ -133,10 +133,6 @@ public:
      */
     uint32_t hanging_length(uint32_t read_id) const;
 
-    virtual double quality() const {
-      return 1;
-    }
-
     /*!
      * @brief Method for object cloning
      *
@@ -145,7 +141,6 @@ public:
     virtual DovetailOverlap* clone() const {
       return new DovetailOverlap(*this);
     }
-
 
     /*!
      * @brief Method for overlap representation

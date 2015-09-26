@@ -17,10 +17,6 @@ namespace MHAP {
     return base_score;
   }
 
-  double MhapOverlap::quality() const {
-    return jaccard_score;
-  }
-
   Overlap* MhapOverlap::clone() const {
     return new MhapOverlap(*this);
   }

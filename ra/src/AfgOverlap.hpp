@@ -18,10 +18,5 @@ public:
     AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie);
     ~AfgOverlap() {}
 
-    // TODO
-    double quality() const {
-        return 1;
-    }
-
     virtual AfgOverlap* clone() const;
 };
