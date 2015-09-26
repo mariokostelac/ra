@@ -1110,9 +1110,11 @@ void StringGraph::delete_marked_vertices() {
 
         for (auto edge : v->getEdgesB()) {
           edge->mark();
+          edge->pair()->mark();
         }
         for (auto edge : v->getEdgesE()) {
           edge->mark();
+          edge->pair()->mark();
         }
         for_removal.push_back(v->getId());
     }
