@@ -84,7 +84,7 @@ $(TST_EXC): $(OBJ_DIR)/googletest/gtest.a $(OBJ)
 	@$(LD) -o $@ $^ $(LD_FLAGS)
 
 $(TST_BIN): $(TST_EXC)
-	@echo [CXX] $@
+	@echo [CP] $@
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
