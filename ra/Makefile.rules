@@ -79,10 +79,10 @@ $(BIN): $(EXC)
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
-$(TST_EXC): $(OBJ_DIR)/googletest/gtest.a $(OBJ)
+$(TST_EXC): $(OBJ_DIR)/googletest/libgtest.a $(OBJ)
 	@echo [LD] $@
 	@mkdir -p $(dir $@)
-	@$(LD) -o $@ $^ $(LD_FLAGS)
+	@$(LD) -o $@ $^ $(LD_FLAGS) -L $(OBJ_DIR)/googletest -lgtest
 
 $(TST_BIN): $(TST_EXC)
 	@echo [CP] $@
