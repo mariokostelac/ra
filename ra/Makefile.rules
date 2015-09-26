@@ -16,6 +16,7 @@ L_CMD = $(addprefix -L, )
 
 CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp
+AR_FLAGS = rcs
 
 API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Contig.hpp \
       DovetailOverlap.hpp \
@@ -71,7 +72,7 @@ $(INC_DIR)/%.hpp: $(SRC_DIR)/%.hpp
 $(LIB): $(OBJ)
 	@echo [AR] $@
 	@mkdir -p $(dir $@)
-	@ar rcs $(LIB) $(OBJ)
+	@$(AR) $(AR_FLAGS) $(LIB) $(OBJ)
 
 $(BIN): $(EXC)
 	@echo [CXX] $@
