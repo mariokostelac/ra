@@ -14,4 +14,7 @@ debug:
 release:
 	@echo [MAKE] $(NAME) $@
 
-.PHONY: default all debug release install
+clean:
+	@echo [CLEAN]
+
+.PHONY: default all debug release install clean

@@ -7,7 +7,7 @@ LIB_DIR = lib
 BIN_DIR = bin
 
 all: TARGETS=install
-clean: TARGETS=remove clean
+clean: TARGETS=clean
 install: TARGETS=install
 
 all: $(CORE) $(MODULES)
