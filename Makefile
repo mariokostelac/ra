@@ -1,6 +1,6 @@
 
 CORE = ra
-MODULES = ra_consensus to_afg consensus unitigger overlap2dot zoom filter_contained filter_transitive widen_overlaps
+MODULES = ra_consensus to_afg consensus unitigger overlap2dot zoom filter_contained filter_transitive widen_overlaps layout
 
 INC_DIR = include/$(CORE)
 LIB_DIR = lib
