@@ -1,8 +1,8 @@
 .o
 bin
-include
+/include
 obj
-lib
+/lib
 
 consensus/debug/consensus
 consensus/release/consensus
