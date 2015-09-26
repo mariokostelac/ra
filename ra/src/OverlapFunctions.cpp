@@ -102,7 +102,7 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
 
     std::vector<bool> transitive(overlaps.size(), false);
 
-    for (size_t i = 0; i < edges.size(); ++i) {
+    for (size_t i = 0; i < overlaps.size(); ++i) {
 
         const DovetailOverlap* overlap = overlaps[i];
 
