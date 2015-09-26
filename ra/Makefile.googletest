@@ -22,7 +22,7 @@ GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 $(OBJ_DIR)/googletest/gtest-all.o : $(GTEST_SRCS_)
 	@mkdir -p $(OBJ_DIR)/googletest
 	@echo "[CXX] googletest"
-	@$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXX_FLAGS) -c \
+	@$(CXX) -I$(GTEST_DIR) $(CXX_FLAGS) -c \
             $(GTEST_DIR)/src/gtest-all.cc -o $@
 
 $(OBJ_DIR)/googletest/gtest.a : $(OBJ_DIR)/googletest/gtest-all.o
