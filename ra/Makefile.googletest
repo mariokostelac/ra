@@ -4,6 +4,7 @@ GTEST_DIR = ../vendor/googletest
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
 CXX_FLAGS += -isystem $(GTEST_DIR)/include
+LD_FLAGS += -isystem $(GTEST_DIR)/include
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
