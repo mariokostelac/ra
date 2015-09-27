@@ -378,3 +378,18 @@ std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_l
 
   return hangs;
 }
+
+DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates) {
+    const auto a_lo = o->a_lo(), a_hi = o->a_hi();
+    const auto a_rc = 0;
+    const auto a_len = o->read_a()->getLength();
+
+    const auto b_lo = o->b_lo(), b_hi = o->b_hi();
+    const auto b_rc = o->innie();
+    const auto b_len = o->read_b()->getLength();
+
+    const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
+
+    // TODO: error rates
+    return new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), -1, -1);
+}

@@ -403,14 +403,15 @@ void fileWrite(const char* bytes, size_t bytesLen, const char* path) {
 void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd) {
   int a, b, a_hang, b_hang;
   char type;
+  double orig_errate, errate;
 
-  while (fscanf(fd, "%d %d %c %d %d", &a, &b, &type, &a_hang, &b_hang) == 5) {
+  while (fscanf(fd, "%d %d %c %d %d %lf %lf", &a, &b, &type, &a_hang, &b_hang, &orig_errate, &errate) == 7) {
 
     assert(a > 0);
     assert(b > 0);
     assert(type == 'N' || type == 'I');
 
-    overlaps->emplace_back(new DovetailOverlap(a, b, a_hang, b_hang, type == 'I'));
+    overlaps->emplace_back(new DovetailOverlap(a, b, a_hang, b_hang, type == 'I', orig_errate, errate));
   }
 }
 

@@ -197,5 +197,6 @@ uint32_t DovetailOverlap::b_hi() const {
 
 void DovetailOverlap::print(std::ostream& o) const {
   o << a() << "\t" << b() << "\t" << (innie_ ? 'I' : 'N') << "\t";
-  o << a_hang() << "\t" << b_hang() << std::endl;
+  o << a_hang() << "\t" << b_hang()  << "\t" << orig_errate() << "\t";
+  o << errate() << std::endl;
 }

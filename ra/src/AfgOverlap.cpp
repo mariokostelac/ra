@@ -8,7 +8,7 @@
 #include "AfgOverlap.hpp"
 
 AfgOverlap::AfgOverlap(int a, int b, int length, int aHang, int bHang, bool innie) :
-    DovetailOverlap(a, b, aHang, bHang, innie) {
+    DovetailOverlap(a, b, aHang, bHang, innie, -1, -1) {
 }
 
 AfgOverlap* AfgOverlap::clone() const {

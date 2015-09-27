@@ -3,39 +3,39 @@
 #include "../DovetailOverlap.hpp"
 
 TEST(DovetailOverlap, ReturnsRightAHang) {
-  auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 4, false, -1, -1);
   ASSERT_EQ(3, overlap->a_hang());
 }
 
 TEST(DovetailOverlap, ReturnsRightBHang) {
-  auto overlap = new DovetailOverlap(1, 2, 3, -4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, -4, false, -1, -1);
   ASSERT_EQ(-4, overlap->b_hang());
 }
 
 TEST(DovetailOverlap, ReturnsRightAId) {
-  auto overlap = new DovetailOverlap(1, 2, 3, -4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, -4, false, -1, -1);
   ASSERT_EQ(1, overlap->a());
 }
 
 TEST(DovetailOverlap, ReturnsRightBId) {
-  auto overlap = new DovetailOverlap(1, 2, 3, -4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, -4, false, -1, -1);
   ASSERT_EQ(2, overlap->b());
 }
 
 TEST(DovetailOverlap, ReturnsRightInnie1) {
-  auto overlap = new DovetailOverlap(1, 2, 3, -4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, -4, false, -1 , -1);
   ASSERT_EQ(false, overlap->innie());
 }
 
 TEST(DovetailOverlap, ReturnsRightInnie2) {
-  auto overlap = new DovetailOverlap(1, 2, 3, -4, true);
+  auto overlap = new DovetailOverlap(1, 2, 3, -4, true, -1, -1);
   ASSERT_EQ(true, overlap->innie());
 }
 
 TEST(DovetailOverlap, ReturnsRightLengths1) {
   // AAACGT
   //    CGTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -50,7 +50,7 @@ TEST(DovetailOverlap, ReturnsRightLengths1) {
 TEST(DovetailOverlap, ReturnsRightLengths2) {
   //    CGTTTT
   // AAACGT
-  auto overlap = new DovetailOverlap(2, 1, -3, -3, false);
+  auto overlap = new DovetailOverlap(2, 1, -3, -3, false, -1, -1);
 
   auto read_b = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_a = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -67,7 +67,7 @@ TEST(DovetailOverlap, ReturnsRightLengthsIfHasInsertions) {
   // AAAC.GT
   //    CGTTTT
   //       |||
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACNGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -84,7 +84,7 @@ TEST(DovetailOverlap, ReturnsRightLengthsIfHasInsertions2) {
   // AAACGT
   //    C.GTTTT
   //        |||
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CNGTTTT", "", 1);
@@ -99,7 +99,7 @@ TEST(DovetailOverlap, ReturnsRightLengthsIfHasInsertions2) {
 TEST(DovetailOverlap, ReturnsRightLowerBoundaries) {
   // AAACGT
   //    CGTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -114,7 +114,7 @@ TEST(DovetailOverlap, ReturnsRightLowerBoundaries) {
 TEST(DovetailOverlap, ReturnsRightLowerBoundaries2) {
   //    CGTTTT
   // AAACGT
-  auto overlap = new DovetailOverlap(2, 1, -3, -3, false);
+  auto overlap = new DovetailOverlap(2, 1, -3, -3, false, -1, -1);
 
   auto read2 = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read1 = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -129,7 +129,7 @@ TEST(DovetailOverlap, ReturnsRightLowerBoundaries2) {
 TEST(DovetailOverlap, ReturnsRightLowerBoundaries3) {
   // AAAC.GT
   //    CGTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACNGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -144,7 +144,7 @@ TEST(DovetailOverlap, ReturnsRightLowerBoundaries3) {
 TEST(DovetailOverlap, ReturnsRightLowerBoundaries4) {
   // AAACGT
   //    C.GTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 4, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CNGTTTT", "", 1);
@@ -159,7 +159,7 @@ TEST(DovetailOverlap, ReturnsRightLowerBoundaries4) {
 TEST(DovetailOverlap, ReturnsRightHigherBoundaries) {
   // AAACGT
   //    CGTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -174,7 +174,7 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries) {
 TEST(DovetailOverlap, ReturnsRightHigherBoundaries2) {
   //    CGTTTT
   // AAACGT
-  auto overlap = new DovetailOverlap(2, 1, -3, -3, false);
+  auto overlap = new DovetailOverlap(2, 1, -3, -3, false, -1, -1);
 
   auto read2 = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read1 = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -189,7 +189,7 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries2) {
 TEST(DovetailOverlap, ReturnsRightHigherBoundaries3) {
   // AAAC.GT
   //    CGTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 3, false, -1, -1);
 
   auto read1 = new AfgRead(1, "read1", "AAACNGT", "", 1);
   auto read2 = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -204,7 +204,7 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries3) {
 TEST(DovetailOverlap, ReturnsRightHigherBoundaries4) {
   // AAACGT
   //    C.GTTTT
-  auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 4, false, -1, -1);
 
   auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read2 = new AfgRead(2, "read2", "CNGTTTT", "", 1);
@@ -219,7 +219,7 @@ TEST(DovetailOverlap, ReturnsRightHigherBoundaries4) {
 TEST(DovetailOverlap, ReturnsRightHangingLength) {
   // ---|-->
   //    |--|--->
-  auto overlap = new DovetailOverlap(1, 2, 3, 4, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, 4, false, -1, -1);
   ASSERT_EQ(3, overlap->hanging_length(1));
   ASSERT_EQ(4, overlap->hanging_length(2));
 }
@@ -227,7 +227,7 @@ TEST(DovetailOverlap, ReturnsRightHangingLength) {
 TEST(DovetailOverlap, ReturnsRightHangingLength2) {
   //    |--|--->
   // ---|-->
-  auto overlap = new DovetailOverlap(1, 2, -3, -4, false);
+  auto overlap = new DovetailOverlap(1, 2, -3, -4, false, -1, -1);
   ASSERT_EQ(4, overlap->hanging_length(1));
   ASSERT_EQ(3, overlap->hanging_length(2));
 }
@@ -235,7 +235,7 @@ TEST(DovetailOverlap, ReturnsRightHangingLength2) {
 TEST(DovetailOverlap, ReturnsRightHangingLength3) {
   // ---|--|-->
   //    |--|
-  auto overlap = new DovetailOverlap(1, 2, 3, -3, false);
+  auto overlap = new DovetailOverlap(1, 2, 3, -3, false, -1, -1);
   ASSERT_EQ(6, overlap->hanging_length(1));
   ASSERT_EQ(0, overlap->hanging_length(2));
 }
@@ -243,7 +243,7 @@ TEST(DovetailOverlap, ReturnsRightHangingLength3) {
 TEST(DovetailOverlap, ReturnsRightHangingLength4) {
   //    |--|
   // ---|--|-->
-  auto overlap = new DovetailOverlap(1, 2, -3, 3, false);
+  auto overlap = new DovetailOverlap(1, 2, -3, 3, false, -1, -1);
   ASSERT_EQ(0, overlap->hanging_length(1));
   ASSERT_EQ(6, overlap->hanging_length(2));
 }
@@ -253,7 +253,7 @@ TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues) {
   //    CGTTTT
   auto a = 1;
   auto b = 2;
-  auto overlap = new DovetailOverlap(a, b, 3, 3, false);
+  auto overlap = new DovetailOverlap(a, b, 3, 3, false, -1, -1);
 
   auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
@@ -272,7 +272,7 @@ TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues2) {
   // AAACGT
   auto a = 2;
   auto b = 1;
-  auto overlap = new DovetailOverlap(a, b, -3, -3, false);
+  auto overlap = new DovetailOverlap(a, b, -3, -3, false, -1, -1);
 
   auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
   auto read2 = new AfgRead(2, "read2", "CGTTTT", "", 1);
