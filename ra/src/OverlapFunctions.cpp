@@ -38,14 +38,12 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         const auto b = o->b();
 
         const auto a_lo = o->a_lo(), a_hi = o->a_hi();
-        const auto a_rc = 0;
         const auto a_len = o->read_a()->getLength();
 
         const auto b_lo = o->b_lo(), b_hi = o->b_hi();
-        const auto b_rc = o->innie();
         const auto b_len = o->read_b()->getLength();
 
-        const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
+        const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
 
         if (hangs.first <= 0 && hangs.second >= 0) {
             // read_a is contained
@@ -334,10 +332,8 @@ static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<s
     matches.clear();
 }
 
-std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len, bool a_rc,
-    uint32_t b_lo, uint32_t b_hi, uint32_t b_len, bool b_rc) {
-
-  assert("first read has to be normal" && a_rc == 0);
+std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
+    uint32_t b_lo, uint32_t b_hi, uint32_t b_len) {
 
   std::pair<int, int> hangs;
 
@@ -367,14 +363,12 @@ DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates
     double orig_errate = editDistance(a_part, b_part) / (double) o->length();
 
     const auto a_lo = o->a_lo(), a_hi = o->a_hi();
-    const auto a_rc = 0;
     const auto a_len = o->read_a()->getLength();
 
     const auto b_lo = o->b_lo(), b_hi = o->b_hi();
-    const auto b_rc = o->innie();
     const auto b_len = o->read_b()->getLength();
 
-    const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
+    const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
 
     auto tmp = DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), -1, -1);
     tmp.set_read_a(o->read_a());

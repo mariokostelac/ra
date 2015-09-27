@@ -46,7 +46,7 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
 void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path);
 
-std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len, bool a_rc,
-    uint32_t b_lo, uint32_t b_hi, uint32_t b_len, bool b_rc);
+std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
+    uint32_t b_lo, uint32_t b_hi, uint32_t b_len);
 
 DovetailOverlap* forced_dovetail_overlap(const Overlap* overlap, bool calc_error_rates);
