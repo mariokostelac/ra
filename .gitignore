@@ -32,3 +32,5 @@ widen_overlaps/debug/widen_overlaps
 widen_overlaps/release/widen_overlaps
 ra/debug/run_tests
 ra/release/run_tests
+filter_erroneous_overlaps/debug/filter_erroneous_overlaps
+filter_erroneous_overlaps/release/filter_erroneous_overlaps

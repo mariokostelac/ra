@@ -100,6 +100,10 @@ def unitigger_bin(debug: false)
   File.join(bin_dir(debug: debug), "unitigger")
 end
 
+def filter_bad_overlaps_bin(debug: false)
+  File.join(bin_dir(debug: debug), "filter_erroneous_overlaps")
+end
+
 def run_filter_contained(reads_filename, overlaps_filename)
   working_directory = $options[:working_dir]
   cmd = "#{filter_contained_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory}"
@@ -128,12 +132,18 @@ def run_unitigger(reads_filename, overlaps_filename)
   system(cmd)
 end
 
-def ensure_dir(dirpath)
-  FileUtils::mkdir_p dirpath
+def run_filter_bad_overlaps(overlaps_filename)
+  working_directory = $options[:working_dir]
+  output = File.join(working_directory, "overlaps.filtered")
+  cmd = "#{filter_bad_overlaps_bin} -x #{overlaps_filename} > #{output}"
+  puts(cmd)
+  system(cmd)
+
+  output
 end
 
-def line
-  "=" * 80
+def ensure_dir(dirpath)
+  FileUtils::mkdir_p dirpath
 end
 
 $options_parser = nil
@@ -154,13 +164,12 @@ def main
   puts "Create dovetail overlaps binary: #{create_dovetail_bin}"
   puts "Filter transitive overlaps binary: #{filter_transitives_bin}"
   puts "Unitigger binary: #{unitigger_bin}"
+  puts "Filter erroneous overlaps binary: #{filter_bad_overlaps_bin}"
   puts
   puts "Reads filename: #{reads_filename}"
   puts "Overlaps filename: #{overlaps_filename}"
   puts "Assembly directory: #{$options[:working_dir]}"
   puts
-
-  step = 1
 
   Task.new "PREPARING ASSEMBLY DIRECTORY" do
     if !ensure_dir($options[:working_dir])
@@ -188,6 +197,11 @@ def main
     File.join($options[:working_dir], "overlaps.dovetail")
   end
   overlaps_filename = create_dovetail.run
+
+  filter_bad_overlaps = Task.new "FILTERING BAD OVERLAPS" do
+    run_filter_bad_overlaps(overlaps_filename)
+  end
+  overlaps_filename = filter_bad_overlaps.run
 
   filter_transitive = Task.new "FILTERING TRANSITIVE OVERLAPS" do
     if !run_filer_transitive(reads_filename, overlaps_filename)
