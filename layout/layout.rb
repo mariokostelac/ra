@@ -16,6 +16,33 @@ module Colors
   def self.end;            "\e[0m" end
 end
 
+class Task
+
+  @@task_number = 1
+
+  def initialize(name, &block)
+    @name = name
+    @cmd = block
+  end
+
+  def run
+    puts Colors::green
+    puts "#{@@task_number}. #{@name}"
+    puts '=' * 80
+
+    puts Colors::cyan
+    res = @cmd.call
+
+    puts Colors::green
+    puts '=' * 80
+
+    @@task_number += 1
+
+    res
+  end
+
+end
+
 def help
   puts $options_parser
   exit 1
@@ -135,63 +162,50 @@ def main
 
   step = 1
 
-  puts "#{step}. PREPARING ASSEMBLY DIRECTORY"
-  puts line
-  puts Colors::cyan
-  if !ensure_dir($options[:working_dir])
-    puts 'Process exited with non-zero exit status, stopping here!'
-    exit 1
+  Task.new "PREPARING ASSEMBLY DIRECTORY" do
+    if !ensure_dir($options[:working_dir])
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
+  end.run
+
+  filter_contained = Task.new "FILTERING CONTAINED READS" do
+    if !run_filter_contained(reads_filename, overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
+
+    File.join($options[:working_dir], "overlaps.nocont")
   end
+  overlaps_filename = filter_contained.run
 
-  step += 1
-  puts Colors::green
+  create_dovetail = Task.new "CREATING DOVETAIL OVERLAPS" do
+    if !run_dovetail_overlaps(reads_filename, overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
 
-  puts "#{step}. FILTERING CONTAINED READS"
-  puts line
-  puts Colors::cyan
-  if !run_filter_contained(reads_filename, overlaps_filename)
-    puts 'Process exited with non-zero exit status, stopping here!'
-    exit 1
+    File.join($options[:working_dir], "overlaps.dovetail")
   end
-  overlaps_filename = File.join($options[:working_dir], "overlaps.nocont")
+  overlaps_filename = create_dovetail.run
 
-  step += 1
-  puts Colors::green
+  filter_transitive = Task.new "FILTERING TRANSITIVE OVERLAPS" do
+    if !run_filer_transitive(reads_filename, overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
 
-  puts "#{step}. CREATING DOVETAIL OVERLAPS"
-  puts line
-  puts Colors::cyan
-  if !run_dovetail_overlaps(reads_filename, overlaps_filename)
-    puts 'Process exited with non-zero exit status, stopping here!'
-    exit 1
+    File.join($options[:working_dir], "overlaps.notran")
   end
-  overlaps_filename = File.join($options[:working_dir], "overlaps.dovetail")
+  overlaps_filename = filter_transitive.run
 
-  step += 1
-  puts Colors::green
-
-  puts "#{step}. FILTERING TRANSITIVE OVERLAPS"
-  puts line
-  puts Colors::cyan
-  if !run_filer_transitive(reads_filename, overlaps_filename)
-    puts 'Process exited with non-zero exit status, stopping here!'
-    exit 1
+  find_unitigs = Task.new "FINDING UNITIGS" do
+    if !run_unitigger(reads_filename, overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
   end
-  overlaps_filename = File.join($options[:working_dir], "overlaps.notran")
-
-  step += 1
-  puts Colors::green
-
-  puts "#{step}. FINDING UNITIGS"
-  puts line
-  puts Colors::cyan
-  if !run_unitigger(reads_filename, overlaps_filename)
-    puts 'Process exited with non-zero exit status, stopping here!'
-    exit 1
-  end
-
-  step += 1
-  puts Colors::green
+  find_unitigs.run
 
 end
 
