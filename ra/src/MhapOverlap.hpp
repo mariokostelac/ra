@@ -18,7 +18,6 @@ namespace MHAP {
         : Overlap(a_id, b_id, a_rc != b_rc), jaccard_score(jaccard_score), shared_minmers(shared_minmers),
         a_rc(a_rc), a_lo_(a_lo), a_hi_(a_hi), a_len(a_len),
         b_rc(b_rc), b_lo_(b_lo), b_hi_(b_hi), b_len(b_len) {
-
           assert(!a_rc);
         }
 
@@ -33,11 +32,19 @@ namespace MHAP {
       }
 
       uint32_t b_lo() const {
+        if (b_rc) {
+          return b_len - (b_hi_ + 1);
+        }
+
         return b_lo_;
       }
 
       uint32_t b_hi() const {
-        return b_hi_;
+        if (b_rc) {
+          return b_len - b_lo_;
+        }
+
+        return b_hi_ + 1;
       }
 
       double score() const;

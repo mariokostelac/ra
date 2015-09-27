@@ -24,8 +24,8 @@ namespace MHAP {
   void MhapOverlap::print(std::ostream& o) const {
     o << a() << " " << b() << " " << jaccard_score << " ";
     o << (double) (shared_minmers) << " ";
-    o << (int) (a_rc) << " " << a_lo() << " " << a_hi() - 1 << " " << a_len << " ";
-    o << (int) (b_rc) << " " << b_lo() << " " << b_hi() - 1 << " " << b_len << " ";
+    o << (int) (a_rc) << " " << a_lo_ << " " << a_hi_ << " " << a_len << " ";
+    o << (int) (b_rc) << " " << b_lo_ << " " << b_hi_ << " " << b_len << " ";
     o << endl;
   }
 
