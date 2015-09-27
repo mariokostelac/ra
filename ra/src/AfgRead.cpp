@@ -56,7 +56,7 @@ void AfgRead::correctBase(int idx, int c) {
 
 void AfgRead::createReverseComplement() {
 
-    reverseComplement_ = reversedComplement(sequence_);
+    reverseComplement_ = reverse_complement(sequence_);
 }
 
 void createReverseComplements(std::vector<Read*>& reads, int threadLen) {

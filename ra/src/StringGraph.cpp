@@ -952,7 +952,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
         //}
 
         //sequences.emplace_back(end > start ? sequence.substr(start, end - start) : std::string());
-        sequences.push_back(startInverted ? reversedComplement(sequence) : sequence);
+        sequences.push_back(startInverted ? reverse_complement(sequence) : sequence);
     }
 
     bool popped = false;

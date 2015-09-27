@@ -23,7 +23,7 @@
 
 typedef unsigned int uint;
 
-std::string reversedComplement(const std::string& original);
+std::string reverse_complement(const std::string& original);
 
 void debug(const char* fmt, ...);
 

@@ -287,3 +287,76 @@ TEST(DovetailOverlap, ReturnsRightSuffixPrefixValues2) {
 }
 
 // TODO: add tests for innie
+TEST(DovetailOverlap, extractOverlappedPartNormal1) {
+  //    CGTTTT
+  // AAACGT
+  auto a = 2;
+  auto b = 1;
+  auto overlap = new DovetailOverlap(a, b, -3, -3, false, -1, -1);
+
+  auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
+  auto read2 = new AfgRead(2, "read2", "CGTTTT", "", 1);
+
+  overlap->set_read_a(read2);
+  overlap->set_read_b(read1);
+
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a).c_str());
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b).c_str());
+}
+
+TEST(DovetailOverlap, extractOverlappedPartNormal2) {
+  //    |||
+  // AAACGT
+  //   CCGTTTT
+  //   ||||
+  auto a = 1;
+  auto b = 2;
+  auto overlap = new DovetailOverlap(a, b, 3, 3, false, -1, -1);
+
+  auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
+  auto read2 = new AfgRead(2, "read2", "CCGTTTT", "", 1);
+
+  overlap->set_read_a(read1);
+  overlap->set_read_b(read2);
+
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a).c_str());
+  ASSERT_STREQ("CCGT", overlap->extract_overlapped_part(b).c_str());
+}
+
+TEST(DovetailOverlap, extractOverlappedPartInnie1) {
+  //    |||
+  // AAACGT
+  //    CGTTTT
+  //    |||
+  auto a = 1;
+  auto b = 2;
+  auto overlap = new DovetailOverlap(a, b, 3, 3, true, -1, -1);
+
+  auto read1 = new AfgRead(1, "read1", "AAACGT", "", 1);
+  auto read2 = new AfgRead(2, "read2", reverse_complement("CGTTTT").c_str(), "", 1);
+
+  overlap->set_read_a(read1);
+  overlap->set_read_b(read2);
+
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a).c_str());
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b).c_str());
+}
+
+TEST(DovetailOverlap, extractOverlappedPartInnie2) {
+  //    |||
+  //    CGTTTT
+  // AAACGT
+  //    |||
+  auto a = 1;
+  auto b = 2;
+  auto overlap = new DovetailOverlap(a, b, -3, -3, true, -1, -1);
+
+  auto read1 = new AfgRead(1, "read1", "CGTTTT", "", 1);
+  auto read2 = new AfgRead(2, "read2", reverse_complement("AAACGT").c_str(), "", 1);
+
+  overlap->set_read_a(read1);
+  overlap->set_read_b(read2);
+
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a).c_str());
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b).c_str());
+}

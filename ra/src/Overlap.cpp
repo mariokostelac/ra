@@ -36,3 +36,24 @@ uint32_t Overlap::length() const {
   return (length(a()) + length(b()))/2;
 }
 
+std::string Overlap::extract_overlapped_part(uint32_t read_id) {
+  assert(read_id == a() || read_id == b());
+  assert(read_a() != nullptr && read_b() != nullptr);
+
+  if (read_id == a()) {
+    // [lo, hi>
+    int lo = a_lo();
+    int hi = a_hi();
+
+    return std::string(read_a()->getSequence()).substr(lo, hi - lo);
+  } else {
+    int lo = b_lo();
+    int hi = b_hi();
+
+    if (innie()) {
+      return reverse_complement(std::string(read_b()->getSequence())).substr(lo, hi - lo);
+    }
+
+    return std::string(read_b()->getSequence()).substr(lo, hi - lo);
+  }
+}
