@@ -36,7 +36,7 @@ uint32_t Overlap::length() const {
   return (length(a()) + length(b()))/2;
 }
 
-std::string Overlap::extract_overlapped_part(uint32_t read_id) {
+std::string Overlap::extract_overlapped_part(uint32_t read_id) const {
   assert(read_id == a() || read_id == b());
   assert(read_a() != nullptr && read_b() != nullptr);
 

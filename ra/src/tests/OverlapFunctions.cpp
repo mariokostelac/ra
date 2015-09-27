@@ -1,10 +1,6 @@
 #include "gtest/gtest.h"
 #include "../ra.hpp"
 
-//void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
-    //int threadLen, bool view = true);
-    //
-
 TEST(FilterTransitives, SimpleTest1) {
   // CGGT
   //   GTCC
@@ -114,7 +110,7 @@ TEST(CalcForcedHangs, SimpleTest6) {
   //  <|--|---
   int a_len = 5, b_len = 6;
   int a_lo = 2, a_hi = 4;
-  int b_lo = 3, b_hi = 5;
+  int b_lo = 1, b_hi = 3;
   bool a_rc = false, b_rc = true;
   auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
 
@@ -127,7 +123,7 @@ TEST(CalcForcedHangs, SimpleTest7) {
   // <|--|---
   int a_len = 3, b_len = 6;
   int a_lo = 0, a_hi = 2;
-  int b_lo = 3, b_hi = 5;
+  int b_lo = 1, b_hi = 3;
   bool a_rc = false, b_rc = true;
   auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
 

@@ -141,7 +141,7 @@ public:
      */
     virtual void print(std::ostream& str) const = 0;
 
-    std::string extract_overlapped_part(uint32_t read_id);
+    std::string extract_overlapped_part(uint32_t read_id) const;
 
     /*!
      * @brief Operator prints overlap representation.

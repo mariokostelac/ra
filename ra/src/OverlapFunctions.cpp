@@ -1,6 +1,7 @@
 
 #include "AfgOverlap.hpp"
 #include "CommonHeaders.hpp"
+#include "EditDistance.hpp"
 #include "Overlap.hpp"
 #include "OverlapFunctions.hpp"
 #include "ReadIndex.hpp"
@@ -340,46 +341,31 @@ std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_l
 
   std::pair<int, int> hangs;
 
-  if (!a_rc && !b_rc) {
-    // -----|------|---->
-    //  ah -|------|---->
-    //
-    // -ah -|------|---->
-    // -----|------|---->
-    hangs.first = a_lo - b_lo;
-  } else if (!a_rc && b_rc) {
-    // -----|------|---->
-    //  ah <|------|-----
-    //
-    // -ah -|------|---->
-    // <----|------|-----
-    hangs.first = a_lo - (b_len - b_hi);
-  }
+  // -----|------|---->
+  //  ah -|------|---->
+  //
+  // -ah -|------|---->
+  // -----|------|---->
+  hangs.first = a_lo - b_lo;
 
-  if (!a_rc && !b_rc) {
-    //     -|------|-> bh
-    // -----|------|------>
-    //
-    // -----|------|------>
-    //     -|------|-> -bh
-    int b_after = b_len - b_hi;
-    int a_after = a_len - a_hi;
-    hangs.second = b_after - a_after;
-  } else if (!a_rc && b_rc) {
-    //     -|------|-> bh
-    // <----|------|-------
-    //
-    // -----|------|------>
-    //     <|------|-- -bh
-    int a_after = a_len - a_hi;
-    int b_after = b_lo;
-    hangs.second = b_after - a_after;
-  }
+  //     -|------|-> bh
+  // -----|------|------>
+  //
+  // -----|------|------>
+  //     -|------|-> -bh
+  int b_after = b_len - b_hi;
+  int a_after = a_len - a_hi;
+  hangs.second = b_after - a_after;
 
   return hangs;
 }
 
 DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates) {
+    auto a_part = o->extract_overlapped_part(o->a());
+    auto b_part = o->extract_overlapped_part(o->b());
+
+    double orig_errate = editDistance(a_part, b_part) / (double) o->length();
+
     const auto a_lo = o->a_lo(), a_hi = o->a_hi();
     const auto a_rc = 0;
     const auto a_len = o->read_a()->getLength();
@@ -390,6 +376,16 @@ DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates
 
     const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, a_rc, b_lo, b_hi, b_len, b_rc);
 
-    // TODO: error rates
-    return new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), -1, -1);
+    auto tmp = DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), -1, -1);
+    tmp.set_read_a(o->read_a());
+    tmp.set_read_b(o->read_b());
+    a_part = tmp.extract_overlapped_part(tmp.a());
+    b_part = tmp.extract_overlapped_part(tmp.b());
+
+    double errate = editDistance(a_part, b_part) / (double) o->length();
+
+    auto res = new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), orig_errate, errate);
+    res->set_read_a(o->read_a());
+    res->set_read_b(o->read_b());
+    return res;
 }
