@@ -5,6 +5,7 @@
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
 #include <algorithm>
+#include <cassert>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -69,14 +70,58 @@ void read_args() {
   overlaps_filename = args.get<string>("overlaps");
 }
 
-void filter_bad_overlaps(vector<DovetailOverlap*>* dst, vector<DovetailOverlap*>& src, double percentage) {
+void filter_bad_overlaps(vector<DovetailOverlap*>* dst, vector<DovetailOverlap*>& src) {
   *dst = src;
+
+  // compress errates into buckets
+  int buckets_size = 50;
+  int divisor = 100 / buckets_size;
+
+  int most_count = 0;
+  int most_count_idx = -1;
+
+  vector<int> bucket_count(buckets_size, 0);
+  for (int i = 0, n = src.size(); i < n; ++i) {
+    int bucket_idx = 100 * src[i]->errate() / 2;
+    bucket_count[bucket_idx]++;
+    most_count = max(most_count, bucket_count[bucket_idx]);
+
+    if (most_count == bucket_count[bucket_idx]) {
+      most_count_idx = bucket_idx;
+    }
+  }
+
+  // find first bucket that contains elements
+  int best_errate_idx = -1;
+  for (int i = 0; i < buckets_size; ++i) {
+    if (bucket_count[i] > 0) {
+      best_errate_idx = i;
+      break;
+    }
+  }
+  assert(best_errate_idx >= 0);
+
+  // scale errates back
+  int best_errate = best_errate_idx * divisor;
+  int most_counts_errate = most_count_idx * divisor;
+  int worst_errate = most_counts_errate + (most_counts_errate - best_errate) + 1;
+
+  fprintf(stderr, "Most overlaps have errate ~%d%%\n", most_counts_errate);
+  fprintf(stderr, "Trimming all overlaps with errate higher than %d%%\n", worst_errate);
 
   std::sort(dst->begin(), dst->end(), [](const DovetailOverlap* a, const DovetailOverlap* b) {
       return a->errate() < b->errate();
   });
 
-  dst->resize(dst->size() * (1 - percentage));
+  int size = 0;
+  for (uint32_t i = 0; i < dst->size(); ++i) {
+    if (100 * (*dst)[i]->errate() > worst_errate) {
+      break;
+    }
+    size = i;
+  }
+
+  dst->resize(size);
 }
 
 int main(int argc, char **argv) {
@@ -92,7 +137,7 @@ int main(int argc, char **argv) {
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
   vector<DovetailOverlap*> filtered;
-  filter_bad_overlaps(&filtered, overlaps, 0.05);
+  filter_bad_overlaps(&filtered, overlaps);
 
   write_overlaps(filtered, nullptr);
 
