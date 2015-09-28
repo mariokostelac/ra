@@ -31,9 +31,14 @@ class Task
     puts '=' * 80
 
     puts Colors::cyan
+
+    before = Time.now
     res = @cmd.call
+    after = Time.now
 
     puts Colors::green
+    passed = human_time((after - before) * 1000)
+    puts "Finished in #{passed}"
     puts '=' * 80
 
     @@task_number += 1
@@ -41,6 +46,35 @@ class Task
     res
   end
 
+end
+
+def human_time(milisecs)
+  units = ['ms', 1000, 's', 60, 'm', 60]
+
+  parts = []
+
+  left = milisecs.to_i
+  i = 0
+
+  while i < units.size do
+    unit_label = units[i]
+    till_next = units[i + 1]
+
+    in_this_unit = left % till_next
+    left -= in_this_unit
+    left /= till_next
+
+    parts.push(unit_label)
+    parts.push(in_this_unit.to_s) 
+
+    break if left == 0
+
+    i += 2
+  end
+
+  parts.push('h', left) if left > 0
+
+  parts.reverse.take(6).join('')
 end
 
 def help
@@ -223,4 +257,4 @@ def main
 
 end
 
-main
+main()
