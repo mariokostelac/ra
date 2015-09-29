@@ -44,9 +44,6 @@ size_t MAX_START_NODES = 100;
 double LENGTH_THRESHOLD = 0.05;
 double QUALITY_THRESHOLD = 0.2;
 
-// filter reads param
-size_t READS_MIN_LEN = 3000;
-
 // global vars
 cmdline::parser args;
 int thread_num;
@@ -115,24 +112,6 @@ uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
   return removed;
 }
 
-int filter_overlaps_by_min_read_len(vector<DovetailOverlap*>* overlaps, const uint32_t min_length) {
-  int skipped = 0;
-
-  for (uint32_t i = 0; i < overlaps->size(); ++i) {
-    const auto o = (*overlaps)[i];
-
-    if (o->read_a()->getLength() < min_length || o->read_b()->getLength() < min_length) {
-      skipped++;
-      continue;
-    }
-
-    (*overlaps)[i - skipped] = (*overlaps)[i];
-  }
-  overlaps->resize(overlaps->size() - skipped);
-
-  return skipped;
-}
-
 void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
 
   for (uint32_t i = 0; i < walks.size(); ++i) {
@@ -178,9 +157,7 @@ void read_settings(FILE *fd) {
     // comment
     if (buff[0] == '#') continue;
 
-    if (sscanf(buff, "READS_MIN_LEN: %lu", &READS_MIN_LEN)) {
-      debug("READ READS_MIN_LEN: %lu from file\n", READS_MIN_LEN);
-    } else if (sscanf(buff, "READ_LEN_THRESHOLD: %d", &READ_LEN_THRESHOLD)) {
+    if (sscanf(buff, "READ_LEN_THRESHOLD: %d", &READ_LEN_THRESHOLD)) {
       debug("READ READ_LEN_THRESHOLD: %lu from file\n", READ_LEN_THRESHOLD);
     } else if (sscanf(buff, "MAX_READS_IN_TIP: %d", &MAX_READS_IN_TIP)) {
       debug("READ MAX_READS_IN_TIP: %lu from file\n", MAX_READS_IN_TIP);
@@ -206,8 +183,6 @@ void read_settings(FILE *fd) {
 
 void write_settings(FILE *fd) {
   fprintf(fd, "# filter reads parameters\n");
-  fprintf(fd, "READS_MIN_LEN: %lu\n", READS_MIN_LEN);
-  fprintf(fd, "\n");
 
   fprintf(fd, "# trimming parameters\n");
   fprintf(fd, "READ_LEN_THRESHOLD: %d\n", READ_LEN_THRESHOLD);
@@ -348,11 +323,6 @@ int main(int argc, char **argv) {
     o->set_read_a(reads[a]);
     o->set_read_b(reads[b]);
   }
-
-  had_overlaps = overlaps.size();
-  int bad_len_filtered = filter_overlaps_by_min_read_len(&overlaps, READS_MIN_LEN);
-  fprintf(stderr, "%d (%.2lf%%) overlaps filtered because incident reads shorter than %lu\n",
-      bad_len_filtered, 100. * bad_len_filtered / had_overlaps, READS_MIN_LEN);
 
   createReverseComplements(reads, thread_num);
 
