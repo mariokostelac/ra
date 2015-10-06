@@ -698,8 +698,6 @@ int StringGraph::extract_unitigs(std::vector<StringGraphWalk*>* walks) const {
     // mark from vertex to the start of unitig
     mark_unitig(&edges, &unitig_id, curr_unitig_id, vertex, 0);
 
-    debug("MARK %lu edges ", edges.size());
-
     // reverse edges
     for (int i = 0, n = edges.size(); i < n; ++i) {
       edges[i] = edges[i]->pair();
