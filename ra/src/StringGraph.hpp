@@ -290,14 +290,6 @@ public:
 
     /*!
      * @brief Method for edge marking
-     * @details Marks edge with the given identifier and its edge pair for removal.
-     *
-     * @param [in] id edge identifier
-     */
-    void markEdge(int id);
-
-    /*!
-     * @brief Method for edge marking
      * @details Marks all edges in both lists and their pairs for removal.
      */
     void markEdges();

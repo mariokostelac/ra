@@ -194,25 +194,6 @@ const bool Vertex::isBeginEdge(const Edge* e) const {
   return true;
 }
 
-void Vertex::markEdge(int id) {
-
-    for (const auto& edge : edgesE_) {
-        if (edge->getId() == id) {
-            edge->mark();
-            edge->pair_->mark();
-            return;
-        }
-    }
-
-    for (const auto& edge : edgesB_) {
-        if (edge->getId() == id) {
-            edge->mark();
-            edge->pair_->mark();
-            return;
-        }
-    }
-}
-
 void Vertex::markEdges() {
 
     for (const auto& edge : edgesE_) {
