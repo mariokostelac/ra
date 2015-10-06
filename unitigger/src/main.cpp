@@ -79,7 +79,7 @@ uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
 
     auto key = make_pair(a, b);
     if (best.count(key)) {
-      if (overlap->score() > best[key]->score()) {
+      if (overlap->errate() < best[key]->errate()) {
         best[key] = overlap;
       }
 

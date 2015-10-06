@@ -94,7 +94,7 @@ public:
      * @brief Getter for overlap length
      * @return length
      */
-    virtual uint32_t length() const;
+    uint32_t length() const;
 
     /*!
      * @brief Getter for overlap length in given read
@@ -102,7 +102,7 @@ public:
      * @param [in] readId read identifier
      * @return length
      */
-    virtual uint32_t length(uint32_t read_id) const;
+    uint32_t length(uint32_t read_id) const;
 
     virtual uint32_t a_lo() const = 0;
 
@@ -113,10 +113,10 @@ public:
     virtual uint32_t b_hi() const = 0;
 
     /*!
-     * @brief Getter for overlap score
-     * @return overlap score
+     * @brief Getter for amount of read covered by overlap.
+     * @return covered_percentage 
      */
-    virtual double score() const;
+    double covered_percentage(uint32_t read_id) const;
 
     /*!
      * @brief Getter for overlap type

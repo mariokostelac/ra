@@ -17,9 +17,16 @@ static inline bool doubleEq(double x, double y, double eps) {
     return y <= x + eps && x <= y + eps;
 }
 
-double Overlap::score() const {
-  return (length(a())/(double)read_a()->getLength() +
-      length(b())/(double)read_b()->getLength());
+double Overlap::covered_percentage(uint32_t read_id) const {
+  assert(read_id == a() || read_id == b());
+
+  if (read_id == a()) {
+    return length(a())/(double)read_a()->getLength();
+  } else if (read_id == b()) {
+    return length(b())/(double)read_b()->getLength();
+  }
+
+  return 0;
 }
 
 uint32_t Overlap::length(uint32_t read_id) const {

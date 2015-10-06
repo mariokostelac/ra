@@ -1272,6 +1272,10 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 
 // StringGraphComponent
 
+double overlap_score(const DovetailOverlap* overlap) {
+  return overlap->covered_percentage(overlap->a()) + overlap->covered_percentage(overlap->b());
+};
+
 static int longest_sequence_length(const Vertex* from, const int direction, std::vector<bool>& visited,
     const int forks_left) {
 
@@ -1307,14 +1311,14 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
         double qual_lo = 0;
 
         for (const auto& edge : edges) {
-          best_qual = max(best_qual, edge->getOverlap()->score());
+          best_qual = max(best_qual, overlap_score(edge->getOverlap()));
         }
 
         qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
 
         for (const auto& edge : edges) {
 
-            auto curr_qual = edge->getOverlap()->score();
+            auto curr_qual = overlap_score(edge->getOverlap());
 
             if (curr_qual >= qual_lo) {
               int curr_len = longest_sequence_length(edge->getDst(), edge->getOverlap()->innie() ? (direction ^ 1) :
@@ -1368,7 +1372,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
             double qual_lo = 0;
 
             for (const auto& edge : edges) {
-              best_qual = max(best_qual, edge->getOverlap()->score());
+              best_qual = max(best_qual, overlap_score(edge->getOverlap()));
             }
 
             qual_lo = best_qual * (1 - QUALITY_THRESHOLD);
@@ -1381,7 +1385,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                auto curr_qual = edge->getOverlap()->score();
+                auto curr_qual = overlap_score(edge->getOverlap());
                 if (curr_qual >= qual_lo) {
                   int curr_length = longest_sequence_length(next, edge->getOverlap()->innie() ? (curr_direction ^ 1) :
                       curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
