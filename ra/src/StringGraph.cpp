@@ -391,7 +391,7 @@ void StringGraph::trim() {
     }
 
     if (disconnectedNum > 0 || tipsNum > 0) {
-        deleteMarked();
+        delete_marked();
     }
 
     fprintf(stderr, "[SG][trimming]: removed %zu tips and %zu disconnected vertices\n",
@@ -426,7 +426,7 @@ uint32_t StringGraph::popBubbles() {
     }
 
     if (bubblesPoppedNum > 0) {
-        deleteMarked();
+        delete_marked();
     }
 
     fprintf(stderr, "[SG][bubble popping]: popped %zu bubbles\n", bubblesPoppedNum);
@@ -567,7 +567,7 @@ int StringGraph::reduceToBOG() {
     }
   }
 
-  this->deleteMarked();
+  this->delete_marked();
 
   trim();
 
@@ -1026,12 +1026,14 @@ int StringGraph::mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* un
 
     auto next = edge->getDst();
 
-    dst_edges->push_back(const_cast<Edge*>(edge));
-
+    // if curr and next do not share best overlap
     if (next->bestEdge(1 - use_suffix)->getOverlap() != edge->getOverlap()) {
       break;
     }
 
+    dst_edges->push_back(const_cast<Edge*>(edge));
+
+    // if read is already part of some other unitig
     if (unitig_id->at(next->getId()) != NOT_DEFINED) {
       break;
     }
@@ -1042,7 +1044,7 @@ int StringGraph::mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* un
   return marked;
 }
 
-void StringGraph::deleteMarked() {
+void StringGraph::delete_marked() {
   delete_marked_vertices();
   delete_marked_edges();
 }

@@ -433,10 +433,17 @@ public:
 
     int extract_unitigs(std::vector<StringGraphWalk*>* walks) const;
 
-    void delete_marked_edges();
-    void delete_marked_vertices();
+    /*!
+     * @brief Method for deletion of vertices and edges
+     * @details Method first removes edges from lists of each vertex in marked_.
+     * Afterwards it deletes all marked edges and vertices from the graph.
+     */
+    void delete_marked();
 
 private:
+
+    void delete_marked_edges();
+    void delete_marked_vertices();
 
     /**
      * TODO
@@ -470,13 +477,6 @@ private:
      * for sequence extraction
      */
     bool popBubble(const std::vector<StringGraphWalk*>& walks, const uint32_t juncture_id, const int direction);
-
-    /*!
-     * @brief Method for deletion of vertices and edges
-     * @details Method first removes edges from lists of each vertex in marked_.
-     * Afterwards it deletes all marked edges and vertices from the graph.
-     */
-    void deleteMarked();
 
     const std::vector<DovetailOverlap*>* overlaps_;
 
