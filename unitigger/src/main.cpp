@@ -226,7 +226,7 @@ int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, const Stri
   for (const auto& component : components) {
     const auto& contig_walk_orig = component->longestWalk();
 
-    fprintf(stderr, "Extracting component from graph component with %u vertices\n", component->vertices().size());
+    fprintf(stderr, "Extracting contig from graph component with %u vertices\n", component->vertices().size());
 
     if (contig_walk_orig == nullptr) {
       continue;
