@@ -1254,7 +1254,8 @@ StringGraphWalk* StringGraphNode::getWalk() const {
 // StringGraphComponent
 
 double overlap_score(const DovetailOverlap* overlap) {
-  return overlap->covered_percentage(overlap->a()) + overlap->covered_percentage(overlap->b());
+  double quality = 1 - overlap->errate();
+  return (overlap->covered_percentage(overlap->a()) + overlap->covered_percentage(overlap->b())) * quality;
 };
 
 static int longest_sequence_length(const Vertex* from, const int direction, std::vector<bool>& visited,
@@ -1366,7 +1367,7 @@ static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, cons
                     continue;
                 }
 
-                auto curr_qual = overlap_score(edge->getOverlap());
+                double curr_qual = overlap_score(edge->getOverlap());
                 if (curr_qual >= qual_lo) {
                   int curr_length = longest_sequence_length(next, edge->getOverlap()->innie() ? (curr_direction ^ 1) :
                       curr_direction, visitedVertices, max_branches) + vertex->getLength() + edge->labelLength();
