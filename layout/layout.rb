@@ -91,6 +91,10 @@ def parse_options!
       $options[:working_dir] = dir
     end
 
+    opts.on("-f", "--use_smart_filter", "Uses 'smart' overlaps filter that cuts right tail of gauss distribution") do |dir|
+      $options[:use_smart_filter] = true
+    end
+
     opts.on_tail("-h", "--help", "Show this message") do
       help
     end
@@ -232,10 +236,12 @@ def main
   end
   overlaps_filename = create_dovetail.run
 
-  filter_bad_overlaps = Task.new "FILTERING BAD OVERLAPS" do
-    run_filter_bad_overlaps(overlaps_filename)
+  if $options[:use_smart_filter]
+    filter_bad_overlaps = Task.new "FILTERING BAD OVERLAPS" do
+      run_filter_bad_overlaps(overlaps_filename)
+    end
+    overlaps_filename = filter_bad_overlaps.run
   end
-  overlaps_filename = filter_bad_overlaps.run
 
   filter_transitive = Task.new "FILTERING TRANSITIVE OVERLAPS" do
     if !run_filer_transitive(reads_filename, overlaps_filename)
