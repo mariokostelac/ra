@@ -721,6 +721,10 @@ public:
      */
     StringGraphWalk* longestWalk();
 
+    std::vector<const Vertex*>& vertices() {
+      return vertices_;
+    }
+
 private:
 
     void extractLongestWalk();
