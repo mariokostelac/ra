@@ -23,7 +23,7 @@ API = $(addprefix $(SRC_DIR)/, AfgRead.hpp AfgOverlap.hpp CommonHeaders.hpp Cont
       EnhancedSuffixArray.hpp IO.hpp \
       EdgesSet.hpp MhapOverlap.hpp MhapParser.hpp \
 	    Overlap.hpp OverlapFunctions.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp \
-	    StringGraph.hpp Utils.hpp)
+	    StringGraph.hpp StringGraphUtils.hpp Utils.hpp)
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
 VND = $(shell find $(VND_DIR) -type f -regex ".*\.cpp")

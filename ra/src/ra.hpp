@@ -25,4 +25,5 @@
 #include "Read.hpp"
 #include "ReadIndex.hpp"
 #include "StringGraph.hpp"
+#include "StringGraphUtils.hpp"
 #include "Utils.hpp"
