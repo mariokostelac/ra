@@ -454,38 +454,24 @@ void StringGraph::simplify() {
         numEdges = edges_.size();
 
         // trimming
-        size_t numVerticesTemp = 0;
-        while (numVerticesTemp != vertices_.size()) {
+        size_t num_vertices_before = 0;
+        while (num_vertices_before != vertices_.size()) {
 
-            numVerticesTemp = vertices_.size();
+            num_vertices_before = vertices_.size();
 
             ++numTrimmingRounds;
             trim();
         }
 
         // bubble popping
-        numVerticesTemp = vertices_.size();
-        size_t numEdgesTemp = edges_.size();
+        size_t num_edges_before = edges_.size();
 
-        auto MAX_NODES_TMP = MAX_NODES;
-        MAX_NODES = min((size_t) 5, MAX_NODES);
-        do {
-          MAX_NODES = min(MAX_NODES * 2, MAX_NODES_TMP);
-
-          fprintf(stderr, "[SG][bubble popping]: max bracket size %lu\n", MAX_NODES);
-          int popped = popBubbles();
-          if (popped > 0) {
-            break;
-          }
-
-        } while (MAX_NODES < MAX_NODES_TMP);
-
-        // bring back original limit
-        swap(MAX_NODES, MAX_NODES_TMP);
+        fprintf(stderr, "[SG][bubble popping]: max bucket size %lu\n", MAX_NODES);
+        popBubbles();
 
         ++numBubbleRounds;
 
-        if (numVerticesTemp == vertices_.size() && numEdgesTemp == edges_.size()) {
+        if (num_vertices_before == vertices_.size() && num_edges_before == edges_.size()) {
             break;
         }
     }
