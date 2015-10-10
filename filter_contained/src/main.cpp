@@ -54,18 +54,6 @@ void read_args() {
   assembly_directory = args.get<string>("directory");
 }
 
-void write_version(FILE* fd) {
-  fprintf(fd, "# version: %s\n", VERSION);
-}
-
-void write_call_cmd(FILE* fd, int argc, char **argv) {
-  fprintf(fd, "#");
-  for (int i = 0; i < argc; ++i) {
-    fprintf(fd, "%s ", argv[i]);
-  }
-  fprintf(fd, "\n");
-}
-
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -109,8 +97,8 @@ int main(int argc, char **argv) {
 
   write_overlaps(nocontainments, assembly_directory + "/overlaps.nocont");
 
-  for (auto r: reads)           delete r;
-  for (auto o: overlaps)    delete o;
+  for (auto r: reads)    delete r;
+  for (auto o: overlaps) delete o;
 
   return 0;
 }
