@@ -87,6 +87,10 @@ def parse_options!
     $options_parser = opts
     opts.banner = "Usage: #{$0} <fasta_reads> <mhap_overlaps>"
 
+    opts.on("-s", "--settings settings_file", "Set given settings file") do |settings_file|
+      $options[:settings_file] = settings_file
+    end
+
     opts.on("-d", "--directory dirpath", "Set given dirpath as working directory") do |dir|
       $options[:working_dir] = dir
     end
@@ -164,8 +168,13 @@ def run_filer_transitive(reads_filename, overlaps_filename)
 end
 
 def run_unitigger(reads_filename, overlaps_filename)
+  if $options.has_key?(:settings_file)
+    settings = "-b #{$options[:settings_file]}"
+  else
+    settings = ""
+  end
   working_directory = $options[:working_dir]
-  cmd = "#{unitigger_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory}"
+  cmd = "#{unitigger_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory} #{settings}"
   puts(cmd)
   system(cmd)
 end
