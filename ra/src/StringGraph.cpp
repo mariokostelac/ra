@@ -850,8 +850,8 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
 
     assert("we need at least two bubble walks" && bubble_walks.size() >= 2);
 
-    size_t selectedWalk = 0;
-    double selectedCoverage = 0;
+    size_t selected_walk = 0;
+    double selected_coverage = 0;
 
     int overlapStart = std::numeric_limits<int>::max();
     int overlapEnd = std::numeric_limits<int>::max();
@@ -864,9 +864,9 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
             coverage += edge->getDst()->getCoverage();
         }
 
-        if (coverage > selectedCoverage) {
-            selectedWalk = i;
-            selectedCoverage = coverage;
+        if (coverage > selected_coverage) {
+            selected_walk = i;
+            selected_coverage = coverage;
         }
 
         assert("bubblewalk is not empty" && walk->getEdges().size() > 0);
@@ -924,31 +924,31 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
 
     for (size_t i = 0; i < sequences.size(); ++i) {
 
-        if (i == selectedWalk) {
+        if (i == selected_walk) {
             continue;
         }
 
-        auto smaller = min(sequences[i].size(), sequences[selectedWalk].size());
-        auto bigger = max(sequences[i].size(), sequences[selectedWalk].size());
+        auto smaller = min(sequences[i].size(), sequences[selected_walk].size());
+        auto bigger = max(sequences[i].size(), sequences[selected_walk].size());
         if ((bigger - smaller) / (double) bigger >= MAX_DIFFERENCE) {
             auto curr_repr = vertices_sequence_from_walk(bubble_walks[i]);
-            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selectedWalk]);
+            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selected_walk]);
             debug("KEEPBUBBLE %s because len diff with %s is %f > %f\n",
                     curr_repr.c_str(), selected_repr.c_str(),
-                    sequences[i].size() / (double) sequences[selectedWalk].size(),
+                    sequences[i].size() / (double) sequences[selected_walk].size(),
                     MAX_DIFFERENCE
             );
 
             continue;
         }
 
-        int distance = editDistance(sequences[i], sequences[selectedWalk]);
-        if (distance / (double) sequences[selectedWalk].size() >= MAX_DIFFERENCE) {
+        int distance = editDistance(sequences[i], sequences[selected_walk]);
+        if (distance / (double) sequences[selected_walk].size() >= MAX_DIFFERENCE) {
             auto curr_repr = vertices_sequence_from_walk(bubble_walks[i]);
-            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selectedWalk]);
+            auto selected_repr = vertices_sequence_from_walk(bubble_walks[selected_walk]);
             debug("KEEPBUBBLE %s because diff with %s is %f > %f\n",
                     curr_repr.c_str(), selected_repr.c_str(),
-                    distance / (double) sequences[selectedWalk].size(),
+                    distance / (double) sequences[selected_walk].size(),
                     MAX_DIFFERENCE
             );
 
