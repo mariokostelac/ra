@@ -15,6 +15,7 @@
 #include "Contig.hpp"
 #include "DovetailOverlap.hpp"
 #include "EnhancedSuffixArray.hpp"
+#include "Globals.hpp"
 #include "IO.hpp"
 #include "MhapOverlap.hpp"
 #include "MhapParser.hpp"
