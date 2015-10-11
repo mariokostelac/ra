@@ -142,6 +142,10 @@ def unitigger_bin(debug: false)
   File.join(bin_dir(debug: debug), "unitigger")
 end
 
+def draw_graph_bin(debug: false)
+  File.join(bin_dir(debug: debug), "overlap2dot")
+end
+
 def filter_bad_overlaps_bin(debug: false)
   File.join(bin_dir(debug: debug), "filter_erroneous_overlaps")
 end
@@ -175,6 +179,14 @@ def run_unitigger(reads_filename, overlaps_filename)
   end
   working_directory = $options[:working_dir]
   cmd = "#{unitigger_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory} #{settings}"
+  puts(cmd)
+  system(cmd)
+end
+
+def run_graphviz(overlaps_filename)
+  working_directory = $options[:working_dir]
+  graph_filename = "#{working_directory}/genome.svg"
+  cmd = "#{draw_graph_bin} < #{overlaps_filename} | neato -T svg -o #{graph_filename}"
   puts(cmd)
   system(cmd)
 end
@@ -269,6 +281,13 @@ def main
     end
   end
   find_unitigs.run
+
+  Task.new "DRAWING GRAPHS" do
+    if !run_graphviz(overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
+  end.run
 
 end
 
