@@ -851,7 +851,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
     assert("we need at least two bubble walks" && bubble_walks.size() >= 2);
 
     size_t selected_walk = 0;
-    double selected_coverage = 0;
+    double max_score = 0;
 
     int overlapStart = std::numeric_limits<int>::max();
     int overlapEnd = std::numeric_limits<int>::max();
@@ -859,14 +859,18 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
     size_t i = 0;
     for (const auto& walk : bubble_walks) {
 
+        double errate = 0;
         double coverage = 0;
         for (const auto& edge : walk->getEdges()) {
+            errate += edge->getOverlap()->errate();
             coverage += edge->getDst()->getCoverage();
         }
+        errate /= walk->getEdges().size();
 
-        if (coverage > selected_coverage) {
+        double score = (1 - errate) * coverage;
+        if (score > max_score) {
             selected_walk = i;
-            selected_coverage = coverage;
+            max_score = score;
         }
 
         assert("bubblewalk is not empty" && walk->getEdges().size() > 0);
