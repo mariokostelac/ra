@@ -334,19 +334,6 @@ int main(int argc, char **argv) {
   }
   writeAfgContigs(unitigs, (assembly_directory + "/unitigs.afg").c_str());
 
-  {
-    uint32_t removed_edges = remove_external_unitig_edges(graph);
-    fprintf(stderr, "Removed %u edges during transition SG -> UG\n", removed_edges);
-  }
-
-  {
-    vector<Overlap*> simplified_overlaps;
-    graph->extractOverlaps(simplified_overlaps);
-    write_overlaps(simplified_overlaps, assembly_directory + "/ug.dovetail");
-  }
-
-  graph->simplify();
-
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
 
