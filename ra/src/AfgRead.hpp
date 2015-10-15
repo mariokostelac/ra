@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "CommonHeaders.hpp"
 #include "Read.hpp"
+#include "CommonHeaders.hpp"
 
 class AfgRead: public Read {
 public:
@@ -58,9 +58,15 @@ public:
 
     void createReverseComplement();
 
+    void serialize(char** bytes, uint32_t* bytes_length) const;
+
+    static AfgRead* deserialize(const char* bytes);
+
 private:
 
-    int id_;
+    AfgRead() {};
+
+    uint32_t id_;
     std::string name_;
     std::string sequence_;
     std::string quality_;
