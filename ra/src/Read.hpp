@@ -11,6 +11,9 @@
 
 #include "CommonHeaders.hpp"
 
+class Read;
+using ReadSet = std::vector<Read*>;
+
 /*!
  * @brief Read class
  */

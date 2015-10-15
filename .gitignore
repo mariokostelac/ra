@@ -4,6 +4,7 @@ bin
 obj
 /lib
 
+ra/depot_dummy
 consensus/debug/consensus
 consensus/release/consensus
 layout/debug/layout

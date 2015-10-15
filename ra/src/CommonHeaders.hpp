@@ -13,7 +13,10 @@
 #include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
 #include <time.h>
+#include <sys/file.h>
+#include <sys/stat.h>
 
 #include <algorithm>
 #include <fstream>
