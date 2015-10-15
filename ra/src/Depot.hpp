@@ -40,6 +40,16 @@ public:
     void store_reads(const ReadSet& src) const;
 
     /*!
+     * @bried Method for loading a single Read object stored beforehand
+     * @details Loads a Read object from a binary file in the depot folder
+     * determined by the given index
+     *
+     * @param [in] index index of the wanted Read object
+     * @return Read object pointer
+     */
+    Read* load_read(uint32_t index) const;
+
+    /*!
      * @brief Method for loading the set of Read objects stored beforehand
      * @details Loads Read objects from a binary file in the depot folder
      *
@@ -57,16 +67,6 @@ public:
      * @param [in] length length of Read objects to be loaded
      */
     void load_reads(ReadSet& dst, uint32_t begin, uint32_t length) const;
-
-    /*!
-     * @bried Method for loading a single Read object stored beforehand
-     * @details Loads a Read object from a binary file in the depot folder
-     * determined by the given index
-     *
-     * @param [in] index index of the wanted Read object
-     * @return Read object pointer
-     */
-    Read* load_read(uint32_t index) const;
 
 private:
 

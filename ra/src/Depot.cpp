@@ -36,7 +36,7 @@ void fwriteWrapper(void *ptr, size_t size, size_t count, FILE* stream) {
 
 void flockWrapper(FILE* file, int operation) {
     ASSERT(flock(fileno(file), operation) == 0, "Depot",
-        "Unable to (un)lock file (lock)!");
+        "Unable to (un)lock file (flock)!");
 }
 
 void ftruncateWraper(FILE* file, off_t length) {
@@ -108,9 +108,7 @@ Depot::~Depot() {
 
 void Depot::store_reads(const ReadSet& src) const {
 
-    if (src.size() == 0) {
-        return;
-    }
+    ASSERT(src.size() != 0, "Depot", "Can not store empty ReadSet!");
 
     fseekWrapper(reads_index_, 0, SEEK_SET);
     fseekWrapper(reads_data_, 0, SEEK_SET);
@@ -145,20 +143,24 @@ void Depot::store_reads(const ReadSet& src) const {
     ftruncateWraper(reads_data_, data_total_baytes);
 }
 
+Read* Depot::load_read(uint32_t index) const {
+
+    ReadSet temp;
+    load_reads(temp, index, 1);
+
+    return temp.empty() ? nullptr : temp.front();
+}
+
 void Depot::load_reads(ReadSet& dst) const {
-
-    if (fileEmpty(reads_index_) || fileEmpty(reads_data_)) {
-        return;
-    }
-
     load_reads(dst, 0, -1); // read all
 }
 
 void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) const {
 
-    if (fileEmpty(reads_index_) || fileEmpty(reads_data_)) {
-        return;
-    }
+    ASSERT(!fileEmpty(reads_index_), "Depot",
+        "Unable to load from empty read index file!");
+    ASSERT(!fileEmpty(reads_data_), "Depot",
+        "Unable to load from empty reads data file!");
 
     uint64_t reads_length;
     fseekWrapper(reads_index_, 0, SEEK_SET);
@@ -182,21 +184,9 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) const {
         uint32_t bytes_length;
         freadWrapper(&bytes_length, size, 1, reads_data_);
 
-        char buffer[bytes_length];
-        freadWrapper(buffer, 1, bytes_length, reads_data_);
+        char bytes[bytes_length];
+        freadWrapper(bytes, 1, bytes_length, reads_data_);
 
-        dst.emplace_back(AfgRead::deserialize(buffer));
+        dst.emplace_back(AfgRead::deserialize(bytes));
     }
-}
-
-Read* Depot::load_read(uint32_t index) const {
-
-    if (fileEmpty(reads_index_) || fileEmpty(reads_data_)) {
-        return nullptr;
-    }
-
-    ReadSet temp;
-    load_reads(temp, index, 1);
-
-    return temp.empty() ? nullptr : temp.front();
 }

@@ -41,7 +41,21 @@ TEST(AfgRead, StoreLoadHeavy) {
 
   depot->store_reads(reads);
 
+  ReadSet reads2;
+  depot->load_reads(reads2);
+
+  ASSERT_EQ(reads.size(), reads2.size());
+
+  for (uint32_t i = 0; i < reads.size(); ++i) {
+      ASSERT_EQ(reads[i]->getId(), reads2[i]->getId());
+      ASSERT_STREQ(reads[i]->getName().c_str(), reads2[i]->getName().c_str());
+      ASSERT_STREQ(reads[i]->getSequence().c_str(), reads2[i]->getSequence().c_str());
+      ASSERT_STREQ(reads[i]->getQuality().c_str(), reads2[i]->getQuality().c_str());
+      ASSERT_EQ(reads[i]->getCoverage(), reads2[i]->getCoverage());
+  }
+
   delete depot;
 
+  for (const auto& it: reads2) delete it;
   for (const auto& it: reads) delete it;
 }
