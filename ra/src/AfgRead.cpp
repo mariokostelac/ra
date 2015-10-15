@@ -83,14 +83,14 @@ void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
     temp = name_.size() + 1;
     std::memcpy(*bytes + ptr, &temp, size);
     ptr += size;
-    std::memcpy(*bytes + ptr, &name_[0], temp);
+    std::memcpy(*bytes + ptr, name_.c_str(), temp);
     ptr += temp;
 
     // sequence_
     temp = sequence_.size() + 1;
     std::memcpy(*bytes + ptr, &temp, size);
     ptr += size;
-    std::memcpy(*bytes + ptr, &sequence_[0], temp);
+    std::memcpy(*bytes + ptr, sequence_.c_str(), temp);
     ptr += temp;
 
     // quality_
@@ -98,8 +98,8 @@ void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
     std::memcpy(*bytes + ptr, &temp, size);
     ptr += size;
     if (temp > 1) {
-        std::memcpy(*bytes + ptr, &quality_[0], temp);
-        ptr += quality_.size();
+        std::memcpy(*bytes + ptr, quality_.c_str(), temp);
+        ptr += temp;
     }
 
     // coverage_
