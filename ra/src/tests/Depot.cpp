@@ -16,7 +16,6 @@ TEST(Depot, StoreLoad) {
   depot->store_reads(reads);
 
   auto read1 = depot->load_read(0);
-  auto read2 = depot->load_read(1);
 
   ASSERT_EQ(reads.front()->getId(), read1->getId());
   ASSERT_STREQ(reads.front()->getName().c_str(), read1->getName().c_str());
@@ -26,13 +25,12 @@ TEST(Depot, StoreLoad) {
 
   for (const auto& it: reads) delete it;
 
-  delete read2;
   delete read1;
 
   delete depot;
 }
 
-TEST(AfgRead, StoreLoadHeavy) {
+TEST(Depot, StoreHeavy) {
 
   ReadSet reads;
   readFastqReads(reads, "../examples/ERR430949.fastq");
@@ -40,6 +38,18 @@ TEST(AfgRead, StoreLoadHeavy) {
   auto depot = new Depot("depot_dummy");
 
   depot->store_reads(reads);
+
+  delete depot;
+
+  for (const auto& it: reads) delete it;
+}
+
+TEST(Depot, LoadHeavy) {
+
+  ReadSet reads;
+  readFastqReads(reads, "../examples/ERR430949.fastq");
+
+  auto depot = new Depot("depot_dummy");
 
   ReadSet reads2;
   depot->load_reads(reads2);

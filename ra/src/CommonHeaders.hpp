@@ -19,6 +19,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 
+#include <mutex>
 #include <algorithm>
 #include <fstream>
 #include <future>

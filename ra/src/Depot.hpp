@@ -37,7 +37,7 @@ public:
      *
      * @param [in] src set of Read object pointers
      */
-    void store_reads(const ReadSet& src) const;
+    void store_reads(const ReadSet& src);
 
     /*!
      * @bried Method for loading a single Read object stored beforehand
@@ -47,7 +47,7 @@ public:
      * @param [in] index index of the wanted Read object
      * @return Read object pointer
      */
-    Read* load_read(uint32_t index) const;
+    Read* load_read(uint32_t index);
 
     /*!
      * @brief Method for loading the set of Read objects stored beforehand
@@ -55,7 +55,7 @@ public:
      *
      * @param [out] dst set of Read object pointers
      */
-    void load_reads(ReadSet& dst) const;
+    void load_reads(ReadSet& dst);
 
     /*!
      * @brief Method for loading an incomplete set of Read objects stored beforehand
@@ -64,9 +64,11 @@ public:
      *
      * @param [out] dst set of Read object pointers
      * @param [in] begin index of first Read object
-     * @param [in] length length of Read objects to be loaded
+     * @param [in] length length of Read objects to be loaded (if length goes
+     * out of range, function returns all objects from beginning index to last
+     * object available)
      */
-    void load_reads(ReadSet& dst, uint32_t begin, uint32_t length) const;
+    void load_reads(ReadSet& dst, uint32_t begin, uint32_t length);
 
 private:
 
@@ -74,4 +76,6 @@ private:
     FILE* reads_index_;
     FILE* overlaps_data_;
     FILE* overlaps_index_;
+    std::mutex rmutex_;
+    std::mutex omutex_;
 };
