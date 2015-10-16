@@ -69,3 +69,71 @@ TEST(Depot, LoadHeavy) {
   for (const auto& it: reads2) delete it;
   for (const auto& it: reads) delete it;
 }
+
+TEST(Depot, LoadHeavyByNReads) {
+
+    ReadSet reads;
+    readFastqReads(reads, "../examples/ERR430949.fastq");
+
+    auto depot = new Depot("depot_dummy");
+    uint32_t n = 50;
+
+    uint32_t total = 0;
+
+    for (uint32_t i = 0; i < reads.size(); i += n) {
+
+        ReadSet reads2;
+        depot->load_reads(reads2, i, n);
+
+        total += reads2.size();
+
+        for (uint32_t j = 0; j < reads2.size(); ++j) {
+            ASSERT_EQ(reads[i + j]->getId(), reads2[j]->getId());
+            ASSERT_STREQ(reads[i + j]->getName().c_str(), reads2[j]->getName().c_str());
+            ASSERT_STREQ(reads[i + j]->getSequence().c_str(), reads2[j]->getSequence().c_str());
+            ASSERT_EQ(reads[i + j]->getCoverage(), reads2[j]->getCoverage());
+            ASSERT_STREQ(reads[i + j]->getQuality().c_str(), reads2[j]->getQuality().c_str());
+        }
+
+        for (const auto& it: reads2) delete it;
+    }
+
+    ASSERT_EQ(reads.size(), total);
+
+    delete depot;
+    for (const auto& it: reads) delete it;
+}
+
+TEST(Depot, LoadHeavyBy1Read) {
+
+    ReadSet reads;
+    readFastqReads(reads, "../examples/ERR430949.fastq");
+
+    auto depot = new Depot("depot_dummy");
+    uint32_t n = 1;
+
+    uint32_t total = 0;
+
+    for (uint32_t i = 0; i < reads.size(); i += n) {
+
+        ReadSet reads2;
+        depot->load_reads(reads2, i, n);
+
+        total += reads2.size();
+
+        for (uint32_t j = 0; j < reads2.size(); ++j) {
+            ASSERT_EQ(reads[i + j]->getId(), reads2[j]->getId());
+            ASSERT_STREQ(reads[i + j]->getName().c_str(), reads2[j]->getName().c_str());
+            ASSERT_STREQ(reads[i + j]->getSequence().c_str(), reads2[j]->getSequence().c_str());
+            ASSERT_EQ(reads[i + j]->getCoverage(), reads2[j]->getCoverage());
+            ASSERT_STREQ(reads[i + j]->getQuality().c_str(), reads2[j]->getQuality().c_str());
+        }
+
+        for (const auto& it: reads2) delete it;
+    }
+
+    ASSERT_EQ(reads.size(), total);
+
+    delete depot;
+    for (const auto& it: reads) delete it;
+}

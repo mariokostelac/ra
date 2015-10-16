@@ -192,9 +192,10 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
     fseekWrapper(reads_index_, 0, SEEK_SET);
     freadWrapper(&reads_length, sizeof(reads_length), 1, reads_index_);
 
-    ASSERT(begin < (uint32_t) reads_length, "Depot", "Beginning index out of range!");
+    ASSERT(begin < (uint32_t) reads_length, "Depot",
+        "Beginning index out of range!");
 
-    length = std::min(length, (uint32_t) reads_length);
+    length = std::min(length, (uint32_t) reads_length - begin);
 
     uint64_t* offsets = new uint64_t[length + 1];
     fseekWrapper(reads_index_, begin * sizeof(uint64_t), SEEK_CUR);
