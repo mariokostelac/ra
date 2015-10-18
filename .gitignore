@@ -37,3 +37,5 @@ filter_erroneous_overlaps/debug/filter_erroneous_overlaps
 filter_erroneous_overlaps/release/filter_erroneous_overlaps
 depot/debug/depot
 depot/release/depot
+fill_read_coverage/debug/fill_read_coverage
+fill_read_coverage/release/fill_read_coverage
