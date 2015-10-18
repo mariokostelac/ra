@@ -86,14 +86,7 @@ int main(int argc, char **argv) {
   }
 
   vector<Overlap*> nocontainments;
-  {
-    vector<Overlap*> input;
-    for (auto o : overlaps) {
-      input.push_back(o);
-    }
-
-    filterContainedOverlaps(nocontainments, input, reads, true);
-  }
+  filterContainedOverlaps(nocontainments, overlaps, reads, true);
 
   write_overlaps(nocontainments, assembly_directory + "/overlaps.nocont");
 
