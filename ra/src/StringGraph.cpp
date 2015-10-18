@@ -864,6 +864,14 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
         for (const auto& edge : walk->getEdges()) {
             errate += edge->getOverlap()->errate();
             coverage += edge->getDst()->getCoverage();
+
+            // we have to remove overlap coverage since it is already
+            // added in previous stages
+            auto overlap = edge->getOverlap();
+            uint32_t a = overlap->a();
+            uint32_t b = overlap->b();
+            coverage -= overlap->covered_percentage(a);
+            coverage -= overlap->covered_percentage(b);
         }
         errate /= walk->getEdges().size();
 
