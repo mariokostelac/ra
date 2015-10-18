@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 require 'optparse'
-require 'Date'
 require 'FileUtils'
 
-$start_time = DateTime.now
+$start_time = Time.now
 
 module Colors
   def self.black;          "\e[30m" end
@@ -362,6 +361,10 @@ def main
       exit 1
     end
   end.run
+
+  passed = human_time((Time.now - $start_time) * 1000)
+  puts "Layout total time #{passed}"
+  puts '=' * 80
 end
 
 main()
