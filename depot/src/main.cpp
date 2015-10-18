@@ -5,26 +5,8 @@
 
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
-#include <algorithm>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sys/stat.h>
 #include <vector>
 
-using std::cerr;
-using std::cin;
-using std::cout;
-using std::endl;
-using std::fstream;
-using std::make_pair;
-using std::map;
-using std::max;
-using std::min;
-using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 
@@ -89,7 +71,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  const std::string cmd = args.rest()[0];
+  const string cmd = args.rest()[0];
 
   if (cmd == "import_reads") {
     import_reads_cmd();
