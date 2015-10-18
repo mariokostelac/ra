@@ -35,3 +35,5 @@ ra/debug/run_tests
 ra/release/run_tests
 filter_erroneous_overlaps/debug/filter_erroneous_overlaps
 filter_erroneous_overlaps/release/filter_erroneous_overlaps
+depot/debug/depot
+depot/release/depot
