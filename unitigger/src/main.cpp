@@ -14,10 +14,6 @@
 #include <sys/stat.h>
 #include <vector>
 
-using std::cerr;
-using std::cin;
-using std::cout;
-using std::endl;
 using std::fstream;
 using std::make_pair;
 using std::map;
@@ -31,12 +27,11 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string reads_format;
-string reads_filename;
 string overlaps_filename;
 string overlaps_format;
 string settings_file;
 string assembly_directory;
+string depot_path;
 
 void must_one_overlap_per_pair(const vector<DovetailOverlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
@@ -115,22 +110,20 @@ void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("reads", 'r', "reads file", true);
-  args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
   args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("settings", 'b', "settings file", false);
   args.add<string>("directory", 'd', "assembly_directory", false, ".");
+  args.add<string>("depot", 'D', "depot path", true);
 
   args.parse_check(argc, argv);
 }
 
 void read_args() {
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  reads_filename = args.get<string>("reads");
-  reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
   settings_file = args.get<string>("settings");
   assembly_directory = args.get<string>("directory");
+  depot_path = args.get<string>("depot");
 }
 
 void read_settings(FILE *fd) {
@@ -210,7 +203,7 @@ int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, const Stri
   for (const auto& component : components) {
     const auto& contig_walk_orig = component->longestWalk();
 
-    fprintf(stderr, "Extracting contig from graph component with %u vertices\n", component->vertices().size());
+    fprintf(stderr, "Extracting contig from graph component with %lu vertices\n", component->vertices().size());
 
     if (contig_walk_orig == nullptr) {
       continue;
@@ -265,20 +258,13 @@ int main(int argc, char **argv) {
   write_settings(stderr);
   fclose(run_args_file);
 
-  vector<DovetailOverlap*> overlaps;
   vector<Read*> reads;
+  Depot depot(depot_path);
+  depot.load_reads(reads);
 
-  if (reads_format == "fasta") {
-    readFastaReads(reads, reads_filename.c_str());
-  } else if (reads_format == "fastq") {
-    readFastqReads(reads, reads_filename.c_str());
-  } else if (reads_format == "afg") {
-    readAfgReads(reads, reads_filename.c_str());
-  } else {
-    assert(false);
-  }
+  fprintf(stderr, "Read %lu reads\n", reads.size());
 
-  std::cerr << "Read " << reads.size() << " reads" << std::endl;
+  vector<DovetailOverlap*> overlaps;
 
   FILE* overlaps_fd = must_fopen(overlaps_filename, "r");
   read_dovetail_overlaps(&overlaps, overlaps_fd);
@@ -298,11 +284,11 @@ int main(int argc, char **argv) {
     const auto a = o->a();
     const auto b = o->b();
     if (reads[a] == nullptr) {
-      cerr << "Read " << a << " not found" << endl;
+      fprintf(stderr, "Read %u not found\n", a);
       exit(1);
     }
     if (reads[b] == nullptr) {
-      cerr << "Read " << b << " not found" << endl;
+      fprintf(stderr, "Read %u not found\n", b);
       exit(1);
     }
 

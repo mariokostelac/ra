@@ -5,26 +5,10 @@
 
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
-#include <algorithm>
-#include <ctime>
 #include <fstream>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sys/stat.h>
 #include <vector>
 
-using std::cerr;
-using std::cin;
-using std::cout;
-using std::endl;
 using std::fstream;
-using std::make_pair;
-using std::map;
-using std::max;
-using std::min;
-using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 
@@ -34,12 +18,13 @@ int thread_num;
 string reads_filename;
 string overlaps_filename;
 string assembly_directory;
+string depot_path;
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("reads", 'r', "reads file", true);
   args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("directory", 'd', "assembly_directory", false, ".");
+  args.add<string>("depot", 'D', "depot path", true);
 
   args.parse_check(argc, argv);
 }
@@ -48,7 +33,7 @@ void read_args() {
   assembly_directory = args.get<string>("directory");
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
   overlaps_filename = args.get<string>("overlaps");
-  reads_filename = args.get<string>("reads");
+  depot_path = args.get<string>("depot");
 }
 
 int main(int argc, char **argv) {
@@ -57,7 +42,9 @@ int main(int argc, char **argv) {
   read_args();
 
   vector<Read*> reads;
-  readFastaReads(reads, reads_filename.c_str());
+  Depot depot(depot_path);
+  depot.load_reads(reads);
+  fprintf(stderr, "%lu reads read\n", reads.size());
 
   vector<DovetailOverlap*> overlaps;
   FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
@@ -76,6 +63,7 @@ int main(int argc, char **argv) {
 
   write_overlaps(notransitives, assembly_directory + "/overlaps.notran");
 
+  for (auto r: reads)       delete r;
   for (auto o: overlaps)    delete o;
 
   return 0;

@@ -3,6 +3,8 @@ require 'optparse'
 require 'Date'
 require 'FileUtils'
 
+$start_time = DateTime.now
+
 module Colors
   def self.black;          "\e[30m" end
   def self.red;            "\e[31m" end
@@ -92,7 +94,7 @@ def parse_options!
     end
 
     opts.on("-d", "--directory dirpath", "Set given dirpath as working directory") do |dir|
-      $options[:working_dir] = dir
+      working_dir = dir
     end
 
     opts.on("-f", "--use_smart_filter", "Uses 'smart' overlaps filter that cuts right tail of gauss distribution") do |dir|
@@ -112,11 +114,6 @@ def parse_arguments
   end
 
   ARGV.take 2
-end
-
-def working_dir
-  suffix = DateTime.now.strftime("%Y%m%d_%H%M%S")
-  "layout_#{suffix}"
 end
 
 def bin_dir(debug: false)
@@ -150,41 +147,45 @@ def filter_bad_overlaps_bin(debug: false)
   File.join(bin_dir(debug: debug), "filter_erroneous_overlaps")
 end
 
-def run_filter_contained(reads_filename, overlaps_filename)
-  working_directory = $options[:working_dir]
-  cmd = "#{filter_contained_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory}"
+def depot_bin(debug: false)
+  File.join(bin_dir(debug: debug), "depot")
+end
+
+def run_filter_contained(overlaps_filename)
+  working_directory = working_dir
+  cmd = "#{filter_contained_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
   puts(cmd)
   system(cmd)
 end
 
-def run_dovetail_overlaps(reads_filename, overlaps_filename)
-  working_directory = $options[:working_dir]
-  cmd = "#{create_dovetail_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory}"
+def run_dovetail_overlaps(overlaps_filename)
+  working_directory = working_dir
+  cmd = "#{create_dovetail_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
   puts(cmd)
   system(cmd)
 end
 
-def run_filer_transitive(reads_filename, overlaps_filename)
-  working_directory = $options[:working_dir]
-  cmd = "#{filter_transitives_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory}"
+def run_filer_transitive(overlaps_filename)
+  working_directory = working_dir
+  cmd = "#{filter_transitives_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
   puts(cmd)
   system(cmd)
 end
 
-def run_unitigger(reads_filename, overlaps_filename)
+def run_unitigger(overlaps_filename)
   if $options.has_key?(:settings_file)
     settings = "-b #{$options[:settings_file]}"
   else
     settings = ""
   end
-  working_directory = $options[:working_dir]
-  cmd = "#{unitigger_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{working_directory} #{settings}"
+  working_directory = working_dir
+  cmd = "#{unitigger_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory} #{settings}"
   puts(cmd)
   system(cmd)
 end
 
 def run_graphviz(overlaps_filename)
-  working_directory = $options[:working_dir]
+  working_directory = working_dir
   graph_filename = "#{working_directory}/genome.svg"
   cmd = "#{draw_graph_bin} < #{overlaps_filename} | neato -T svg -o #{graph_filename}"
   puts(cmd)
@@ -192,7 +193,7 @@ def run_graphviz(overlaps_filename)
 end
 
 def run_filter_bad_overlaps(overlaps_filename)
-  working_directory = $options[:working_dir]
+  working_directory = working_dir
   output = File.join(working_directory, "overlaps.filtered")
   cmd = "#{filter_bad_overlaps_bin} -x #{overlaps_filename} > #{output}"
   puts(cmd)
@@ -201,15 +202,49 @@ def run_filter_bad_overlaps(overlaps_filename)
   output
 end
 
+def run_import_reads(depot_path, reads_filename)
+  cmd = "#{depot_bin} -r #{reads_filename} -d #{depot_path} import_reads"
+  puts(cmd)
+  system(cmd)
+end
+
 def ensure_dir(dirpath)
   FileUtils::mkdir_p dirpath
 end
 
 $options_parser = nil
 
-$options = {
-  :working_dir => working_dir
-}
+$options = {}
+
+def working_dir
+  if $options.has_key?(:working_dir)
+    return $options[:working_dir]
+  end
+
+  suffix = $start_time.strftime("%Y%m%d_%H%M%S")
+  working_dir = "layout_#{suffix}"
+
+  working_dir
+end
+
+def working_dir=(str)
+  $options[:working_dir] = str
+end
+
+def depot_path=(str)
+  $options[:depot_path] = str
+end
+
+def depot_path
+  if $options.has_key?(:depot_path)
+    return $options[:depot_path]
+  end
+
+  suffix = $start_time.strftime("%Y%m%d_%H%M%S")
+  depot_path = "layout_#{suffix}_depot"
+
+  depot_path
+end
 
 def main
   parse_options!
@@ -227,33 +262,43 @@ def main
   puts
   puts "Reads filename: #{reads_filename}"
   puts "Overlaps filename: #{overlaps_filename}"
-  puts "Assembly directory: #{$options[:working_dir]}"
+  puts "Assembly directory: #{working_dir}"
+  puts "Depot path: #{depot_path}"
   puts
 
   Task.new "PREPARING ASSEMBLY DIRECTORY" do
-    if !ensure_dir($options[:working_dir])
+    if !ensure_dir(working_dir)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
   end.run
 
-  filter_contained = Task.new "FILTERING CONTAINED READS" do
-    if !run_filter_contained(reads_filename, overlaps_filename)
+  Task.new "FILLING DEPOT WITH READS" do
+    if !run_import_reads(depot_path, reads_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
 
-    File.join($options[:working_dir], "overlaps.nocont")
+    File.join(working_dir, "overlaps.nocont")
+  end.run
+
+  filter_contained = Task.new "FILTERING CONTAINED READS" do
+    if !run_filter_contained(overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
+
+    File.join(working_dir, "overlaps.nocont")
   end
   overlaps_filename = filter_contained.run
 
   create_dovetail = Task.new "CREATING DOVETAIL OVERLAPS" do
-    if !run_dovetail_overlaps(reads_filename, overlaps_filename)
+    if !run_dovetail_overlaps(overlaps_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
 
-    File.join($options[:working_dir], "overlaps.dovetail")
+    File.join(working_dir, "overlaps.dovetail")
   end
   overlaps_filename = create_dovetail.run
 
@@ -265,17 +310,17 @@ def main
   end
 
   filter_transitive = Task.new "FILTERING TRANSITIVE OVERLAPS" do
-    if !run_filer_transitive(reads_filename, overlaps_filename)
+    if !run_filer_transitive(overlaps_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
 
-    File.join($options[:working_dir], "overlaps.notran")
+    File.join(working_dir, "overlaps.notran")
   end
   overlaps_filename = filter_transitive.run
 
   find_unitigs = Task.new "FINDING UNITIGS" do
-    if !run_unitigger(reads_filename, overlaps_filename)
+    if !run_unitigger(overlaps_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
@@ -288,7 +333,6 @@ def main
       exit 1
     end
   end.run
-
 end
 
 main()
