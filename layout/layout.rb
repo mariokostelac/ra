@@ -147,6 +147,10 @@ def filter_bad_overlaps_bin(debug: false)
   File.join(bin_dir(debug: debug), "filter_erroneous_overlaps")
 end
 
+def fill_read_coverage_bin(debug: false)
+  File.join(bin_dir(debug: debug), "fill_read_coverage")
+end
+
 def depot_bin(debug: false)
   File.join(bin_dir(debug: debug), "depot")
 end
@@ -202,6 +206,12 @@ end
 
 def run_import_reads(depot_path, reads_filename)
   cmd = "#{depot_bin} -r #{reads_filename} -d #{depot_path} import_reads"
+  puts(cmd)
+  system(cmd)
+end
+
+def run_fill_read_coverage(overlaps_filename)
+  cmd = "#{fill_read_coverage_bin} -D #{depot_path} -x #{overlaps_filename}"
   puts(cmd)
   system(cmd)
 end
@@ -285,6 +295,15 @@ def main
 
   Task.new "FILLING DEPOT WITH READS" do
     if !run_import_reads(depot_path, reads_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
+
+    File.join(working_dir, "overlaps.nocont")
+  end.run
+
+  Task.new "CALCULATING READS COVERAGE" do
+    if !run_fill_read_coverage(overlaps_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
