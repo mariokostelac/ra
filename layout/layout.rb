@@ -173,11 +173,9 @@ def run_filer_transitive(overlaps_filename)
 end
 
 def run_unitigger(overlaps_filename)
-  if $options.has_key?(:settings_file)
-    settings = "-b #{$options[:settings_file]}"
-  else
-    settings = ""
-  end
+  settings = ""
+  settings = "-b #{settings_file}" if settings_file.to_s.length > 0
+
   working_directory = working_dir
   cmd = "#{unitigger_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory} #{settings}"
   puts(cmd)
@@ -246,6 +244,18 @@ def depot_path
   depot_path
 end
 
+def use_smart_filter?
+  if $options.has_key?(:use_smart_filter)
+    return $options[:use_smart_filter]
+  end
+
+  false
+end
+
+def settings_file
+  return $options[:settings_file]
+end
+
 def main
   parse_options!
   reads_filename, overlaps_filename = parse_arguments
@@ -302,7 +312,7 @@ def main
   end
   overlaps_filename = create_dovetail.run
 
-  if $options[:use_smart_filter]
+  if use_smart_filter?
     filter_bad_overlaps = Task.new "FILTERING BAD OVERLAPS" do
       run_filter_bad_overlaps(overlaps_filename)
     end
