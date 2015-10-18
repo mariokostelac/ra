@@ -15,7 +15,6 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string reads_filename;
 string overlaps_filename;
 string assembly_directory;
 string depot_path;
