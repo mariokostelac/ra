@@ -50,8 +50,6 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
             contained[a] = true;
             debug("ISCONT %d in %d,%d\n", a, a, b);
 
-            reads[b]->addCoverage(reads[a]->getLength() / (double) reads[b]->getLength());
-
             continue;
         }
 
@@ -61,8 +59,6 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
             // read_b is contained
             contained[b] = true;
             debug("ISCONT %d in %d,%d\n", b, a, b);
-
-            reads[a]->addCoverage(reads[b]->getLength() / (double) reads[a]->getLength());
         }
     }
 
