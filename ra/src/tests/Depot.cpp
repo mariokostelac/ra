@@ -22,6 +22,7 @@ TEST(Depot, StoreLoad) {
   ASSERT_STREQ(reads.front()->getSequence().c_str(), read1->getSequence().c_str());
   ASSERT_STREQ(reads.front()->getQuality().c_str(), read1->getQuality().c_str());
   ASSERT_EQ(reads.front()->getCoverage(), read1->getCoverage());
+  ASSERT_EQ(reads.front()->getLength(), read1->getLength());
 
   for (const auto& it: reads) delete it;
 

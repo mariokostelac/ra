@@ -121,23 +121,20 @@ AfgRead* AfgRead::deserialize(const char* bytes) {
     // name_
     std::memcpy(&temp, bytes + ptr, size);
     ptr += size;
-    read->name_.reserve(temp);
-    std::memcpy(&read->name_[0], bytes + ptr, temp);
+    read->name_ = std::string(bytes + ptr, temp - 1);
     ptr += temp;
 
     // sequence_
     std::memcpy(&temp, bytes + ptr, size);
     ptr += size;
-    read->sequence_.reserve(temp);
-    std::memcpy(&read->sequence_[0], bytes + ptr, temp);
+    read->sequence_ = std::string(bytes + ptr, temp - 1);
     ptr += temp;
 
     // quality_
     std::memcpy(&temp, bytes + ptr, size);
     ptr += size;
     if (temp > 1) {
-        read->quality_.reserve(temp);
-        std::memcpy(&read->quality_[0], bytes + ptr, temp);
+        read->quality_ = std::string(bytes + ptr, temp - 1);
         ptr += temp;
     }
 
