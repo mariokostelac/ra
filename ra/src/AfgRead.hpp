@@ -66,6 +66,8 @@ private:
 
     AfgRead() {};
 
+    static DepotObjectType type_;
+
     uint32_t id_;
     std::string name_;
     std::string sequence_;

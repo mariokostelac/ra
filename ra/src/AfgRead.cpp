@@ -21,6 +21,8 @@ static void threadCreateReverseComplements(std::vector<Read*>& reads, int start,
     }
 }
 
+DepotObjectType AfgRead::type_ = DepotObjectType::kAfgRead;
+
 AfgRead::AfgRead(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage) {
 
     ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
@@ -64,6 +66,7 @@ void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
     uint32_t uint32_size = sizeof(uint32_t);
 
     *bytes_length =
+        sizeof(type_) +
         uint32_size + // id_
         uint32_size + name_.size() +
         uint32_size + sequence_.size() +
@@ -74,6 +77,10 @@ void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
 
     uint32_t field_size;
     uint32_t ptr = 0;
+
+    // type_
+    std::memcpy(*bytes + ptr, &type_, sizeof(type_));
+    ptr += sizeof(type_);
 
     // id_
     std::memcpy(*bytes + ptr, &id_, uint32_size);
@@ -113,6 +120,12 @@ AfgRead* AfgRead::deserialize(const char* bytes) {
     uint32_t uint32_size = sizeof(uint32_t);
     uint32_t field_size;
     uint32_t ptr = 0;
+
+    // type_
+    DepotObjectType type;
+    std::memcpy(&type, bytes + ptr, sizeof(DepotObjectType));
+    ASSERT(type == type_, "AfgRead", "Wrong object serialized in bytes array!");
+    ptr += sizeof(DepotObjectType);
 
     // id_
     std::memcpy(&read->id_, bytes + ptr, uint32_size);

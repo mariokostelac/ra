@@ -14,6 +14,7 @@
 #include "CommonHeaders.hpp"
 #include "Contig.hpp"
 #include "Depot.hpp"
+#include "DepotObject.hpp"
 #include "DovetailOverlap.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "Globals.hpp"

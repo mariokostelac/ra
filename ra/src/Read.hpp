@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "DepotObject.hpp"
 #include "CommonHeaders.hpp"
 
 class Read;
@@ -17,7 +18,7 @@ using ReadSet = std::vector<Read*>;
 /*!
  * @brief Read class
  */
-class Read {
+class Read: public DepotObject {
 public:
 
     /*!

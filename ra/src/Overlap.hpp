@@ -19,6 +19,9 @@
 #include "Read.hpp"
 #include "CommonHeaders.hpp"
 
+class Overlap;
+using OverlapSet = std::vector<Overlap*>;
+
 /*!
  * @brief Overlap class
  */
@@ -114,7 +117,7 @@ public:
 
     /*!
      * @brief Getter for amount of read covered by overlap.
-     * @return covered_percentage 
+     * @return covered_percentage
      */
     double covered_percentage(uint32_t read_id) const;
 
@@ -168,4 +171,3 @@ protected:
 
     bool innie_;
 };
-

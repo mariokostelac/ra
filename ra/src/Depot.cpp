@@ -8,6 +8,7 @@
  */
 
 #include "AfgRead.hpp"
+#include "DepotObject.hpp"
 #include "Depot.hpp"
 
 constexpr mode_t kPermissions = 0775;
@@ -86,92 +87,37 @@ Depot::Depot(const std::string& path) {
 
     createFolder(path.c_str());
 
-    std::string path_ = path + "/reads_data.bin";
-    openAndLockFile(&reads_data_, path_.c_str());
+    std::string path_ = path + "/read_data.bin";
+    openAndLockFile(&read_data_, path_.c_str());
 
-    path_ = path + "/reads_index.bin";
-    openAndLockFile(&reads_index_, path_.c_str());
+    path_ = path + "/read_index.bin";
+    openAndLockFile(&read_index_, path_.c_str());
 
-    path_ = path + "/overlaps_data.bin";
-    openAndLockFile(&overlaps_data_, path_.c_str());
+    path_ = path + "/overlap_data.bin";
+    openAndLockFile(&overlap_data_, path_.c_str());
 
-    path_ = path + "/overlaps_index.bin";
-    openAndLockFile(&overlaps_index_, path_.c_str());
+    path_ = path + "/overlap_index.bin";
+    openAndLockFile(&overlap_index_, path_.c_str());
 }
 
 Depot::~Depot() {
 
-    unlockAndCloseFile(reads_data_);
-    unlockAndCloseFile(reads_index_);
-    unlockAndCloseFile(overlaps_data_);
-    unlockAndCloseFile(overlaps_index_);
+    unlockAndCloseFile(read_data_);
+    unlockAndCloseFile(read_index_);
+    unlockAndCloseFile(overlap_data_);
+    unlockAndCloseFile(overlap_index_);
 }
 
 void Depot::store_reads(const ReadSet& src)  {
 
-    std::unique_lock<std::mutex> lock(rmutex_);
-
-    ASSERT(src.size() != 0, "Depot", "Can not store empty ReadSet!");
-
-    fseekWrapper(reads_index_, 0, SEEK_SET);
-    fseekWrapper(reads_data_, 0, SEEK_SET);
-
-    uint32_t offsets_size = src.size() + 2;
-    uint64_t* offsets = new uint64_t[offsets_size]();
-    offsets[0] = offsets_size - 2;
-
-    size_t data_total_bytes = 0;
-    size_t index_total_bytes = offsets_size * sizeof(*offsets);
-
-    uint32_t id = 1;
-    uint32_t size = sizeof(uint32_t);
-
-    char* buffer = new char[kBufferSize];
-    uint32_t buffer_size = 0;
-
-    for (const auto& it: src) {
-
-        char* bytes;
-        uint32_t bytes_length;
-        it->serialize(&bytes, &bytes_length);
-
-        if (buffer_size + bytes_length > kBufferSize) {
-            fwriteWrapper(buffer, sizeof(*buffer), buffer_size, reads_data_);
-            buffer_size = 0;
-        }
-
-        std::memcpy(buffer + buffer_size, &bytes_length, size);
-        buffer_size += size;
-
-        std::memcpy(buffer + buffer_size, bytes, bytes_length);
-        buffer_size += bytes_length;
-
-        delete[] bytes;
-
-        offsets[id + 1] = offsets[id] + bytes_length + size;
-        ++id;
-    }
-
-    data_total_bytes = offsets[offsets_size - 1];
-
-    if (buffer_size > 0) {
-        fwriteWrapper(buffer, sizeof(*buffer), buffer_size, reads_data_);
-    }
-
-    fwriteWrapper(offsets, sizeof(*offsets), offsets_size, reads_index_);
-
-    delete[] buffer;
-    delete[] offsets;
-
-    ftruncateWraper(reads_index_, index_total_bytes);
-    ftruncateWraper(reads_data_, data_total_bytes);
+    ASSERT(src.size() != 0, "Depot", "Can not store an empty ReadSet!");
+    store(src, read_data_, read_index_);
 }
 
 Read* Depot::load_read(uint32_t index) {
 
     ReadSet temp;
     load_reads(temp, index, 1);
-
     return temp.front();
 }
 
@@ -180,17 +126,103 @@ void Depot::load_reads(ReadSet& dst) {
 }
 
 void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
+    load(dst, begin, length, read_data_, read_index_);
+}
 
-    std::unique_lock<std::mutex> lock(rmutex_);
+void Depot::store_overlaps(const OverlapSet& src) {
 
-    ASSERT(!fileEmpty(reads_index_), "Depot",
-        "Unable to load from empty reads index file!");
-    ASSERT(!fileEmpty(reads_data_), "Depot",
-        "Unable to load from empty reads data file!");
+    ASSERT(src.size() != 0, "Depot", "Can not store empty OverlapSet!");
+    //store(src, overlap_data_, overlap_index_);
+}
+
+Overlap* Depot::load_overlap(uint32_t index) {
+
+    OverlapSet temp;
+    load_overlaps(temp, index, 1);
+    return temp.front();
+}
+
+void Depot::load_overlaps(OverlapSet& dst) {
+    load_overlaps(dst, 0, -1); // read all
+}
+
+void Depot::load_overlaps(OverlapSet& dst, uint32_t begin, uint32_t length) {
+    //load(dst, begin, length, overlaps_data_, overlaps_index_);
+}
+
+template<typename T>
+void Depot::store(const std::vector<T*>& src, FILE* data, FILE* index) {
+
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    fseekWrapper(index, 0, SEEK_SET);
+    fseekWrapper(data, 0, SEEK_SET);
+
+    uint32_t offsets_size = src.size() + 2;
+    uint64_t* offsets = new uint64_t[offsets_size]();
+    offsets[0] = offsets_size - 2;
+
+    size_t data_bytes = 0;
+    size_t index_bytes = offsets_size * sizeof(*offsets);
+
+    uint32_t id = 1;
+    uint32_t uint32_size = sizeof(uint32_t);
+
+    char* buffer = new char[kBufferSize];
+    uint32_t buffer_size = 0;
+
+    for (const auto& it: src) {
+
+        char* bytes = nullptr;
+        uint32_t bytes_length = 0;
+        it->serialize(&bytes, &bytes_length);
+
+        if (buffer_size + bytes_length > kBufferSize) {
+            fwriteWrapper(buffer, sizeof(*buffer), buffer_size, data);
+            buffer_size = 0;
+        }
+
+        std::memcpy(buffer + buffer_size, &bytes_length, uint32_size);
+        buffer_size += uint32_size;
+
+        std::memcpy(buffer + buffer_size, bytes, bytes_length);
+        buffer_size += bytes_length;
+
+        delete[] bytes;
+
+        offsets[id + 1] = offsets[id] + bytes_length + uint32_size;
+        ++id;
+    }
+
+    data_bytes = offsets[offsets_size - 1];
+
+    if (buffer_size > 0) {
+        fwriteWrapper(buffer, sizeof(*buffer), buffer_size, data);
+    }
+
+    fwriteWrapper(offsets, sizeof(*offsets), offsets_size, index);
+
+    delete[] buffer;
+    delete[] offsets;
+
+    ftruncateWraper(index, index_bytes);
+    ftruncateWraper(data, data_bytes);
+}
+
+template<typename T>
+void Depot::load(std::vector<T*>& dst, uint32_t begin, uint32_t length,
+    FILE* data, FILE* index) {
+
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    ASSERT(!fileEmpty(index), "Depot",
+        "Unable to load from empty index file!");
+    ASSERT(!fileEmpty(data), "Depot",
+        "Unable to load from empty data file!");
 
     uint64_t reads_length;
-    fseekWrapper(reads_index_, 0, SEEK_SET);
-    freadWrapper(&reads_length, sizeof(reads_length), 1, reads_index_);
+    fseekWrapper(index, 0, SEEK_SET);
+    freadWrapper(&reads_length, sizeof(reads_length), 1, index);
 
     ASSERT(begin < (uint32_t) reads_length, "Depot",
         "Beginning index out of range!");
@@ -198,12 +230,12 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
     length = std::min(length, (uint32_t) reads_length - begin);
 
     uint64_t* offsets = new uint64_t[length + 1];
-    fseekWrapper(reads_index_, begin * sizeof(uint64_t), SEEK_CUR);
-    freadWrapper(offsets, sizeof(*offsets), length + 1, reads_index_);
+    fseekWrapper(index, begin * sizeof(uint64_t), SEEK_CUR);
+    freadWrapper(offsets, sizeof(*offsets), length + 1, index);
 
-    fseekWrapper(reads_data_, offsets[0], SEEK_SET);
+    fseekWrapper(read_data_, offsets[0], SEEK_SET);
 
-    uint32_t size = sizeof(uint32_t);
+    uint32_t uint32_size = sizeof(uint32_t);
 
     char* buffer = new char[kBufferSize];
     uint32_t buffer_size = 0;
@@ -214,16 +246,16 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
 
         if (buffer_size + bytes_length > kBufferSize) {
 
-            freadWrapper(buffer, sizeof(*buffer), buffer_size, reads_data_);
+            freadWrapper(buffer, sizeof(*buffer), buffer_size, data);
 
             uint32_t ptr = 0;
             while (ptr < buffer_size) {
 
                 uint32_t bytes_length_;
-                std::memcpy(&bytes_length_, buffer + ptr, size);
-                ptr += size;
+                std::memcpy(&bytes_length_, buffer + ptr, uint32_size);
+                ptr += uint32_size;
 
-                dst.emplace_back(AfgRead::deserialize(buffer + ptr));
+                dst.emplace_back(static_cast<T*>(DepotObject::deserialize(buffer + ptr)));
                 ptr += bytes_length_;
             }
 
@@ -235,16 +267,16 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
 
     if (buffer_size > 0) {
 
-        freadWrapper(buffer, sizeof(*buffer), buffer_size, reads_data_);
+        freadWrapper(buffer, sizeof(*buffer), buffer_size, data);
 
         uint32_t ptr = 0;
         while (ptr < buffer_size) {
 
             uint32_t bytes_length;
-            std::memcpy(&bytes_length, buffer + ptr, size);
-            ptr += size;
+            std::memcpy(&bytes_length, buffer + ptr, uint32_size);
+            ptr += uint32_size;
 
-            dst.emplace_back(AfgRead::deserialize(buffer + ptr));
+            dst.emplace_back(static_cast<T*>(DepotObject::deserialize(buffer + ptr)));
             ptr += bytes_length;
         }
     }
