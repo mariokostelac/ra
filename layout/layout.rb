@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 require 'optparse'
-require 'FileUtils'
 
 $start_time = Time.now
 
@@ -216,7 +215,9 @@ def run_fill_read_coverage(overlaps_filename)
 end
 
 def ensure_dir(dirpath)
-  FileUtils::mkdir_p dirpath
+  cmd = "mkdir -p #{dirpath}"
+  puts(cmd)
+  system(cmd)
 end
 
 $options_parser = nil
