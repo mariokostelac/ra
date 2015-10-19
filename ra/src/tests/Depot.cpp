@@ -58,6 +58,7 @@ TEST(Depot, LoadHeavy) {
   ASSERT_EQ(reads.size(), reads2.size());
 
   for (uint32_t i = 0; i < reads.size(); ++i) {
+      ASSERT_EQ(reads[i]->getLength(), reads2[i]->getLength());
       ASSERT_EQ(reads[i]->getId(), reads2[i]->getId());
       ASSERT_STREQ(reads[i]->getName().c_str(), reads2[i]->getName().c_str());
       ASSERT_STREQ(reads[i]->getSequence().c_str(), reads2[i]->getSequence().c_str());
@@ -89,6 +90,7 @@ TEST(Depot, LoadHeavyByNReads) {
         total += reads2.size();
 
         for (uint32_t j = 0; j < reads2.size(); ++j) {
+            ASSERT_EQ(reads[i + j]->getLength(), reads2[j]->getLength());
             ASSERT_EQ(reads[i + j]->getId(), reads2[j]->getId());
             ASSERT_STREQ(reads[i + j]->getName().c_str(), reads2[j]->getName().c_str());
             ASSERT_STREQ(reads[i + j]->getSequence().c_str(), reads2[j]->getSequence().c_str());
@@ -123,6 +125,7 @@ TEST(Depot, LoadHeavyBy1Read) {
         total += reads2.size();
 
         for (uint32_t j = 0; j < reads2.size(); ++j) {
+            ASSERT_EQ(reads[i + j]->getLength(), reads2[j]->getLength());
             ASSERT_EQ(reads[i + j]->getId(), reads2[j]->getId());
             ASSERT_STREQ(reads[i + j]->getName().c_str(), reads2[j]->getName().c_str());
             ASSERT_STREQ(reads[i + j]->getSequence().c_str(), reads2[j]->getSequence().c_str());

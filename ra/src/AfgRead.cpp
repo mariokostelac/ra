@@ -61,45 +61,45 @@ void AfgRead::createReverseComplement() {
 
 void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
 
-    uint32_t size = sizeof(uint32_t);
+    uint32_t uint32_size = sizeof(uint32_t);
 
     *bytes_length =
-        size + // id_
-        size + name_.size() + 1 +
-        size + sequence_.size() + 1 +
-        size + quality_.size() + 1 +
+        uint32_size + // id_
+        uint32_size + name_.size() +
+        uint32_size + sequence_.size() +
+        uint32_size + quality_.size() +
         sizeof(coverage_);
 
     *bytes = new char[*bytes_length]();
 
-    uint32_t temp;
+    uint32_t field_size;
     uint32_t ptr = 0;
 
     // id_
-    std::memcpy(*bytes + ptr, &id_, size);
-    ptr += size;
+    std::memcpy(*bytes + ptr, &id_, uint32_size);
+    ptr += uint32_size;
 
     // name_
-    temp = name_.size() + 1;
-    std::memcpy(*bytes + ptr, &temp, size);
-    ptr += size;
-    std::memcpy(*bytes + ptr, name_.c_str(), temp);
-    ptr += temp;
+    field_size = name_.size();
+    std::memcpy(*bytes + ptr, &field_size, uint32_size);
+    ptr += uint32_size;
+    std::memcpy(*bytes + ptr, name_.c_str(), field_size);
+    ptr += field_size;
 
     // sequence_
-    temp = sequence_.size() + 1;
-    std::memcpy(*bytes + ptr, &temp, size);
-    ptr += size;
-    std::memcpy(*bytes + ptr, sequence_.c_str(), temp);
-    ptr += temp;
+    field_size = sequence_.size();
+    std::memcpy(*bytes + ptr, &field_size, uint32_size);
+    ptr += uint32_size;
+    std::memcpy(*bytes + ptr, sequence_.c_str(), field_size);
+    ptr += field_size;
 
     // quality_
-    temp = quality_.size() + 1;
-    std::memcpy(*bytes + ptr, &temp, size);
-    ptr += size;
-    if (temp > 1) {
-        std::memcpy(*bytes + ptr, quality_.c_str(), temp);
-        ptr += temp;
+    field_size = quality_.size();
+    std::memcpy(*bytes + ptr, &field_size, uint32_size);
+    ptr += uint32_size;
+    if (field_size > 1) {
+        std::memcpy(*bytes + ptr, quality_.c_str(), field_size);
+        ptr += field_size;
     }
 
     // coverage_
@@ -110,32 +110,32 @@ AfgRead* AfgRead::deserialize(const char* bytes) {
 
     AfgRead* read = new AfgRead();
 
-    uint32_t size = sizeof(uint32_t);
-    uint32_t temp;
+    uint32_t uint32_size = sizeof(uint32_t);
+    uint32_t field_size;
     uint32_t ptr = 0;
 
     // id_
-    std::memcpy(&read->id_, bytes + ptr, size);
-    ptr += size;
+    std::memcpy(&read->id_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
 
     // name_
-    std::memcpy(&temp, bytes + ptr, size);
-    ptr += size;
-    read->name_ = std::string(bytes + ptr, temp - 1);
-    ptr += temp;
+    std::memcpy(&field_size, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+    read->name_ = std::string(bytes + ptr, field_size);
+    ptr += field_size;
 
     // sequence_
-    std::memcpy(&temp, bytes + ptr, size);
-    ptr += size;
-    read->sequence_ = std::string(bytes + ptr, temp - 1);
-    ptr += temp;
+    std::memcpy(&field_size, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+    read->sequence_ = std::string(bytes + ptr, field_size);
+    ptr += field_size;
 
     // quality_
-    std::memcpy(&temp, bytes + ptr, size);
-    ptr += size;
-    if (temp > 1) {
-        read->quality_ = std::string(bytes + ptr, temp - 1);
-        ptr += temp;
+    std::memcpy(&field_size, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+    if (field_size > 1) {
+        read->quality_ = std::string(bytes + ptr, field_size);
+        ptr += field_size;
     }
 
     // coverage_
