@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "../AfgRead.hpp"
+#include "../Read.hpp"
 #include "../MhapOverlap.hpp"
 
 using namespace MHAP;
@@ -19,6 +19,8 @@ TEST(MhapOverlap, ReturnsRightIds) {
       b_rc, b_lo, b_hi, b_len);
   ASSERT_EQ(a_id, overlap->a());
   ASSERT_EQ(b_id, overlap->b());
+
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightInnie1) {
@@ -34,6 +36,8 @@ TEST(MhapOverlap, ReturnsRightInnie1) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
   ASSERT_EQ(false, overlap->innie());
+
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightInnie2) {
@@ -49,6 +53,8 @@ TEST(MhapOverlap, ReturnsRightInnie2) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
   ASSERT_EQ(true, overlap->innie());
+
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightBbounds1) {
@@ -66,14 +72,18 @@ TEST(MhapOverlap, ReturnsRightBbounds1) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", "CGTTTT", "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", "CGTTTT", "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_EQ(0, overlap->b_lo());
   ASSERT_EQ(3, overlap->b_hi());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightBbounds2) {
@@ -91,14 +101,18 @@ TEST(MhapOverlap, ReturnsRightBbounds2) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", reverse_complement("CGTTTT").c_str(), "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", reverseComplement("CGTTTT").c_str(), "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_EQ(0, overlap->b_lo());
   ASSERT_EQ(3, overlap->b_hi());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightLengths1) {
@@ -116,14 +130,18 @@ TEST(MhapOverlap, ReturnsRightLengths1) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(1, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(2, "read2", "CGTTTT", "", 1);
+  auto read_a = new Read(1, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(2, "read2", "CGTTTT", "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
-  ASSERT_EQ(3, overlap->length(read_a->getId()));
-  ASSERT_EQ(3, overlap->length(read_b->getId()));
+  ASSERT_EQ(3, overlap->length(read_a->id()));
+  ASSERT_EQ(3, overlap->length(read_b->id()));
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, ReturnsRightLengthsRc) {
@@ -141,14 +159,18 @@ TEST(MhapOverlap, ReturnsRightLengthsRc) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", reverse_complement("CGTTTT").c_str(), "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", reverseComplement("CGTTTT").c_str(), "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_EQ(3, overlap->length(a_id));
   ASSERT_EQ(3, overlap->length(b_id));
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, extractOverlappedPartNormal1) {
@@ -166,14 +188,18 @@ TEST(MhapOverlap, extractOverlappedPartNormal1) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", "CGTTTT", "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", "CGTTTT", "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a_id).c_str());
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b_id).c_str());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, extractOverlappedPartNormal2) {
@@ -193,14 +219,18 @@ TEST(MhapOverlap, extractOverlappedPartNormal2) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", "CCGTTTT", "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", "CCGTTTT", "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a_id).c_str());
   ASSERT_STREQ("CCGT", overlap->extract_overlapped_part(b_id).c_str());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, extractOverlappedPartInnie1) {
@@ -220,14 +250,18 @@ TEST(MhapOverlap, extractOverlappedPartInnie1) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "AAACGT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", reverse_complement("CGTTTT").c_str(), "", 1);
+  auto read_a = new Read(a_id, "read1", "AAACGT", "", 1);
+  auto read_b = new Read(b_id, "read2", reverseComplement("CGTTTT").c_str(), "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a_id).c_str());
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b_id).c_str());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }
 
 TEST(MhapOverlap, extractOverlappedPartInnie2) {
@@ -247,12 +281,16 @@ TEST(MhapOverlap, extractOverlappedPartInnie2) {
       a_rc, a_lo, a_hi, a_len,
       b_rc, b_lo, b_hi, b_len);
 
-  auto read_a = new AfgRead(a_id, "read1", "CGTTTT", "", 1);
-  auto read_b = new AfgRead(b_id, "read2", reverse_complement("AAACGT").c_str(), "", 1);
+  auto read_a = new Read(a_id, "read1", "CGTTTT", "", 1);
+  auto read_b = new Read(b_id, "read2", reverseComplement("AAACGT").c_str(), "", 1);
 
   overlap->set_read_a(read_a);
   overlap->set_read_b(read_b);
 
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(a_id).c_str());
   ASSERT_STREQ("CGT", overlap->extract_overlapped_part(b_id).c_str());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
 }

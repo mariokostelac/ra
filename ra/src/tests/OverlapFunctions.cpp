@@ -5,9 +5,9 @@ TEST(FilterTransitives, SimpleTest1) {
   // CGGT
   //   GTCC
   //    TCCC
-  auto read1 = new AfgRead(1, "read1", "CGGT", "", 1);
-  auto read2 = new AfgRead(2, "read2", "GTCC", "", 1);
-  auto read3 = new AfgRead(3, "read3", "TCCC", "", 1);
+  auto read1 = new Read(1, "read1", "CGGT", "", 1);
+  auto read2 = new Read(2, "read2", "GTCC", "", 1);
+  auto read3 = new Read(3, "read3", "TCCC", "", 1);
 
   auto one_two = new DovetailOverlap(1, 2, 2, 2, false, -1, -1);
   auto two_three = new DovetailOverlap(2, 3, 1, 1, false, -1, -1);
@@ -35,6 +35,14 @@ TEST(FilterTransitives, SimpleTest1) {
   ASSERT_NE(dst.end(), std::find(dst.begin(), dst.end(), two_three));
   ASSERT_EQ(dst.end(), std::find(dst.begin(), dst.end(), one_three));
   ASSERT_EQ(2, dst.size());
+
+  delete one_three;
+  delete two_three;
+  delete one_two;
+
+  delete read3;
+  delete read2;
+  delete read1;
 }
 
 //std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,

@@ -10,7 +10,6 @@
 #pragma once
 
 #include "AfgOverlap.hpp"
-#include "AfgRead.hpp"
 #include "CommonHeaders.hpp"
 #include "Contig.hpp"
 #include "Depot.hpp"

@@ -172,11 +172,11 @@ uint32_t DovetailOverlap::a_lo() const {
 
 uint32_t DovetailOverlap::a_hi() const {
   if (b_hang() >= 0) {
-    return read_a()->getLength();
+    return read_a()->length();
   }
 
   // b_hang is < 0
-  return read_a()->getLength() + b_hang();
+  return read_a()->length() + b_hang();
 }
 
 uint32_t DovetailOverlap::b_lo() const {
@@ -189,10 +189,10 @@ uint32_t DovetailOverlap::b_lo() const {
 
 uint32_t DovetailOverlap::b_hi() const {
   if (b_hang() <= 0) {
-    return read_b()->getLength();
+    return read_b()->length();
   }
 
-  return read_b()->getLength() - b_hang();
+  return read_b()->length() - b_hang();
 }
 
 void DovetailOverlap::print(std::ostream& o) const {

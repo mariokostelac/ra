@@ -12,7 +12,7 @@
 #include "CommonHeaders.hpp"
 
 enum class DepotObjectType {
-    kAfgRead,
+    kRead,
     kDefault
 };
 

@@ -7,7 +7,7 @@
  * @date Apr 21, 2015
  */
 
-#include "AfgRead.hpp"
+#include "Read.hpp"
 #include "IO.hpp"
 
 #include "../vendor/afgreader/reader.h"
@@ -46,7 +46,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
             if (buffer[i] == '>') {
 
                 if (createRead) {
-                    reads.push_back(new AfgRead(idx++, name, sequence, "", 1.0));
+                    reads.push_back(new Read(idx++, name, sequence, "", 1.0));
                 }
 
                 name.clear();
@@ -70,7 +70,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
         }
     }
 
-    reads.push_back(new AfgRead(idx, name, sequence, "", 1.0));
+    reads.push_back(new Read(idx, name, sequence, "", 1.0));
 
     delete[] buffer;
     fclose(f);
@@ -102,7 +102,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         switch (i % 4) {
             case 0:
                 if (i != 0) {
-                    reads.push_back(new AfgRead(idx++, name, sequence, quality, 1.0));
+                    reads.push_back(new Read(idx++, name, sequence, quality, 1.0));
                 }
 
                 name = line.substr(1, line.size() - 1);
@@ -122,7 +122,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
         ++i;
     }
 
-    reads.push_back(new AfgRead(idx, name, sequence, quality, 1.0));
+    reads.push_back(new Read(idx, name, sequence, quality, 1.0));
 
     f.close();
 
@@ -175,8 +175,8 @@ void writeFastaReads(const std::vector<Read*>& reads, const char* path) {
     std::ostream& out = path == nullptr ? std::cout : file;
 
     for (const auto& read : reads) {
-        out << ">" << read->getName() << std::endl;
-        out << read->getSequence() << std::endl;
+        out << ">" << read->name() << std::endl;
+        out << read->sequence() << std::endl;
     }
 
     if (path != nullptr) file.close();
@@ -198,14 +198,14 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
 
     for (const auto& read : reads) {
         out << "{RED" << std::endl;
-        out << "clr:0," << read->getLength() << std::endl;
-        out << "eid:" << read->getName() << std::endl;
-        out << "iid:" << read->getId() << std::endl;
-        out << "qlt:" << read->getQuality() << std::endl;
+        out << "clr:0," << read->length() << std::endl;
+        out << "eid:" << read->name() << std::endl;
+        out << "iid:" << read->id() << std::endl;
+        out << "qlt:" << read->quality() << std::endl;
         out << "." << std::endl;
-        out << "seq:" << read->getSequence() << std::endl;
+        out << "seq:" << read->sequence() << std::endl;
         out << "." << std::endl;
-        out << "cvg:" << read->getCoverage() << std::endl;
+        out << "cvg:" << read->coverage() << std::endl;
         out << "}" << std::endl;
     }
 
@@ -428,4 +428,3 @@ FILE* must_fopen(const char* path, const char* mode) {
 
   return res;
 }
-

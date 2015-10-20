@@ -38,10 +38,10 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         const auto b = o->b();
 
         const auto a_lo = o->a_lo(), a_hi = o->a_hi();
-        const auto a_len = o->read_a()->getLength();
+        const auto a_len = o->read_a()->length();
 
         const auto b_lo = o->b_lo(), b_hi = o->b_hi();
-        const auto b_len = o->read_b()->getLength();
+        const auto b_len = o->read_b()->length();
 
         const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
 
@@ -84,7 +84,7 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
     Timer timer;
     timer.start();
 
-    std::map<int, std::vector<std::pair<int, DovetailOverlap*>>> edges;
+    std::map<uint32_t, std::vector<std::pair<uint32_t, DovetailOverlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
         edges[overlap->a()].emplace_back(overlap->b(), overlap);
@@ -312,8 +312,8 @@ static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<s
                 break;
         }
 
-        int aHang = reads[matches[j].first]->getLength() - matches[j].second;
-        int bHang = reads[i]->getLength() - matches[j].second;
+        int aHang = reads[matches[j].first]->length() - matches[j].second;
+        int bHang = reads[i]->length() - matches[j].second;
 
         if (i < matches[j].first) {
             dst.push_back(new AfgOverlap(i, matches[j].first, matches[j].second,
@@ -359,10 +359,10 @@ DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates
     double orig_errate = editDistance(a_part, b_part) / (double) o->length();
 
     const auto a_lo = o->a_lo(), a_hi = o->a_hi();
-    const auto a_len = o->read_a()->getLength();
+    const auto a_len = o->read_a()->length();
 
     const auto b_lo = o->b_lo(), b_hi = o->b_hi();
-    const auto b_len = o->read_b()->getLength();
+    const auto b_len = o->read_b()->length();
 
     const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
 

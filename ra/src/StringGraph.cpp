@@ -25,7 +25,7 @@ static int countForks(const Vertex* start, const int start_direction, const int 
 //*****************************************************************************
 // Edge
 
-Edge::Edge(int id, int readId, const DovetailOverlap* overlap, const StringGraph* graph) {
+Edge::Edge(uint32_t id, uint32_t readId, const DovetailOverlap* overlap, const StringGraph* graph) {
 
     id_ = id;
 
@@ -132,7 +132,7 @@ void Edge::rkLabel(std::string& dst) const {
     }
 }
 
-const Vertex* Edge::oppositeVertex(int id) const {
+const Vertex* Edge::oppositeVertex(uint32_t id) const {
 
     if (id == src_->getId()) return dst_;
     if (id == dst_->getId()) return src_;
@@ -151,7 +151,7 @@ Edge* Edge::pair() const {
 //*****************************************************************************
 // Vertex
 
-Vertex::Vertex(int id, const Read* read, const StringGraph* graph) :
+Vertex::Vertex(uint32_t id, const Read* read, const StringGraph* graph) :
     id_(id), read_(read), graph_(graph), marked_(false) {
 }
 
@@ -278,7 +278,7 @@ StringGraph::StringGraph(const std::vector<Read*>& reads, const std::vector<Dove
     overlaps_ = &overlaps;
 
     for (const auto& read : reads) {
-        vertices_.emplace(read->getId(), new Vertex(read->getId(), read, this));
+        vertices_.emplace(read->id(), new Vertex(read->id(), read, this));
     }
 
     edges_.reserve(overlaps.size() * 2);
@@ -578,7 +578,7 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
     Timer timer;
     timer.start();
 
-    int maxId = 0;
+    uint32_t maxId = 0;
 
     for (const auto& kv : vertices_) {
         const auto& vertex = kv.second;
@@ -643,7 +643,7 @@ void StringGraph::extractComponents(std::vector<StringGraphComponent*>& dst) con
 
 int StringGraph::extract_unitigs(std::vector<StringGraphWalk*>* walks) const {
 
-  int max_id = 0;
+  uint32_t max_id = 0;
   for (auto kv : vertices_) {
     max_id = std::max(kv.second->getId(), max_id);
   }
@@ -786,7 +786,7 @@ uint32_t StringGraph::popBubblesStartingAt(const Vertex* root, int direction) {
 bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, const uint32_t juncture_id, const int direction) {
 
     // types: 0 - normal, 1 - reverse complement
-    auto getType = [](const Edge* edge, int id) -> int {
+    auto getType = [](const Edge* edge, uint32_t id) -> int {
         if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
         if (!edge->getOverlap()->innie()) return 0;
         return 1;
@@ -843,7 +843,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
     std::vector<std::string> sequences;
 
     for (const auto& walk : all_walks) {
-      if (walk->getEdges().back()->getDst()->getId() == (int) juncture_id) {
+      if (walk->getEdges().back()->getDst()->getId() == juncture_id) {
         bubble_walks.push_back(walk);
       }
     }
@@ -929,7 +929,7 @@ bool StringGraph::popBubble(const std::vector<StringGraphWalk*>& all_walks, cons
         //}
 
         //sequences.emplace_back(end > start ? sequence.substr(start, end - start) : std::string());
-        sequences.push_back(startInverted ? reverse_complement(sequence) : sequence);
+        sequences.push_back(startInverted ? reverseComplement(sequence) : sequence);
     }
 
     bool popped = false;
@@ -1127,7 +1127,7 @@ void StringGraphWalk::extractSequence(std::string& dst) const {
   }
 
   // types: 0 - normal, 1 - reverse complement
-  auto getType = [](const Edge* edge, int id) -> int {
+  auto getType = [](const Edge* edge, uint32_t id) -> int {
     if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
     if (!edge->getOverlap()->innie()) return 0;
     return 1;
@@ -1224,7 +1224,7 @@ bool StringGraphNode::isInWalk(const StringGraphNode* node) const {
     return this->isInWalk(node->getParent());
 }
 
-const StringGraphNode* StringGraphNode::rewindedTo(const int vertexId) const {
+const StringGraphNode* StringGraphNode::rewindedTo(const uint32_t vertexId) const {
 
     if (vertexId == this->getVertex()->getId()) return this;
     if (this->getParent() == nullptr) return nullptr;
@@ -1322,7 +1322,7 @@ static int longest_sequence_length(const Vertex* from, const int direction, std:
     return res_length;
 }
 
-static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, const int start_direction, const int maxId, const int max_branches) {
+static int expandVertex(std::vector<const Edge*>& dst, const Vertex* start, const int start_direction, const uint32_t maxId, const int max_branches) {
 
     debug("EXPAND %d\n", start->getReadId());
 
@@ -1490,7 +1490,7 @@ void StringGraphComponent::extractLongestWalk() {
     // pick n start vertices based on total coverage of their chains to first branch
     std::vector<Candidate> startCandidates;
 
-    int maxId = 0;
+    uint32_t maxId = 0;
     for (const auto& vertex : vertices_) {
         maxId = std::max(maxId, vertex->getId());
     }

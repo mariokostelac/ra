@@ -41,7 +41,7 @@ public:
      * @param [in] overlap DovetailOverlap object pointer
      * @param [in] graph Graph object pointer the edge is in
      */
-    Edge(int id, int readId, const DovetailOverlap* overlap, const StringGraph* graph);
+    Edge(uint32_t id, uint32_t readId, const DovetailOverlap* overlap, const StringGraph* graph);
 
     /*!
      * @brief Edge destructor
@@ -52,7 +52,7 @@ public:
      * @brief Getter for identifier
      * @return identifier
      */
-    int getId() const {
+    uint32_t getId() const {
         return id_;
     }
 
@@ -123,7 +123,7 @@ public:
      * @param [in] id vertex identifier
      * @return opposite vertex
      */
-    const Vertex* oppositeVertex(int id) const;
+    const Vertex* oppositeVertex(uint32_t id) const;
 
     // TODO
     Edge* pair() const;
@@ -133,7 +133,7 @@ public:
 
 private:
 
-    int id_;
+    uint32_t id_;
     const Vertex* src_;
     const Vertex* dst_;
     const DovetailOverlap* overlap_;
@@ -158,7 +158,7 @@ public:
      * @param [in] read Read object pointer
      * @param [in] graph Graph object pointer the edge is in
      */
-    Vertex(int id, const Read* read, const StringGraph* graph);
+    Vertex(uint32_t id, const Read* read, const StringGraph* graph);
 
     /*!
      * @brief Vertex destructor
@@ -169,7 +169,7 @@ public:
      * @brief Getter for identifier
      * @return identifier
      */
-    int getId() const {
+    uint32_t getId() const {
         return id_;
     }
 
@@ -177,8 +177,8 @@ public:
      * @brief Getter for read identifier
      * @return read identifier
      */
-    int getReadId() const {
-        return read_->getId();
+    uint32_t getReadId() const {
+        return read_->id();
     }
 
     /*!
@@ -186,7 +186,7 @@ public:
      * @return length
      */
     int getLength() const {
-        return read_->getLength();
+        return read_->length();
     }
 
     /*!
@@ -194,7 +194,7 @@ public:
      * @return sequence
      */
     const std::string& getSequence() const {
-        return read_->getSequence();
+        return read_->sequence();
     }
 
     /*!
@@ -202,7 +202,7 @@ public:
      * @return reverse complement
      */
     const std::string& getReverseComplement() const {
-        return read_->getReverseComplement();
+        return read_->reverse_complement();
     }
 
     /*!
@@ -210,7 +210,7 @@ public:
      * @return coverage
      */
     double getCoverage() const {
-        return read_->getCoverage();
+        return read_->coverage();
     }
 
     /*!
@@ -301,7 +301,7 @@ public:
 
 private:
 
-    int id_;
+    uint32_t id_;
     const Read* read_;
     const StringGraph* graph_;
     bool marked_;
@@ -410,7 +410,7 @@ public:
     /*!
      * @brief Methd for graph component extraction
      * @details Method returns all graph components (component is a set of
-     * vertices that are connected together by edges). 
+     * vertices that are connected together by edges).
      *
      * @param [out] dst vector of StringGraphComponent object pointers
      */
@@ -440,7 +440,7 @@ private:
      * @brief Method for bubble search
      * @details A breadth first search is executed from root until a juncture vertex is found.
      * If a juncutre exists backtracked paths from juncture to root are added to the bubble.
-     * The orientation of juncture vertices can be different on more paths so the bubble is 
+     * The orientation of juncture vertices can be different on more paths so the bubble is
      * split into two and the one with more than 1 path is returned.
      *
      * @param [out] dst vector of bubble paths
@@ -526,7 +526,7 @@ public:
      * @brief Method for vertices extraction
      * @details Method appends vertices ids extracted from the path.
      *
-     * @param [out] dst vertices 
+     * @param [out] dst vertices
      */
     void extractVertices(std::vector<const Vertex*>& dst) const;
 
@@ -651,7 +651,7 @@ public:
      * @param [in] vertexId vertexId
      * @return preceeding node with given vertexId, nullptr if does not exist such node.
      */
-    const StringGraphNode* rewindedTo(const int vertexId) const;
+    const StringGraphNode* rewindedTo(const uint32_t vertexId) const;
 
     /*!
      * @brief Method creates StringGraphWalk from this node and it's predecessors.

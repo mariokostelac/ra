@@ -2,7 +2,7 @@
 #ifndef _AMOS_READER_H
 #define _AMOS_READER_H
 
-#include "../../src/AfgRead.hpp"
+#include "../../src/Read.hpp"
 #include "../../src/AfgOverlap.hpp"
 
 #include <cstdio>

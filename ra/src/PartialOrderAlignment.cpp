@@ -25,11 +25,11 @@ extern std::string consensus(const Contig* contig, const std::vector<Read*>& rea
     }
 
     auto& first = contig->getParts().front();
-    POA::Graph graph(first.type() ? reads[first.src]->getReverseComplement() : reads[first.src]->getSequence(), "seq0");
+    POA::Graph graph(first.type() ? reads[first.src]->reverse_complement() : reads[first.src]->sequence(), "seq0");
 
     for (int i = 1; i < size; ++i) {
       const auto& curr = contig->getParts()[i];
-      const auto& curr_seq = curr.type() ? reads[curr.src]->getReverseComplement() : reads[curr.src]->getSequence();
+      const auto& curr_seq = curr.type() ? reads[curr.src]->reverse_complement() : reads[curr.src]->sequence();
       const int offset = std::max((int) (curr.offset - THRESHOLD * curr_seq.length()), (int) (BAND_PERCENTAGE * curr_seq.length()));
 
       Timer t;

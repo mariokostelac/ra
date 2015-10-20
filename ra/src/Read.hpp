@@ -21,52 +21,76 @@ using ReadSet = std::vector<Read*>;
 class Read: public DepotObject {
 public:
 
+    Read(uint32_t id, const std::string& name, const std::string& sequence,
+        const std::string& quality, double coverage);
+
     /*!
      * @brief Read destructor
      */
-    virtual ~Read() {};
+    ~Read() {};
 
     /*!
      * @brief Getter for identifier
      * @return identifier
      */
-    virtual int getId() const = 0;
+    uint32_t id() const {
+        return id_;
+    }
 
     /*!
      * @brief Getter for name
      * @return name
      */
-    virtual const std::string& getName() const = 0;
+    const std::string& name() const {
+        return name_;
+    }
 
     /*!
      * @brief Getter for sequence
      * @return sequence
      */
-    virtual const std::string& getSequence() const = 0;
+    const std::string& sequence() const {
+        return sequence_;
+    }
 
     /*!
      * @brief Getter for length
      * @return length
      */
-    virtual size_t getLength() const = 0;
+    uint32_t length() const {
+        return sequence_.size();
+    }
 
     /*!
      * @brief Getter for quality
      * @return quality
      */
-    virtual const std::string& getQuality() const = 0;
+    const std::string& quality() const {
+        return quality_;
+    }
 
     /*!
      * @brief Getter for reverse complement
      * @return reverse complement
      */
-    virtual const std::string& getReverseComplement() const = 0;
+    const std::string& reverse_complement() const {
+        return reverse_complement_;
+    }
+
+    /*!
+     * @brief Construction of the reverse complement
+     * @details Method constructs a reverse complement from the sequence.
+     * and stores it in the object
+     */
+    void create_reverse_complement();
 
     /*!
      * @brief Getter for coverage
      * @return coverage
      */
-    virtual double getCoverage() const = 0;
+    double coverage() const {
+        return coverage_;
+    }
 
     /*!
      * @brief Setter for coverage
@@ -74,14 +98,16 @@ public:
      *
      * @param [in] value increasing coverage value
      */
-    virtual void addCoverage(double value) = 0;
+    void add_coverage(double value) {
+        coverage_ += value;
+    }
 
     /*!
      * @brief Method for object cloning
      *
      * @return new Read object which equals this
      */
-    virtual Read* clone() const = 0;
+    Read* clone() const;
 
     /*!
      * @brief Method for sequence correction
@@ -90,14 +116,7 @@ public:
      * @param [in] idx position in sequence
      * @param [in] c new character
      */
-    virtual void correctBase(int idx, int c) = 0;
-
-    /*!
-     * @brief Construction of the reverse complement
-     * @details Method constructs a reverse complement from the sequence.
-     * and stores it in the object
-     */
-    virtual void createReverseComplement() = 0;
+    void correct_base(uint32_t idx, char c);
 
     /*!
      * @brief Method for object serialization
@@ -107,7 +126,29 @@ public:
      * @param [out] bytes_length adrees of the variable holding size of the
      * serialized object
      */
-    virtual void serialize(char** bytes, uint32_t* bytes_length) const = 0;
+    void serialize(char** bytes, uint32_t* bytes_length) const;
+
+    /*!
+     * @brief Method for object deserialization
+     * @details Deserializes an object stored in a char array
+     *
+     * @param [in] bytes char array where the object was serialized
+     * @return Read object pointer
+     */
+    static Read* deserialize(const char* bytes);
+
+private:
+
+    Read() {};
+
+    static DepotObjectType type_;
+
+    uint32_t id_;
+    std::string name_;
+    std::string sequence_;
+    std::string quality_;
+    double coverage_;
+    std::string reverse_complement_;
 };
 
 /*!

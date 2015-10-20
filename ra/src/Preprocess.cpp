@@ -58,7 +58,7 @@ static bool correctBase(int i, int suffix, std::string& sequence, int k, int c, 
 
 static bool correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
 
-    std::string sequence(read->getSequence());
+    std::string sequence(read->sequence());
 
     std::vector<int> positions;
     std::vector<char> chars;
@@ -101,7 +101,7 @@ static bool correctRead(Read* read, int k, int c, const ReadIndex* rindex) {
 
     if (correct) {
         for (int i = 0; i < (int) positions.size(); ++i) {
-            read->correctBase(positions[i], chars[i]);
+            read->correct_base(positions[i], chars[i]);
         }
     }
 
@@ -154,8 +154,8 @@ static void learnCutoff(int* c, int k, const std::vector<Read*>& reads, const Re
 
     for (const auto& it : samples) {
 
-        const char* sequence = it->getSequence().c_str();
-        int nk = it->getLength() - k + 1;
+        const char* sequence = it->sequence().c_str();
+        int nk = it->length() - k + 1;
 
         for (int i = 0; i < nk; ++i) {
             kmerDistribution.add(rindex->numberOfOccurrences(&sequence[i], k));
@@ -384,7 +384,7 @@ bool filterReads(std::vector<Read*>& dst, std::vector<Read*>& reads, bool view) 
 
         rindex->readDuplicates(equals, reads[i]);
 
-        reads[i]->addCoverage(equals.size() - 1);
+        reads[i]->add_coverage(equals.size() - 1);
 
         for (size_t j = 0; j < equals.size(); ++j) {
             duplicates[equals[j]] = true;

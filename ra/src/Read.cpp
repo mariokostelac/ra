@@ -4,64 +4,87 @@
  * @brief Read class source file
  *
  * @author rvaser (robert.vaser@gmail.com)
- * @date Apr 20, 2015
+ * @date Oct 10, 2015
  */
 
-#include "AfgRead.hpp"
+#include "Utils.hpp"
+#include "Read.hpp"
 
-static bool isValidChar(char c) {
-    if ((c > 64 && c < 91) || (c > 96 && c < 123)) return true;
-    return false;
-}
+std::vector<char> kCoder = {
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  65,  66,  67,  68,  69,
+    70,  71,  72,  73,  74,  75,  76,  77,  78,  79,
+    80,  81,  82,  83,  84,  85,  86,  87,  88,  89,
+    90,  -1,  -1,  -1,  -1,  -1,  -1,  65,  66,  67,
+    68,  69,  70,  71,  72,  73,  74,  75,  76,  77,
+    78,  79,  80,  81,  82,  83,  84,  85,  86,  87,
+    88,  89,  90,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+    -1,  -1,  -1,  -1,  -1
+};
 
-static void threadCreateReverseComplements(std::vector<Read*>& reads, int start, int end) {
+static void threadCreateReverseComplements(std::vector<Read*>& reads,
+    uint32_t start, uint32_t end) {
 
-    for (int i = start; i < end; ++i) {
-        reads[i]->createReverseComplement();
+    for (uint32_t i = start; i < end; ++i) {
+        reads[i]->create_reverse_complement();
     }
 }
 
-DepotObjectType AfgRead::type_ = DepotObjectType::kAfgRead;
+DepotObjectType Read::type_ = DepotObjectType::kRead;
 
-AfgRead::AfgRead(int id, const std::string& name, const std::string& sequence, const std::string& quality, double coverage) {
+Read::Read(uint32_t id, const std::string& name, const std::string& sequence,
+    const std::string& quality, double coverage)
+        : id_(id), name_(name), sequence_(), quality_(quality),
+        coverage_(coverage), reverse_complement_() {
 
     ASSERT(name.size() > 0 && sequence.size() > 0, "Read", "invalid data");
 
-    id_ = id;
-    name_ = name;
-
-    for (int i = 0; i < (int) sequence.size(); ++i) {
-        if (isValidChar(sequence[i])) {
-            sequence_ += toupper(sequence[i]);
+    sequence_.reserve(sequence.size());
+    for (uint32_t i = 0; i < sequence.size(); ++i) {
+        auto c = kCoder[sequence[i]];
+        if (c != -1) {
+            sequence_.push_back(c);
         }
     }
 
     ASSERT(sequence_.size() > 0, "Read", "invalid data");
-
-    quality_ = quality;
-    coverage_ = coverage;
-    reverseComplement_ = "";
 }
 
-AfgRead* AfgRead::clone() const {
+Read* Read::clone() const {
 
-    AfgRead* copy = new AfgRead(id_, name_, sequence_, quality_, coverage_);
+    Read* copy = new Read(id_, name_, sequence_, quality_, coverage_);
 
-    if (!reverseComplement_.empty()) copy->createReverseComplement();
+    if (!reverse_complement_.empty()) copy->create_reverse_complement();
 
     return copy;
 }
 
-void AfgRead::correctBase(int idx, int c) {
+void Read::correct_base(uint32_t idx, char c) {
     sequence_[idx] = c;
 }
 
-void AfgRead::createReverseComplement() {
-
-    reverseComplement_ = reverse_complement(sequence_);
+void Read::create_reverse_complement() {
+    reverse_complement_ = reverseComplement(sequence_);
 }
 
-void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
+void Read::serialize(char** bytes, uint32_t* bytes_length) const {
 
     uint32_t uint32_size = sizeof(uint32_t);
 
@@ -113,9 +136,9 @@ void AfgRead::serialize(char** bytes, uint32_t* bytes_length) const {
     std::memcpy(*bytes + ptr, &coverage_, sizeof(coverage_));
 }
 
-AfgRead* AfgRead::deserialize(const char* bytes) {
+Read* Read::deserialize(const char* bytes) {
 
-    AfgRead* read = new AfgRead();
+    auto read = new Read();
 
     uint32_t uint32_size = sizeof(uint32_t);
     uint32_t field_size;
@@ -124,7 +147,7 @@ AfgRead* AfgRead::deserialize(const char* bytes) {
     // type_
     DepotObjectType type;
     std::memcpy(&type, bytes + ptr, sizeof(DepotObjectType));
-    ASSERT(type == type_, "AfgRead", "Wrong object serialized in bytes array!");
+    ASSERT(type == type_, "Read", "Wrong object serialized in bytes array!");
     ptr += sizeof(DepotObjectType);
 
     // id_

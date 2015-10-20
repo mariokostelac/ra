@@ -53,7 +53,7 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
 
     for (size_t i = 0; i < reads.size(); ++i) {
 
-        if (str.size() + reads[i]->getLength() + 6 > FRAGMENT_SIZE) {
+        if (str.size() + reads[i]->length() + 6 > FRAGMENT_SIZE) {
 
             fragmentSizes_.push_back(i - j);
             fragments_.push_back(new EnhancedSuffixArray(str));
@@ -66,7 +66,7 @@ ReadIndex::ReadIndex(const std::vector<Read*>& reads, int rk) {
         }
 
         str += S_DELIMITER;
-        str += rk == 0 ? reads[i]->getSequence() : reads[i]->getReverseComplement();
+        str += rk == 0 ? reads[i]->sequence() : reads[i]->reverse_complement();
         str += E_DELIMITER;
         str += SUBSTITUTE;
     }
@@ -113,7 +113,7 @@ void ReadIndex::readDuplicates(std::vector<int>& dst, const Read* read) const {
     std::string pattern = "";
 
     pattern += S_DELIMITER;
-    pattern += read->getSequence();
+    pattern += read->sequence();
     pattern += E_DELIMITER;
 
     int m = pattern.size();
@@ -139,7 +139,7 @@ void ReadIndex::readPrefixSuffixMatches(std::vector<std::pair<int, int>>& dst, c
 
     if (read == nullptr) return;
 
-    const std::string& pattern = rk == 0 ? read->getSequence() : read->getReverseComplement();
+    const std::string& pattern = rk == 0 ? read->sequence() : read->reverse_complement();
     int m = pattern.size();
 
     int f = 0;
@@ -394,7 +394,7 @@ void ReadIndex::updateFragment(int fragment, int start, int end, const std::vect
 
     int len = 0;
     for (int i = start; i < end; ++i) {
-        len += reads[i]->getLength() + 2;
+        len += reads[i]->length() + 2;
 
         *((int32_t*) (fragments_[fragment]->getString().c_str() + len)) = i;
 

@@ -7,7 +7,7 @@
  * @date Oct 19, 2015
  */
 
-#include "AfgRead.hpp"
+#include "Read.hpp"
 #include "DepotObject.hpp"
 
 DepotObjectType DepotObject::type_ = DepotObjectType::kDefault;
@@ -18,8 +18,8 @@ DepotObject* DepotObject::deserialize(const char* bytes) {
     std::memcpy(&type, bytes, sizeof(type));
 
     switch (type) {
-        case DepotObjectType::kAfgRead:
-            return static_cast<DepotObject*>(AfgRead::deserialize(bytes));
+        case DepotObjectType::kRead:
+            return static_cast<DepotObject*>(Read::deserialize(bytes));
         default:
             ASSERT(false, "DepotObject", "Not supported objet type!");
     }

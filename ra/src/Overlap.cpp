@@ -21,9 +21,9 @@ double Overlap::covered_percentage(uint32_t read_id) const {
   assert(read_id == a() || read_id == b());
 
   if (read_id == a()) {
-    return length(a())/(double)read_a()->getLength();
+    return length(a())/(double)read_a()->length();
   } else if (read_id == b()) {
-    return length(b())/(double)read_b()->getLength();
+    return length(b())/(double)read_b()->length();
   }
 
   return 0;
@@ -52,15 +52,15 @@ std::string Overlap::extract_overlapped_part(uint32_t read_id) const {
     int lo = a_lo();
     int hi = a_hi();
 
-    return std::string(read_a()->getSequence()).substr(lo, hi - lo);
+    return std::string(read_a()->sequence()).substr(lo, hi - lo);
   } else {
     int lo = b_lo();
     int hi = b_hi();
 
     if (innie()) {
-      return reverse_complement(std::string(read_b()->getSequence())).substr(lo, hi - lo);
+      return reverseComplement(std::string(read_b()->sequence())).substr(lo, hi - lo);
     }
 
-    return std::string(read_b()->getSequence()).substr(lo, hi - lo);
+    return std::string(read_b()->sequence()).substr(lo, hi - lo);
   }
 }
