@@ -3,7 +3,7 @@
 
 namespace MHAP {
 
-  int read_overlaps(istream& input, vector<Overlap*>* overlaps) {
+  int read_overlaps(OverlapSet& overlaps, const ReadSet& reads, istream& input) {
     int read = 0;
 
     uint32_t a_id;
@@ -24,16 +24,26 @@ namespace MHAP {
       input >> a_fwd >> a_lo >> a_hi >> a_len;
       input >> b_fwd >> b_lo >> b_hi >> b_len;
 
-      MhapOverlap* overlap = new MhapOverlap(
-          a_id, b_id, jaccard_score, shared_minmers,
-          a_fwd, a_lo, a_hi, a_len,
-          b_fwd, b_lo, b_hi, b_len);
+      // update params to fit Overlap
+      a_hi += 1;
+      if (!b_fwd) {
+          auto tmp = b_lo;
+          b_lo = b_len - (b_hi + 1);
+          b_hi = b_len - tmp;
+      } else {
+          b_hi += 1;
+      }
+
+      auto overlap = new Overlap(
+          reads[a_id], a_lo, a_hi, a_fwd, // [a_lo, a_hi>
+          reads[b_id], b_lo, b_hi, b_fwd  // [b_lo, b_hi>
+      );
 
       if (input.fail()) {
         break;
       }
 
-      overlaps->push_back(overlap);
+      overlaps.push_back(overlap);
       read++;
     }
 

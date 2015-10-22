@@ -23,7 +23,7 @@
  * @param [out] reads vector of Read objects pointers
  * @param [in] path path to file where the Read objects are stored
  */
-void readFastaReads(std::vector<Read*>& reads, const char* path);
+void readFastaReads(ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Read input
@@ -33,7 +33,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path);
  * @param [out] reads vector of Read objects pointers
  * @param [in] path path to file where the Read objects are stored
  */
-void readFastqReads(std::vector<Read*>& reads, const char* path);
+void readFastqReads(ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Read input
@@ -43,7 +43,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path);
  * @param [out] reads vector of Read objects pointers
  * @param [in] path path to file where the Read objects are stored
  */
-void readAfgReads(std::vector<Read*>& reads, const char* path);
+void readAfgReads(ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Read input
@@ -53,7 +53,7 @@ void readAfgReads(std::vector<Read*>& reads, const char* path);
  * @param [out] reads vector of Read objects pointers
  * @param [in] input stream
  */
-void readAfgReads(std::vector<Read*>& reads, std::istream& input);
+void readAfgReads(ReadSet& reads, std::istream& input);
 
 /*!
  * @brief Method for Read output
@@ -63,7 +63,7 @@ void readAfgReads(std::vector<Read*>& reads, std::istream& input);
  * @param [in] path path to file where the Read objects will be stored
  * (if null, stdout is used)
  */
-void writeFastaReads(const std::vector<Read*>& reads, const char* path);
+void writeFastaReads(const ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Read output
@@ -73,7 +73,7 @@ void writeFastaReads(const std::vector<Read*>& reads, const char* path);
  * @param [in] path path to file where the Read objects will be store
  * (if null, stdout is used)
  */
-void writeAfgReads(const std::vector<Read*>& reads, const char* path);
+void writeAfgReads(const ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Overlap input
@@ -83,7 +83,7 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path);
  * @param [out] overlaps vector of Overlap objects pointers
  * @param [in] path path to file where the Overlap objects are stored
  */
-void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path);
+void readAfgOverlaps(OverlapSet& overlaps, const ReadSet& reads, const char* path);
 
 /*!
  * @brief Method for Overlap input
@@ -93,7 +93,7 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path);
  * @param [out] overlaps vector of Overlap objects pointers
  * @param [in] input stream where Overlap objects flow through
  */
-void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& input);
+void readAfgOverlaps(OverlapSet& overlaps, const ReadSet& reads, std::istream& input);
 
 /*!
  * @brief Method for Overlap output
@@ -103,7 +103,7 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& inpu
  * @param [in] path path to file where the Overlap objects will be stored
  * (if null, stdout is used)
  */
-void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path);
+void write_overlaps(const OverlapSet& overlaps, const char* path);
 
 /*!
  * @brief Method for Overlap output
@@ -113,7 +113,7 @@ void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path);
  * @param [in] path path to file where the Overlap objects will be stored
  * (if null, stdout is used)
  */
-void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path);
+void write_overlaps(const OverlapSet& overlaps, const std::string path);
 
 /*!
  * @brief Method for Overlap output
@@ -123,26 +123,16 @@ void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string pat
  * @param [in] path path to file where the Overlap objects will be stored
  * (if null, stdout is used)
  */
-void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const char* path);
-
-/*!
- * @brief Method for Overlap output
- * @details Method writes Overlap objects to file
- *
- * @param [in] reads vector of Overlap objects pointers
- * @param [in] path path to file where the Overlap objects will be stored
- * (if null, stdout is used)
- */
-void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const std::string path);
+void write_overlaps(const OverlapSet& overlaps, const char* path);
 
 /*!
  * @brief Method for reading dovetail overlaps
- * @details Method reads DovetailOverlaps from file
+ * @details Method reads Overlaps from file
  *
  * @param [in] overlaps vector of Overlap objects pointers
  * @param [in] fd file descriptor
  */
-void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd);
+void read_dovetail_overlaps(OverlapSet& overlaps, const ReadSet& reads, FILE* fd);
 
 /*!
  * @brief Method for Contig input

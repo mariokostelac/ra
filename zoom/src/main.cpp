@@ -57,17 +57,20 @@ int main(int argc, char **argv) {
   const int root = args.get<int>("root");
   const int depth = args.get<int>("depth");
 
+  vector<Read*> reads;
+  // FILL READS!!!!!!!!
+
   vector<Overlap*> overlaps;
 
   if (overlaps_format == "afg") {
-    vector<DovetailOverlap*> overlaps_;
-    readAfgOverlaps(overlaps_, overlaps_filename.c_str());
+    vector<Overlap*> overlaps_;
+    readAfgOverlaps(overlaps_, reads, overlaps_filename.c_str());
     for (auto o : overlaps_) {
       overlaps.push_back(o);
     }
   } else if (overlaps_format == "mhap") {
     fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps_file, &overlaps);
+    MHAP::read_overlaps(overlaps, reads, overlaps_file);
     overlaps_file.close();
   } else {
     assert(false);

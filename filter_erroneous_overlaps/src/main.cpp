@@ -48,7 +48,7 @@ void read_args() {
   overlaps_filename = args.get<string>("overlaps");
 }
 
-void filter_bad_overlaps(vector<DovetailOverlap*>* dst, vector<DovetailOverlap*>& src) {
+void filter_bad_overlaps(vector<Overlap*>* dst, vector<Overlap*>& src) {
   *dst = src;
 
   // compress errates into buckets
@@ -60,7 +60,7 @@ void filter_bad_overlaps(vector<DovetailOverlap*>* dst, vector<DovetailOverlap*>
 
   vector<int> bucket_count(buckets_size, 0);
   for (int i = 0, n = src.size(); i < n; ++i) {
-    int bucket_idx = 100 * src[i]->errate() / 2;
+    int bucket_idx = 100 * src[i]->err_rate() / 2;
     bucket_count[bucket_idx]++;
     most_count = max(most_count, bucket_count[bucket_idx]);
 
@@ -87,13 +87,13 @@ void filter_bad_overlaps(vector<DovetailOverlap*>* dst, vector<DovetailOverlap*>
   fprintf(stderr, "Most overlaps have errate ~%d%%\n", most_counts_errate);
   fprintf(stderr, "Trimming all overlaps with errate higher than %d%%\n", worst_errate);
 
-  std::sort(dst->begin(), dst->end(), [](const DovetailOverlap* a, const DovetailOverlap* b) {
-      return a->errate() < b->errate();
+  std::sort(dst->begin(), dst->end(), [](const Overlap* a, const Overlap* b) {
+      return a->err_rate() < b->err_rate();
   });
 
   int size = 0;
   for (uint32_t i = 0; i < dst->size(); ++i) {
-    if (100 * (*dst)[i]->errate() > worst_errate) {
+    if (100 * (*dst)[i]->err_rate() > worst_errate) {
       break;
     }
     size = i;
@@ -107,14 +107,17 @@ int main(int argc, char **argv) {
   init_args(argc, argv);
   read_args();
 
-  vector<DovetailOverlap*> overlaps;
+  vector<Read*> reads;
+  // FIL READS!!!!!
+
+  vector<Overlap*> overlaps;
   FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(&overlaps, overlaps_fd);
+  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
   fclose(overlaps_fd);
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
-  vector<DovetailOverlap*> filtered;
+  vector<Overlap*> filtered;
   filter_bad_overlaps(&filtered, overlaps);
 
   write_overlaps(filtered, nullptr);

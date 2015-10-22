@@ -1,20 +1,16 @@
-
-#include "AfgOverlap.hpp"
-#include "CommonHeaders.hpp"
-#include "EditDistance.hpp"
-#include "Overlap.hpp"
-#include "OverlapFunctions.hpp"
 #include "ReadIndex.hpp"
+#include "EditDistance.hpp"
+#include "OverlapFunctions.hpp"
 
-static void overlapReadsPart(std::vector<DovetailOverlap*>& dst, const std::vector<Read*>& reads,
+static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, int threadLen, const char* path, const char* ext);
 
-static bool compareOverlaps(const DovetailOverlap* left, const DovetailOverlap* right);
+static bool compareOverlaps(const Overlap* left, const Overlap* right);
 
-static void threadOverlapReads(std::vector<DovetailOverlap*>& dst, const std::vector<Read*>& reads,
+static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, const ReadIndex* rindex, int start, int end);
 
-static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
+static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
     int type, const std::vector<Read*>& reads);
 
 void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
@@ -43,7 +39,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
         const auto b_lo = o->b_lo(), b_hi = o->b_hi();
         const auto b_len = o->read_b()->length();
 
-        const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
+        const auto hangs = calculateForcedHangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
 
         if (hangs.first <= 0 && hangs.second >= 0) {
             // read_a is contained
@@ -78,13 +74,13 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
     timer.print("Overlap", "filter contained");
 }
 
-void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
+void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const OverlapSet& overlaps,
     int threadLen, bool view) {
 
     Timer timer;
     timer.start();
 
-    std::map<uint32_t, std::vector<std::pair<uint32_t, DovetailOverlap*>>> edges;
+    std::map<uint32_t, std::vector<std::pair<uint32_t, Overlap*>>> edges;
 
     for (const auto& overlap : overlaps) {
         edges[overlap->a()].emplace_back(overlap->b(), overlap);
@@ -99,7 +95,7 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
 
     for (size_t i = 0; i < overlaps.size(); ++i) {
 
-        const DovetailOverlap* overlap = overlaps[i];
+        const Overlap* overlap = overlaps[i];
 
         const auto& v1 = edges.at(overlap->a());
         const auto& v2 = edges.at(overlap->b());
@@ -171,13 +167,13 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
     timer.print("Overlap", "filter transitive");
 }
 
-void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
+void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path) {
 
     Timer timer;
     timer.start();
 
-    std::vector<DovetailOverlap*> overlaps;
+    std::vector<Overlap*> overlaps;
 
     overlapReadsPart(overlaps, reads, 0, minOverlapLen, threadLen, path, ".nra");
     overlapReadsPart(overlaps, reads, 1, minOverlapLen, threadLen, path, ".rra");
@@ -186,7 +182,7 @@ void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads,
 
     std::sort(overlaps.begin(), overlaps.end(), compareOverlaps);
 
-    std::vector<DovetailOverlap*> duplicates;
+    std::vector<Overlap*> duplicates;
 
     dst.reserve(overlaps.size());
 
@@ -210,7 +206,7 @@ void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads,
     timer.print("Overlap", "overlaps");
 }
 
-static void overlapReadsPart(std::vector<DovetailOverlap*>& dst, const std::vector<Read*>& reads,
+static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, int threadLen, const char* path, const char* ext) {
 
     std::string cache = path;
@@ -229,7 +225,7 @@ static void overlapReadsPart(std::vector<DovetailOverlap*>& dst, const std::vect
 
     std::vector<std::thread> threads;
 
-    std::vector<std::vector<DovetailOverlap*>> overlaps(threadLen);
+    std::vector<std::vector<Overlap*>> overlaps(threadLen);
 
     for (int i = 0; i < threadLen; ++i) {
         threads.emplace_back(threadOverlapReads, std::ref(overlaps[i]), std::ref(reads), rk,
@@ -246,13 +242,13 @@ static void overlapReadsPart(std::vector<DovetailOverlap*>& dst, const std::vect
     // merge overlaps
     for (int i = 0; i < threadLen; ++i) {
         dst.insert(dst.end(), overlaps[i].begin(), overlaps[i].end());
-        std::vector<DovetailOverlap*>().swap(overlaps[i]);
+        std::vector<Overlap*>().swap(overlaps[i]);
     }
 
     delete rindex;
 }
 
-static void threadOverlapReads(std::vector<DovetailOverlap*>& dst, const std::vector<Read*>& reads,
+static void threadOverlapReads(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, const ReadIndex* rindex, int start, int end) {
 
     std::vector<std::pair<int, int>> matches;
@@ -271,7 +267,7 @@ static void threadOverlapReads(std::vector<DovetailOverlap*>& dst, const std::ve
     }
 }
 
-static bool compareOverlaps(const DovetailOverlap* left, const DovetailOverlap* right) {
+static bool compareOverlaps(const Overlap* left, const Overlap* right) {
     if (left->a() != right->a()) return left->a() < right->a();
     if (left->b() != right->b()) return left->b() < right->b();
 
@@ -288,7 +284,7 @@ static bool compareMatches(const std::pair<int, int>& left, const std::pair<int,
 //     0 - id different from i (normal x normal)
 //     1 - id greater than i (normal x reverse complement)
 //     2 - id less than i (reverse complement x normal)
-static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
+static void pickMatches(std::vector<Overlap*>& dst, int i, std::vector<std::pair<int, int>>& matches,
     int type, const std::vector<Read*>& reads) {
 
     if (matches.size() == 0) return;
@@ -316,66 +312,67 @@ static void pickMatches(std::vector<DovetailOverlap*>& dst, int i, std::vector<s
         int bHang = reads[i]->length() - matches[j].second;
 
         if (i < matches[j].first) {
-            dst.push_back(new AfgOverlap(i, matches[j].first, matches[j].second,
-                -1 * aHang, -1 * bHang, type != 0));
+            dst.push_back(new Overlap(reads[i], -1 * aHang, reads[matches[j].first],
+                -1 * bHang, type != 0));
 
         } else {
-            dst.push_back(new AfgOverlap(matches[j].first, i, matches[j].second,
-                aHang, bHang, type != 0));
+            dst.push_back(new Overlap(reads[matches[j].first], aHang, reads[i],
+                bHang, type != 0));
         }
     }
 
     matches.clear();
 }
 
-std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
+std::pair<int, int> calculateForcedHangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
     uint32_t b_lo, uint32_t b_hi, uint32_t b_len) {
 
-  std::pair<int, int> hangs;
+    std::pair<int, int> hangs;
 
-  // -----|------|---->
-  //  ah -|------|---->
-  //
-  // -ah -|------|---->
-  // -----|------|---->
-  hangs.first = a_lo - b_lo;
+    // -----|------|---->
+    //  ah -|------|---->
+    //
+    // -ah -|------|---->
+    // -----|------|---->
+    hangs.first = a_lo - b_lo;
 
-  //     -|------|-> bh
-  // -----|------|------>
-  //
-  // -----|------|------>
-  //     -|------|-> -bh
-  int b_after = b_len - b_hi;
-  int a_after = a_len - a_hi;
-  hangs.second = b_after - a_after;
+    //     -|------|-> bh
+    // -----|------|------>
+    //
+    // -----|------|------>
+    //     -|------|-> -bh
+    int b_after = b_len - b_hi;
+    int a_after = a_len - a_hi;
+    hangs.second = b_after - a_after;
 
-  return hangs;
+    return hangs;
 }
 
-DovetailOverlap* forced_dovetail_overlap(const Overlap* o, bool calc_error_rates) {
+Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
+
+    if (o->is_dovetail()) {
+        return o->clone();
+    }
+
     auto a_part = o->extract_overlapped_part(o->a());
     auto b_part = o->extract_overlapped_part(o->b());
 
-    double orig_errate = editDistance(a_part, b_part) / (double) o->length();
+    double orig_err_rate = editDistance(a_part, b_part) / (double) o->length();
 
-    const auto a_lo = o->a_lo(), a_hi = o->a_hi();
-    const auto a_len = o->read_a()->length();
+    const auto hangs = calculateForcedHangs(
+        o->a_lo(), o->a_hi(), o->read_a()->length(),
+        o->b_lo(), o->b_hi(), o->read_b()->length()
+    );
 
-    const auto b_lo = o->b_lo(), b_hi = o->b_hi();
-    const auto b_len = o->read_b()->length();
+    Overlap tmp(o->read_a(), hangs.first, o->read_b(), hangs.second, o->is_innie());
 
-    const auto hangs = calc_forced_hangs(a_lo, a_hi, a_len, b_lo, b_hi, b_len);
-
-    auto tmp = DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), -1, -1);
-    tmp.set_read_a(o->read_a());
-    tmp.set_read_b(o->read_b());
     a_part = tmp.extract_overlapped_part(tmp.a());
     b_part = tmp.extract_overlapped_part(tmp.b());
 
-    double errate = editDistance(a_part, b_part) / (double) o->length();
+    double err_rate = editDistance(a_part, b_part) / (double) tmp.length();
 
-    auto res = new DovetailOverlap(o->a(), o->b(), hangs.first, hangs.second, o->innie(), orig_errate, errate);
-    res->set_read_a(o->read_a());
-    res->set_read_b(o->read_b());
+    auto res = new Overlap(tmp.read_a(), tmp.a_hang(), tmp.read_b(), tmp.b_hang(),
+        tmp.is_innie(), err_rate, orig_err_rate);
+
     return res;
 }

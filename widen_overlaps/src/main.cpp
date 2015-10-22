@@ -49,19 +49,14 @@ int main(int argc, char **argv) {
   vector<Overlap*> overlaps;
 
   fstream overlaps_file(overlaps_filename);
-  MHAP::read_overlaps(overlaps_file, &overlaps);
+  MHAP::read_overlaps(overlaps, reads, overlaps_file);
   overlaps_file.close();
 
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
-  for (auto o : overlaps) {
-    o->set_read_a(reads[o->a()]);
-    o->set_read_b(reads[o->b()]);
-  }
-
   vector<Overlap*> dovetail_overlaps;
   for (auto o : overlaps) {
-    dovetail_overlaps.push_back(forced_dovetail_overlap(o, true));
+    dovetail_overlaps.push_back(forcedDovetailOverlap(o, true));
   }
 
   write_overlaps(dovetail_overlaps, assembly_directory + "/overlaps.dovetail");

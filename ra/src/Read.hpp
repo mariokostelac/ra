@@ -123,7 +123,7 @@ public:
      * @details Serializes the object to a char array
      *
      * @param [out] bytes adress of the char array where the object is serialized
-     * @param [out] bytes_length adrees of the variable holding size of the
+     * @param [out] bytes_length adress of the variable holding size of the
      * serialized object
      */
     void serialize(char** bytes, uint32_t* bytes_length) const;

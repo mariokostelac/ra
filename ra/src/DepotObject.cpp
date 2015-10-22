@@ -8,6 +8,7 @@
  */
 
 #include "Read.hpp"
+#include "Overlap.hpp"
 #include "DepotObject.hpp"
 
 DepotObjectType DepotObject::type_ = DepotObjectType::kDefault;
@@ -20,6 +21,8 @@ DepotObject* DepotObject::deserialize(const char* bytes) {
     switch (type) {
         case DepotObjectType::kRead:
             return static_cast<DepotObject*>(Read::deserialize(bytes));
+        case DepotObjectType::kOverlap:
+            return static_cast<DepotObject*>(Overlap::deserialize(bytes));
         default:
             ASSERT(false, "DepotObject", "Not supported objet type!");
     }

@@ -13,6 +13,7 @@
 
 enum class DepotObjectType {
     kRead,
+    kOverlap,
     kDefault
 };
 

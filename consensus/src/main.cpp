@@ -18,14 +18,14 @@ using std::vector;
 // map reads so we can access reads with mapped[read_id]
 void map_reads(vector<Read*>* mapped, vector<Read*>& reads) {
 
-  int max_id = -1;
+  uint32_t max_id = -1;
   for (auto r: reads) {
-    max_id = max(max_id, r->getId());
+    max_id = max(max_id, r->id());
   }
 
   mapped->resize(max_id + 1, nullptr);
   for (auto r: reads) {
-    (*mapped)[r->getId()] = r;
+    (*mapped)[r->id()] = r;
   }
 }
 

@@ -4,14 +4,16 @@
 
 #include <iostream>
 #include <vector>
-#include "MhapOverlap.hpp"
+
+#include "Read.hpp"
+#include "Overlap.hpp"
 
 using std::istream;
 using std::vector;
 
 namespace MHAP {
 
-  int read_overlaps(istream& input, vector<Overlap*>* overlaps);
+  int read_overlaps(OverlapSet& dst, const ReadSet& reads, istream& input);
 
 }
 

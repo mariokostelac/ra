@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Read.hpp"
-#include "DovetailOverlap.hpp"
+#include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
 /*!
@@ -27,7 +27,7 @@ void filterContainedOverlaps(std::vector<Overlap*>& dst, const std::vector<Overl
  * @param [in] threadLen number of threads
  * @param [in] view if true Overlap objects are not cloned to dst
  */
-void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vector<DovetailOverlap*>& overlaps,
+void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Overlap*>& overlaps,
     int threadLen, bool view = true);
 
 /*!
@@ -43,10 +43,10 @@ void filterTransitiveOverlaps(std::vector<DovetailOverlap*>& dst, const std::vec
  * @param [in] path path to file where the EnhancedSuffixArray objects are cached to speed up
  * future runs on the same data
  */
-void overlapReads(std::vector<DovetailOverlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
+void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
     int threadLen, const char* path);
 
-std::pair<int, int> calc_forced_hangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
+std::pair<int, int> calculateForcedHangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
     uint32_t b_lo, uint32_t b_hi, uint32_t b_len);
 
-DovetailOverlap* forced_dovetail_overlap(const Overlap* overlap, bool calc_error_rates);
+Overlap* forcedDovetailOverlap(const Overlap* overlap, bool calc_error_rates);

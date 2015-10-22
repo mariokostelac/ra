@@ -45,19 +45,14 @@ int main(int argc, char **argv) {
   depot.load_reads(reads);
   fprintf(stderr, "%lu reads read\n", reads.size());
 
-  vector<DovetailOverlap*> overlaps;
+  vector<Overlap*> overlaps;
   FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(&overlaps, overlaps_fd);
+  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
   fclose(overlaps_fd);
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
-  for (auto o : overlaps) {
-    o->set_read_a(reads[o->a()]);
-    o->set_read_b(reads[o->b()]);
-  }
-
-  vector<DovetailOverlap*> notransitives;
+  vector<Overlap*> notransitives;
   filterTransitiveOverlaps(notransitives, overlaps, thread_num, true);
 
   write_overlaps(notransitives, assembly_directory + "/overlaps.notran");

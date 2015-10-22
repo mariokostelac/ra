@@ -18,12 +18,10 @@ CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp
 LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp
 AR_FLAGS = rcs
 
-API = $(addprefix $(SRC_DIR)/, AfgOverlap.hpp CommonHeaders.hpp Contig.hpp \
-      Depot.hpp DepotObject.hpp DovetailOverlap.hpp \
-      EnhancedSuffixArray.hpp Globals.hpp IO.hpp \
-      EdgesSet.hpp MhapOverlap.hpp MhapParser.hpp \
-	    Overlap.hpp OverlapFunctions.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp ReadIndex.hpp \
-	    StringGraph.hpp StringGraphUtils.hpp Utils.hpp)
+API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp Contig.hpp Depot.hpp DepotObject.hpp \
+    EnhancedSuffixArray.hpp Globals.hpp IO.hpp EdgesSet.hpp MhapParser.hpp Overlap.hpp \
+    OverlapFunctions.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp \
+    ReadIndex.hpp StringGraph.hpp StringGraphUtils.hpp Utils.hpp)
 
 SRC = $(shell find $(SRC_DIR) -type f -regex ".*\.cpp")
 VND = $(shell find $(VND_DIR) -type f -regex ".*\.cpp")

@@ -39,8 +39,8 @@ void fill_reads_coverage(ReadSet& reads, vector<Overlap*>& overlaps) {
     Overlap* overlap = overlaps[i];
     uint32_t a = overlap->a();
     uint32_t b = overlap->b();
-    reads[a]->addCoverage(overlap->covered_percentage(a));
-    reads[b]->addCoverage(overlap->covered_percentage(b));
+    reads[a]->add_coverage(overlap->covered_percentage(a));
+    reads[b]->add_coverage(overlap->covered_percentage(b));
   }
 }
 
@@ -60,15 +60,10 @@ int main(int argc, char **argv) {
   vector<Overlap*> overlaps;
 
   fstream overlaps_file(overlaps_filename);
-  MHAP::read_overlaps(overlaps_file, &overlaps);
+  MHAP::read_overlaps(overlaps, reads, overlaps_file);
   overlaps_file.close();
 
   fprintf(stderr, "%lu overlaps read\n", overlaps.size());
-
-  for (auto o : overlaps) {
-    o->set_read_a(reads[o->a()]);
-    o->set_read_b(reads[o->b()]);
-  }
 
   fprintf(stderr, "Updating reads in store...\n");
   fill_reads_coverage(reads, overlaps);

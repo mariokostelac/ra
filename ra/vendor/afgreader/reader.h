@@ -3,7 +3,7 @@
 #define _AMOS_READER_H
 
 #include "../../src/Read.hpp"
-#include "../../src/AfgOverlap.hpp"
+#include "../../src/Overlap.hpp"
 
 #include <cstdio>
 #include <vector>
@@ -64,7 +64,7 @@ namespace AMOS {
       int skip_next();
       ObjectType next_type();
       bool next(Read** dst);
-      bool next(AfgOverlap** dst);
+      bool next(Overlap** dst, const ReadSet& reads);
 
     private:
       std::istream* input;
@@ -81,7 +81,7 @@ namespace AMOS {
       int buffer_double();
       int buffer_clear();
       bool read_from_buff(Read** dst);
-      bool overlap_from_buff(AfgOverlap** dst);
+      bool overlap_from_buff(Overlap** dst, const ReadSet& reads);
   };
 }
 

@@ -27,12 +27,15 @@ int main(int argc, char **argv) {
     input_streams.emplace_back("-");
   }
 
-  vector<DovetailOverlap*> overlaps;
+  vector<Read*> reads;
+  // FILL READS!!!!!
+
+  vector<Overlap*> overlaps;
 
   for (auto stream_name : input_streams) {
     cerr << "Starting reading from " << stream_name << endl;
     FILE* fd = stream_name == "-" ? stdin : must_fopen(stream_name, "r");
-    read_dovetail_overlaps(&overlaps, fd);
+    read_dovetail_overlaps(overlaps, reads, fd);
     fclose(fd);
   }
 

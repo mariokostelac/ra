@@ -7,7 +7,6 @@
  * @date Apr 21, 2015
  */
 
-#include "Read.hpp"
 #include "IO.hpp"
 
 #include "../vendor/afgreader/reader.h"
@@ -20,7 +19,7 @@ static FILE* fileSafeOpen(const char* path, const char* mode) {
     return f;
 }
 
-void readFastaReads(std::vector<Read*>& reads, const char* path) {
+void readFastaReads(ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -79,7 +78,7 @@ void readFastaReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "fasta input");
 }
 
-void readFastqReads(std::vector<Read*>& reads, const char* path) {
+void readFastqReads(ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -130,7 +129,7 @@ void readFastqReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "fastq input");
 }
 
-void readAfgReads(std::vector<Read*>& reads, const char* path) {
+void readAfgReads(ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -147,7 +146,7 @@ void readAfgReads(std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "afg input");
 }
 
-void readAfgReads(std::vector<Read*>& reads, std::istream& input) {
+void readAfgReads(ReadSet& reads, std::istream& input) {
 
     AMOS::Reader* reader = new AMOS::Reader(input);
 
@@ -163,7 +162,7 @@ void readAfgReads(std::vector<Read*>& reads, std::istream& input) {
     delete reader;
 }
 
-void writeFastaReads(const std::vector<Read*>& reads, const char* path) {
+void writeFastaReads(const ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -185,7 +184,7 @@ void writeFastaReads(const std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "fasta output");
 }
 
-void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
+void writeAfgReads(const ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -215,7 +214,7 @@ void writeAfgReads(const std::vector<Read*>& reads, const char* path) {
     timer.print("IO", "afg output");
 }
 
-void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path) {
+void readAfgOverlaps(OverlapSet& overlaps, const ReadSet& reads, const char* path) {
 
     Timer timer;
     timer.start();
@@ -223,22 +222,22 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, const char* path) 
     ASSERT(fileExists(path), "IO", "cannot open file %s with mode r", path);
 
     std::ifstream f(path);
-    readAfgOverlaps(overlaps, f);
+    readAfgOverlaps(overlaps, reads, f);
     f.close();
 
     timer.stop();
     timer.print("IO", "afg input");
 }
 
-void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& input) {
+void readAfgOverlaps(OverlapSet& overlaps, const ReadSet& reads, std::istream& input) {
 
     AMOS::Reader* reader = new AMOS::Reader(input);
 
     while (reader->has_next()) {
 
-        AfgOverlap* overlap = nullptr;
+        Overlap* overlap = nullptr;
 
-        if (reader->next(&overlap)) {
+        if (reader->next(&overlap, reads)) {
             overlaps.emplace_back(overlap);
         }
     }
@@ -246,25 +245,11 @@ void readAfgOverlaps(std::vector<DovetailOverlap*>& overlaps, std::istream& inpu
     delete reader;
 }
 
-void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const char* path) {
-  std::vector<Overlap*> converted(overlaps.size());
-
-  for (int i = 0, n = overlaps.size(); i < n; ++i) {
-    converted[i] = overlaps[i];
-  }
-
-  write_overlaps(converted, path);
-}
-
-void write_overlaps(const std::vector<DovetailOverlap*>& overlaps, const std::string path) {
+void write_overlaps(const OverlapSet& overlaps, const std::string path) {
   write_overlaps(overlaps, path.c_str());
 }
 
-void write_overlaps(const std::vector<Overlap*>& overlaps, const std::string path) {
-    write_overlaps(overlaps, path.c_str());
-}
-
-void write_overlaps(const std::vector<Overlap*>& overlaps, const char* path) {
+void write_overlaps(const OverlapSet& overlaps, const char* path) {
 
     Timer timer;
     timer.start();
@@ -400,7 +385,7 @@ void fileWrite(const char* bytes, size_t bytesLen, const char* path) {
     fclose(f);
 }
 
-void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd) {
+void read_dovetail_overlaps(OverlapSet& overlaps, const ReadSet& reads, FILE* fd) {
   int a, b, a_hang, b_hang;
   char type;
   double orig_errate, errate;
@@ -411,7 +396,8 @@ void read_dovetail_overlaps(std::vector<DovetailOverlap*>* overlaps, FILE* fd) {
     assert(b > 0);
     assert(type == 'N' || type == 'I');
 
-    overlaps->emplace_back(new DovetailOverlap(a, b, a_hang, b_hang, type == 'I', orig_errate, errate));
+    overlaps.emplace_back(new Overlap(reads[a], a_hang, reads[b], b_hang,
+        type == 'I', errate, orig_errate));
   }
 }
 

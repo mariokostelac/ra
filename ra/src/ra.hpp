@@ -9,16 +9,13 @@
 
 #pragma once
 
-#include "AfgOverlap.hpp"
 #include "CommonHeaders.hpp"
 #include "Contig.hpp"
 #include "Depot.hpp"
 #include "DepotObject.hpp"
-#include "DovetailOverlap.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "Globals.hpp"
 #include "IO.hpp"
-#include "MhapOverlap.hpp"
 #include "MhapParser.hpp"
 #include "Overlap.hpp"
 #include "OverlapFunctions.hpp"

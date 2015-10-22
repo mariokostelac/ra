@@ -33,7 +33,7 @@ string settings_file;
 string assembly_directory;
 string depot_path;
 
-void must_one_overlap_per_pair(const vector<DovetailOverlap*>& overlaps) {
+void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
 
   for (const auto& overlap: overlaps) {
@@ -49,8 +49,8 @@ void must_one_overlap_per_pair(const vector<DovetailOverlap*>& overlaps) {
   }
 }
 
-uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
-  map<pair<uint32_t, uint32_t>, DovetailOverlap*> best;
+uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
+  map<pair<uint32_t, uint32_t>, Overlap*> best;
 
   for (const auto& overlap: *overlaps) {
     uint32_t a = min(overlap->a(), overlap->b());
@@ -58,7 +58,7 @@ uint32_t filter_best_overlap_per_pair(vector<DovetailOverlap*>* overlaps) {
 
     auto key = make_pair(a, b);
     if (best.count(key)) {
-      if (overlap->errate() < best[key]->errate()) {
+      if (overlap->err_rate() < best[key]->err_rate()) {
         best[key] = overlap;
       }
 
@@ -98,8 +98,8 @@ void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read
     const auto& parts = contig.getParts();
     const auto& last_part = contig.getParts().back();
 
-    fprintf(stdout, "contig %u; length: ≈%lu, reads: %lu\n",
-        i, last_part.offset + reads[last_part.src]->getLength(), parts.size()
+    fprintf(stdout, "contig %u; length: ≈%u, reads: %lu\n",
+        i, last_part.offset + reads[last_part.src]->length(), parts.size()
     );
     for (const auto& p: parts) {
       fprintf(stdout, "%d ", p.src);
@@ -264,10 +264,10 @@ int main(int argc, char **argv) {
 
   fprintf(stderr, "Read %lu reads\n", reads.size());
 
-  vector<DovetailOverlap*> overlaps;
+  vector<Overlap*> overlaps;
 
   FILE* overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(&overlaps, overlaps_fd);
+  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
   fclose(overlaps_fd);
 
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
@@ -279,22 +279,6 @@ int main(int argc, char **argv) {
       filtered_duplicates, 100. * filtered_duplicates / had_overlaps);
 
   must_one_overlap_per_pair(overlaps);
-
-  for (auto o: overlaps) {
-    const auto a = o->a();
-    const auto b = o->b();
-    if (reads[a] == nullptr) {
-      fprintf(stderr, "Read %u not found\n", a);
-      exit(1);
-    }
-    if (reads[b] == nullptr) {
-      fprintf(stderr, "Read %u not found\n", b);
-      exit(1);
-    }
-
-    o->set_read_a(reads[a]);
-    o->set_read_b(reads[b]);
-  }
 
   createReverseComplements(reads, thread_num);
 

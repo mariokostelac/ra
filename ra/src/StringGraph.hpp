@@ -13,7 +13,7 @@
 
 #include "Globals.hpp"
 #include "Read.hpp"
-#include "DovetailOverlap.hpp"
+#include "Overlap.hpp"
 #include "CommonHeaders.hpp"
 
 class Edge;
@@ -27,7 +27,7 @@ typedef std::map<int, Vertex*> VerticesSet;
 
 /*!
  * @brief Edge class
- * @details Edge encapsulates DovetailOverlap in StringGraph.
+ * @details Edge encapsulates Overlap in StringGraph.
  */
 class Edge {
 public:
@@ -38,10 +38,10 @@ public:
      *
      * @param [in] id edge identifier
      * @param [in] readId read identifier to determine edge direction
-     * @param [in] overlap DovetailOverlap object pointer
+     * @param [in] overlap Overlap object pointer
      * @param [in] graph Graph object pointer the edge is in
      */
-    Edge(uint32_t id, uint32_t readId, const DovetailOverlap* overlap, const StringGraph* graph);
+    Edge(uint32_t id, uint32_t readId, const Overlap* overlap, const StringGraph* graph);
 
     /*!
      * @brief Edge destructor
@@ -76,7 +76,7 @@ public:
      * @brief Getter for overlap
      * @return overlap
      */
-    const DovetailOverlap* getOverlap() const {
+    const Overlap* getOverlap() const {
         return overlap_;
     }
 
@@ -136,7 +136,7 @@ private:
     uint32_t id_;
     const Vertex* src_;
     const Vertex* dst_;
-    const DovetailOverlap* overlap_;
+    const Overlap* overlap_;
     Edge* pair_;
     const StringGraph* graph_;
     bool marked_;
@@ -320,13 +320,13 @@ public:
     /*!
      * @brief StringGraph constructor
      * @details Creates a StringGraph object from reads and overlaps between them.
-     * Each Read becomes a Vertex and from each DovetailOverlap two Edges are created,
-     * one from A to B and one from B to A (A and B are reads in DovetailOverlap).
+     * Each Read becomes a Vertex and from each Overlap two Edges are created,
+     * one from A to B and one from B to A (A and B are reads in Overlap).
      *
      * @param [in] reads vector of Read object pointers
-     * @param [in] overlaps vector of DovetailOverlap object pointers
+     * @param [in] overlaps vector of Overlap object pointers
      */
-    StringGraph(const std::vector<Read*>& reads, const std::vector<DovetailOverlap*>& overlaps);
+    StringGraph(const std::vector<Read*>& reads, const std::vector<Overlap*>& overlaps);
 
     /*!
      * @brief StrigGraph constructor
@@ -402,8 +402,8 @@ public:
      * @brief Method for overlap extracion
      * @details Method returns all overlaps present in graph.
      *
-     * @param [out] dst vector of DovetailOverlap object pointers
-     * @param [in] view if true DovetailOverlap objects are not cloned to dst
+     * @param [out] dst vector of Overlap object pointers
+     * @param [in] view if true Overlap objects are not cloned to dst
      */
     void extractOverlaps(std::vector<Overlap*>& dst, bool view = true) const;
 
@@ -463,7 +463,7 @@ private:
      */
     bool popBubble(const std::vector<StringGraphWalk*>& walks, const uint32_t juncture_id, const int direction);
 
-    const std::vector<DovetailOverlap*>* overlaps_;
+    const std::vector<Overlap*>* overlaps_;
 
     std::vector<Edge*> edges_;
     VerticesSet vertices_;

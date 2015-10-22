@@ -69,7 +69,7 @@ namespace AMOS {
     return read_from_buff(dst);
   }
 
-  bool Reader::next(AfgOverlap** dst) {
+  bool Reader::next(Overlap** dst, const ReadSet& reads) {
     if (!has_next()) {
       return false;
     }
@@ -81,7 +81,7 @@ namespace AMOS {
       }
     }
 
-    return overlap_from_buff(dst);
+    return overlap_from_buff(dst, reads);
   }
 
   int Reader::buffer_clear() {
@@ -275,7 +275,7 @@ namespace AMOS {
     return true;
   }
 
-  bool Reader::overlap_from_buff(AfgOverlap** overlap) {
+  bool Reader::overlap_from_buff(Overlap** overlap, const ReadSet& reads) {
     if (buff_written == 0) {
       return false;
     }
@@ -315,7 +315,8 @@ namespace AMOS {
 
     buffer_clear();
 
-    *overlap = new AfgOverlap(a_id, b_id, score, a_hang, b_hang, adjacency == 'I' ? true : false);
+    *overlap = new Overlap(reads[a_id], a_hang, reads[b_id], b_hang,
+        adjacency == 'I' ? true : false);
 
     return true;
   }
