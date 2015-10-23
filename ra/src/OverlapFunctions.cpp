@@ -160,8 +160,10 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const OverlapSet& over
         }
     }
 
+#ifdef DEBUG
     fprintf(stderr, "[Overlap][filter transitive]: reduction percentage = %.2lf%%\n",
         (1 - (dst.size() / (double) overlaps.size())) * 100);
+#endif
 
     timer.stop();
     timer.print("Overlap", "filter transitive");
@@ -178,7 +180,9 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
     overlapReadsPart(overlaps, reads, 0, minOverlapLen, threadLen, path, ".nra");
     overlapReadsPart(overlaps, reads, 1, minOverlapLen, threadLen, path, ".rra");
 
+#ifdef DEBUG
     fprintf(stderr, "[Overlap][overlaps]: number of overlaps = %zu\n", overlaps.size());
+#endif
 
     std::sort(overlaps.begin(), overlaps.end(), compareOverlaps);
 
@@ -200,7 +204,9 @@ void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int min
 
     for (const auto& duplicate : duplicates) delete duplicate;
 
+#ifdef DEBUG
     fprintf(stderr, "[Overlap][overlaps]: number of unique overlaps = %zu\n", dst.size());
+#endif
 
     timer.stop();
     timer.print("Overlap", "overlaps");

@@ -51,7 +51,9 @@ void Timer::reset() {
 }
 
 void Timer::print(const char* location, const char* message) const {
+#ifdef DEBUG
     fprintf(stderr, "[%s][%s]: %.5lf s\n", location, message, time_ / (double) 1000000);
+#endif
 }
 
 std::string reverseComplement(const std::string& original) {
