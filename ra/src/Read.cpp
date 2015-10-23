@@ -177,6 +177,8 @@ Read* Read::deserialize(const char* bytes) {
     // coverage_
     std::memcpy(&read->coverage_, bytes + ptr, sizeof(read->coverage_));
 
+    read->create_reverse_complement();
+
     return read;
 }
 
