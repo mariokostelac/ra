@@ -131,22 +131,37 @@ void Depot::load_reads(ReadSet& dst, uint32_t begin, uint32_t length) {
 void Depot::store_overlaps(const OverlapSet& src) {
 
     ASSERT(src.size() != 0, "Depot", "Can not store empty OverlapSet!");
-    //store(src, overlap_data_, overlap_index_);
+    store(src, overlap_data_, overlap_index_);
 }
 
-Overlap* Depot::load_overlap(uint32_t index) {
+Overlap* Depot::load_overlap(uint32_t index, const ReadSet& reads) {
 
     OverlapSet temp;
-    load_overlaps(temp, index, 1);
+    load_overlaps(temp, index, 1, reads);
     return temp.front();
 }
 
-void Depot::load_overlaps(OverlapSet& dst) {
-    load_overlaps(dst, 0, -1); // read all
+void Depot::load_overlaps(OverlapSet& dst, const ReadSet& reads) {
+    load_overlaps(dst, 0, -1, reads); // read all
 }
 
-void Depot::load_overlaps(OverlapSet& dst, uint32_t begin, uint32_t length) {
-    //load(dst, begin, length, overlaps_data_, overlaps_index_);
+void Depot::load_overlaps(OverlapSet& dst, uint32_t begin, uint32_t length,
+    const ReadSet& reads) {
+
+    ASSERT(reads.size() != 0, "Depot", "Empty read set!");
+
+    load(dst, begin, length, overlap_data_, overlap_index_);
+
+    for (auto& it: dst) {
+
+        auto id = (uint64_t) it->read_a_;
+        ASSERT(id < reads.size(), "Depot", "Missing read %lu!", id);
+        it->read_a_ = reads[id];
+
+        id = (uint64_t) it->read_b_;
+        ASSERT(id < reads.size(), "Depot", "Missing read %lu!", id);
+        it->read_b_ = reads[id];
+    }
 }
 
 template<typename T>
@@ -219,20 +234,20 @@ void Depot::load(std::vector<T*>& dst, uint32_t begin, uint32_t length,
     ASSERT(!fileEmpty(data), "Depot",
         "Unable to load from empty data file!");
 
-    uint64_t reads_length;
+    uint64_t objects_length;
     fseekWrapper(index, 0, SEEK_SET);
-    freadWrapper(&reads_length, sizeof(reads_length), 1, index);
+    freadWrapper(&objects_length, sizeof(objects_length), 1, index);
 
-    ASSERT(begin < (uint32_t) reads_length, "Depot",
+    ASSERT(begin < (uint32_t) objects_length, "Depot",
         "Beginning index out of range!");
 
-    length = std::min(length, (uint32_t) reads_length - begin);
+    length = std::min(length, (uint32_t) objects_length - begin);
 
     uint64_t* offsets = new uint64_t[length + 1];
     fseekWrapper(index, begin * sizeof(uint64_t), SEEK_CUR);
     freadWrapper(offsets, sizeof(*offsets), length + 1, index);
 
-    fseekWrapper(read_data_, offsets[0], SEEK_SET);
+    fseekWrapper(data, offsets[0], SEEK_SET);
 
     uint32_t uint32_size = sizeof(uint32_t);
 

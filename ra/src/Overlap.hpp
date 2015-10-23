@@ -42,6 +42,7 @@
 #include "DepotObject.hpp"
 #include "CommonHeaders.hpp"
 
+class Depot;
 class Overlap;
 using OverlapSet = std::vector<Overlap*>;
 
@@ -327,7 +328,11 @@ public:
      */
     static Overlap* deserialize(const char* bytes);
 
+    friend Depot;
+
 protected:
+
+    Overlap() {};
 
     static DepotObjectType type_;
 
@@ -344,8 +349,6 @@ protected:
     uint32_t a_hi_;
     uint32_t b_lo_;
     uint32_t b_hi_;
-    bool a_rc_;
-    bool b_rc_;
 
     double err_rate_;
     double orig_err_rate_;

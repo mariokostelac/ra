@@ -85,17 +85,19 @@ public:
      * determined by the given index
      *
      * @param [in] index index of the wanted Overlap object
+     * @param [in] reads vector of Read objects needed to reconstruct Overlap object
      * @return Overlap object pointer
      */
-    Overlap* load_overlap(uint32_t index);
+    Overlap* load_overlap(uint32_t index, const ReadSet& reads);
 
     /*!
      * @brief Method for loading the set of Overlap objects stored beforehand
      * @details Loads Overlap objects from a binary file in the depot folder
      *
      * @param [out] dst set of Overlap object pointers
+     * @param [in] reads vector of Read objects needed to reconstruct Overlap objects
      */
-    void load_overlaps(OverlapSet& dst);
+    void load_overlaps(OverlapSet& dst, const ReadSet& reads);
 
     /*!
      * @brief Method for loading an incomplete set of Overlap objects stored beforehand
@@ -107,8 +109,10 @@ public:
      * @param [in] length length of Overlap objects to be loaded (if length goes
      * out of range, function returns all objects from the beginning index
      * to the last object available)
+     * @param [in] reads vector of Read objects needed to reconstruct Overlap objects
      */
-    void load_overlaps(OverlapSet& dst, uint32_t begin, uint32_t length);
+    void load_overlaps(OverlapSet& dst, uint32_t begin, uint32_t length,
+        const ReadSet& reads);
 
 private:
 

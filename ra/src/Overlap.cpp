@@ -32,8 +32,6 @@ Overlap::Overlap(const Read* read_a, int32_t a_hang, const Read* read_b,
     a_hi_ = read_a->length() - (b_hang < 0 ? -b_hang : 0);
     b_lo_ = a_hang < 0 ? -a_hang : 0;
     b_hi_ = read_b->length() - (b_hang > 0 ? b_hang : 0);
-    a_rc_ = false;
-    b_rc_ = is_innie;
 
     err_rate_ = err_rate;
     orig_err_rate_ = orig_err_rate;
@@ -48,11 +46,10 @@ Overlap::Overlap(const Read* read_a, uint32_t a_lo, uint32_t a_hi, bool a_rc,
           is_dovetail_(false),
           a_lo_(a_lo), a_hi_(a_hi),
           b_lo_(b_lo), b_hi_(b_hi),
-          a_rc_(a_rc),
-          b_rc_(b_rc),
           err_rate_(err_rate),
           orig_err_rate_(orig_err_rate) {
 
+    ASSERT(a_rc == false, "Overlap", "Read A can not be rk!");
     ASSERT(read_a != nullptr, "Overlap", "Read A is nullptr!");
     ASSERT(read_b != nullptr, "Overlap", "Read B is nullptr!");
 }
@@ -264,8 +261,142 @@ std::string Overlap::repr() const {
 
 void Overlap::serialize(char** bytes, uint32_t* bytes_length) const {
 
+    uint32_t uint32_size = sizeof(uint32_t);
+
+    *bytes_length =
+        sizeof(type_) +
+        2 * uint32_size + // a_id, b_id
+        2 * uint32_size + // a_hang_, b_hang_
+        2 * sizeof(is_innie_) + // is_innie_, is_dovetail_
+        4 * uint32_size + // a_lo_, a_hi_, b_lo_, b_hi_
+        2 * sizeof(err_rate_); // err_rate_, orig_err_rate_
+
+    *bytes = new char[*bytes_length]();
+
+    uint32_t ptr = 0;
+
+    // type_
+    std::memcpy(*bytes + ptr, &type_, sizeof(type_));
+    ptr += sizeof(type_);
+
+    // a_id
+    auto id = read_a_->id();
+    std::memcpy(*bytes + ptr, &id, uint32_size);
+    ptr += uint32_size;
+
+    // a_hang_
+    std::memcpy(*bytes + ptr, &a_hang_, uint32_size);
+    ptr += uint32_size;
+
+    // b_id
+    id = read_b_->id();
+    std::memcpy(*bytes + ptr, &id, uint32_size);
+    ptr += uint32_size;
+
+    // b_hang_
+    std::memcpy(*bytes + ptr, &b_hang_, uint32_size);
+    ptr += uint32_size;
+
+    // is_innie_
+    std::memcpy(*bytes + ptr, &is_innie_, sizeof(is_innie_));
+    ptr += sizeof(is_innie_);
+
+    // is_dovetail_
+    std::memcpy(*bytes + ptr, &is_dovetail_, sizeof(is_dovetail_));
+    ptr += sizeof(is_dovetail_);
+
+    // a_lo_
+    std::memcpy(*bytes + ptr, &a_lo_, uint32_size);
+    ptr += uint32_size;
+
+    // a_hi_
+    std::memcpy(*bytes + ptr, &a_hi_, uint32_size);
+    ptr += uint32_size;
+
+    // b_lo_
+    std::memcpy(*bytes + ptr, &b_lo_, uint32_size);
+    ptr += uint32_size;
+
+    // b_hi_
+    std::memcpy(*bytes + ptr, &b_hi_, uint32_size);
+    ptr += uint32_size;
+
+    // err_rate_
+    std::memcpy(*bytes + ptr, &err_rate_, sizeof(err_rate_));
+    ptr += sizeof(err_rate_);
+
+    // orig_err_rate_
+    std::memcpy(*bytes + ptr, &orig_err_rate_, sizeof(orig_err_rate_));
+    ptr += sizeof(orig_err_rate_);
 }
 
 Overlap* Overlap::deserialize(const char* bytes) {
-    return nullptr;
+
+    auto overlap = new Overlap();
+
+    uint32_t uint32_size = sizeof(uint32_t);
+    uint32_t ptr = 0;
+
+    // type_
+    DepotObjectType type;
+    std::memcpy(&type, bytes + ptr, sizeof(DepotObjectType));
+    ASSERT(type == type_, "Overlap", "Wrong object serialized in bytes array!");
+    ptr += sizeof(DepotObjectType);
+
+    // a_id
+    uint32_t id;
+    std::memcpy(&id, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    size_t id_ = id;
+    overlap->read_a_ = (const Read*) id_;
+
+    // a_hang_
+    std::memcpy(&overlap->a_hang_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // b_id
+    std::memcpy(&id, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    id_ = id;
+    overlap->read_b_ = (const Read*) id_;
+
+    // b_hang_
+    std::memcpy(&overlap->b_hang_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // is_innie_
+    std::memcpy(&overlap->is_innie_, bytes + ptr, sizeof(overlap->is_innie_));
+    ptr += sizeof(overlap->is_innie_);
+
+    // is_dovetail_
+    std::memcpy(&overlap->is_dovetail_, bytes + ptr, sizeof(overlap->is_dovetail_));
+    ptr += sizeof(overlap->is_dovetail_);
+
+    // a_lo_
+    std::memcpy(&overlap->a_lo_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // a_hi_
+    std::memcpy(&overlap->a_hi_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // b_lo_
+    std::memcpy(&overlap->b_lo_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // b_hi_
+    std::memcpy(&overlap->b_hi_, bytes + ptr, uint32_size);
+    ptr += uint32_size;
+
+    // err_rate_
+    std::memcpy(&overlap->err_rate_, bytes + ptr, sizeof(overlap->err_rate_));
+    ptr += sizeof(overlap->err_rate_);
+
+    // orig_err_rate_
+    std::memcpy(&overlap->orig_err_rate_, bytes + ptr, sizeof(overlap->orig_err_rate_));
+    ptr += sizeof(overlap->orig_err_rate_);
+
+    return overlap;
 }
