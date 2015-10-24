@@ -15,23 +15,17 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string overlaps_filename;
-string assembly_directory;
 string depot_path;
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("directory", 'd', "assembly_directory", false, ".");
-  args.add<string>("depot", 'D', "depot path", true);
+  args.add<string>("depot", 'd', "depot path", true);
 
   args.parse_check(argc, argv);
 }
 
 void read_args() {
-  assembly_directory = args.get<string>("directory");
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  overlaps_filename = args.get<string>("overlaps");
   depot_path = args.get<string>("depot");
 }
 
@@ -41,21 +35,24 @@ int main(int argc, char **argv) {
   read_args();
 
   vector<Read*> reads;
+  vector<Overlap*> overlaps;
+
   Depot depot(depot_path);
+
   depot.load_reads(reads);
   fprintf(stderr, "%lu reads read\n", reads.size());
 
-  vector<Overlap*> overlaps;
-  FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
-  fclose(overlaps_fd);
-
-  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
+  depot.load_overlaps(overlaps, reads);
+  fprintf(stderr, "%lu overlaps reads\n", overlaps.size());
 
   vector<Overlap*> notransitives;
   filterTransitiveOverlaps(notransitives, overlaps, thread_num, true);
 
-  write_overlaps(notransitives, assembly_directory + "/overlaps.notran");
+  double fraction = 1 - notransitives.size() / (double) overlaps.size();
+  fprintf(stderr, "%0.2lf%% overlaps filtered as transitive\n", fraction * 100);
+
+  fprintf(stderr, "Updating depot...");
+  depot.store_overlaps(notransitives);
 
   for (auto r: reads)       delete r;
   for (auto o: overlaps)    delete o;

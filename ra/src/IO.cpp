@@ -392,8 +392,8 @@ void read_dovetail_overlaps(OverlapSet& overlaps, const ReadSet& reads, FILE* fd
 
   while (fscanf(fd, "%d %d %c %d %d %lf %lf", &a, &b, &type, &a_hang, &b_hang, &orig_errate, &errate) == 7) {
 
-    assert(a > 0);
-    assert(b > 0);
+    assert(a > 0 && a < reads.size());
+    assert(b > 0 && b < reads.size());
     assert(type == 'N' || type == 'I');
 
     overlaps.emplace_back(new Overlap(reads[a], a_hang, reads[b], b_hang,

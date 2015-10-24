@@ -27,11 +27,9 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string overlaps_filename;
-string overlaps_format;
 string settings_file;
-string assembly_directory;
 string depot_path;
+string working_directory;
 
 void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
@@ -110,20 +108,18 @@ void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("overlaps", 'x', "overlaps file", true);
   args.add<string>("settings", 'b', "settings file", false);
-  args.add<string>("directory", 'd', "assembly_directory", false, ".");
-  args.add<string>("depot", 'D', "depot path", true);
+  args.add<string>("depot", 'd', "depot path", true);
+  args.add<string>("working_directory", 'w', "working directory", false, ".");
 
   args.parse_check(argc, argv);
 }
 
 void read_args() {
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  overlaps_filename = args.get<string>("overlaps");
   settings_file = args.get<string>("settings");
-  assembly_directory = args.get<string>("directory");
   depot_path = args.get<string>("depot");
+  working_directory = args.get<string>("working_directory");
 }
 
 void read_settings(FILE *fd) {
@@ -248,7 +244,7 @@ int main(int argc, char **argv) {
     fclose(settings_fd);
   }
 
-  auto run_args_file = must_fopen(assembly_directory + "/run_args.txt", "w");
+  auto run_args_file = must_fopen(working_directory + "/run_args.txt", "w");
   write_version(run_args_file);
   write_call_cmd(run_args_file, argc, argv);
   write_settings(run_args_file);
@@ -259,17 +255,14 @@ int main(int argc, char **argv) {
   fclose(run_args_file);
 
   vector<Read*> reads;
-  Depot depot(depot_path);
-  depot.load_reads(reads);
-
-  fprintf(stderr, "Read %lu reads\n", reads.size());
-
   vector<Overlap*> overlaps;
 
-  FILE* overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
-  fclose(overlaps_fd);
+  Depot depot(depot_path);
 
+  depot.load_reads(reads);
+  fprintf(stderr, "Read %lu reads\n", reads.size());
+
+  depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   int had_overlaps = overlaps.size();
@@ -287,13 +280,13 @@ int main(int argc, char **argv) {
 
   vector<Overlap*> simplified_overlaps;
   graph->extractOverlaps(simplified_overlaps);
-  write_overlaps(simplified_overlaps, assembly_directory + "/simplified.afg");
+  write_overlaps(simplified_overlaps, working_directory + "/simplified.afg");
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 
   std::vector<StringGraphWalk*> unitig_walks;
   graph->extract_unitigs(&unitig_walks);
-  write_contigs_to_file(unitig_walks, (assembly_directory + "/unitigs_fast.fasta").c_str());
+  write_contigs_to_file(unitig_walks, (working_directory + "/unitigs_fast.fasta").c_str());
 
   std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
 
@@ -302,12 +295,12 @@ int main(int argc, char **argv) {
     Contig *unitig = new Contig(unitig_walk);
     unitigs.push_back(unitig);
   }
-  writeAfgContigs(unitigs, (assembly_directory + "/unitigs.afg").c_str());
+  writeAfgContigs(unitigs, (working_directory + "/unitigs.afg").c_str());
 
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
 
-  write_contigs_to_file(contig_walks, (assembly_directory + "/contigs_fast.fasta").c_str());
+  write_contigs_to_file(contig_walks, (working_directory + "/contigs_fast.fasta").c_str());
 
   std::cerr << "number of contigs " << contig_walks.size() << std::endl;
   print_contigs_info(contig_walks, reads);
@@ -317,7 +310,7 @@ int main(int argc, char **argv) {
     Contig *contig = new Contig(contig_walk);
     contigs.push_back(contig);
   }
-  writeAfgContigs(contigs, (assembly_directory + "/contigs.afg").c_str());
+  writeAfgContigs(contigs, (working_directory + "/contigs.afg").c_str());
 
   for (auto r: reads)           delete r;
   for (auto o: overlaps)        delete o;
