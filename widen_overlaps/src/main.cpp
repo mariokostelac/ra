@@ -14,23 +14,17 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string overlaps_filename;
-string assembly_directory;
 string depot_path;
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("directory", 'd', "assembly directory", false, ".");
-  args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("depot", 'D', "depot path", true);
+  args.add<string>("depot", 'd', "depot path", true);
 
   args.parse_check(argc, argv);
 }
 
 void read_args() {
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  overlaps_filename = args.get<string>("overlaps");
-  assembly_directory = args.get<string>("directory");
   depot_path = args.get<string>("depot");
 }
 
@@ -40,18 +34,14 @@ int main(int argc, char **argv) {
   read_args();
 
   vector<Read*> reads;
-
-  Depot depot(depot_path);
-  depot.load_reads(reads);
-
-  fprintf(stderr, "Read %lu reads\n", reads.size());
-
   vector<Overlap*> overlaps;
 
-  fstream overlaps_file(overlaps_filename);
-  MHAP::read_overlaps(overlaps, reads, overlaps_file);
-  overlaps_file.close();
+  Depot depot(depot_path);
 
+  depot.load_reads(reads);
+  fprintf(stderr, "Read %lu reads\n", reads.size());
+
+  depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   vector<Overlap*> dovetail_overlaps;
@@ -59,7 +49,8 @@ int main(int argc, char **argv) {
     dovetail_overlaps.push_back(forcedDovetailOverlap(o, true));
   }
 
-  write_overlaps(dovetail_overlaps, assembly_directory + "/overlaps.dovetail");
+  fprintf(stderr, "Updating depot...");
+  depot.store_overlaps(dovetail_overlaps);
 
   for (auto r: reads)               delete r;
   for (auto o: overlaps)            delete o;

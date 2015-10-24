@@ -153,23 +153,20 @@ def depot_bin(debug: false)
   File.join(bin_dir(debug: debug), "depot")
 end
 
-def run_filter_contained(overlaps_filename)
-  working_directory = working_dir
-  cmd = "#{filter_contained_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
+def run_filter_contained
+  cmd = "#{filter_contained_bin} -d #{depot_path}"
   puts(cmd)
   system(cmd)
 end
 
-def run_dovetail_overlaps(overlaps_filename)
-  working_directory = working_dir
-  cmd = "#{create_dovetail_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
+def run_dovetail_overlaps
+  cmd = "#{create_dovetail_bin} -d #{depot_path}"
   puts(cmd)
   system(cmd)
 end
 
-def run_filer_transitive(overlaps_filename)
-  working_directory = working_dir
-  cmd = "#{filter_transitives_bin} -D #{depot_path} -x #{overlaps_filename} -d #{working_directory}"
+def run_filer_transitive
+  cmd = "#{filter_transitives_bin} -d #{depot_path}"
   puts(cmd)
   system(cmd)
 end
@@ -202,14 +199,20 @@ def run_filter_bad_overlaps(overlaps_filename)
   output
 end
 
-def run_import_reads(depot_path, reads_filename)
+def run_import_reads(reads_filename)
   cmd = "#{depot_bin} -r #{reads_filename} -d #{depot_path} import_reads"
   puts(cmd)
   system(cmd)
 end
 
-def run_fill_read_coverage(overlaps_filename)
-  cmd = "#{fill_read_coverage_bin} -D #{depot_path} -x #{overlaps_filename}"
+def run_import_overlaps(reads_filename, overlaps_filename)
+  cmd = "#{depot_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{depot_path} import_overlaps"
+  puts(cmd)
+  system(cmd)
+end
+
+def run_fill_read_coverage
+  cmd = "#{fill_read_coverage_bin} -d #{depot_path}"
   puts(cmd)
   system(cmd)
 end
@@ -294,67 +297,59 @@ def main
   end.run
 
   Task.new "FILLING DEPOT WITH READS" do
-    if !run_import_reads(depot_path, reads_filename)
+    if !run_import_reads(reads_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
+  end.run
 
-    File.join(working_dir, "overlaps.nocont")
+  Task.new "FILLING DEPOT WITH OVERLAPS" do
+    if !run_import_overlaps(reads_filename, overlaps_filename)
+      puts 'Process exited with non-zero exit status, stopping here!'
+      exit 1
+    end
   end.run
 
   Task.new "CALCULATING READS COVERAGE" do
-    if !run_fill_read_coverage(overlaps_filename)
+    if !run_fill_read_coverage
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
-
-    File.join(working_dir, "overlaps.nocont")
   end.run
 
-  filter_contained = Task.new "FILTERING CONTAINED READS" do
-    if !run_filter_contained(overlaps_filename)
+  Task.new "FILTERING CONTAINED READS" do
+    if !run_filter_contained
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
+  end.run
 
-    File.join(working_dir, "overlaps.nocont")
-  end
-  overlaps_filename = filter_contained.run
-
-  create_dovetail = Task.new "CREATING DOVETAIL OVERLAPS" do
-    if !run_dovetail_overlaps(overlaps_filename)
+  Task.new "CREATING DOVETAIL OVERLAPS" do
+    if !run_dovetail_overlaps
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
-
-    File.join(working_dir, "overlaps.dovetail")
-  end
-  overlaps_filename = create_dovetail.run
+  end.run
 
   if use_smart_filter?
-    filter_bad_overlaps = Task.new "FILTERING BAD OVERLAPS" do
+    Task.new "FILTERING BAD OVERLAPS" do
       run_filter_bad_overlaps(overlaps_filename)
-    end
-    overlaps_filename = filter_bad_overlaps.run
+    end.run
   end
 
-  filter_transitive = Task.new "FILTERING TRANSITIVE OVERLAPS" do
-    if !run_filer_transitive(overlaps_filename)
+  Task.new "FILTERING TRANSITIVE OVERLAPS" do
+    if !run_filer_transitive
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
+  end.run
 
-    File.join(working_dir, "overlaps.notran")
-  end
-  overlaps_filename = filter_transitive.run
-
-  find_unitigs = Task.new "FINDING UNITIGS" do
+  Task.new "FINDING UNITIGS" do
     if !run_unitigger(overlaps_filename)
       puts 'Process exited with non-zero exit status, stopping here!'
       exit 1
     end
-  end
-  find_unitigs.run
+  end.run
 
   Task.new "DRAWING GRAPHS" do
     if !run_graphviz(overlaps_filename)
