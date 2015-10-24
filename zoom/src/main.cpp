@@ -47,8 +47,7 @@ int main(int argc, char **argv) {
   // input params
   args.add<int>("root", 'r', "root read", true);
   args.add<int>("depth", 'n', "neighborhood depth", true);
-  args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("overlaps_format", 'f', "overlaps file format; supported: afg, mhap", false, "afg");
+  args.add<string>("depot", 'd', "depot path", true);
 
   args.parse_check(argc, argv);
 
@@ -56,27 +55,17 @@ int main(int argc, char **argv) {
   const string overlaps_format = args.get<string>("overlaps_format");
   const int root = args.get<int>("root");
   const int depth = args.get<int>("depth");
+  const string depot_path = args.get<string>("depot");
 
   vector<Read*> reads;
-  // FILL READS!!!!!!!!
-
   vector<Overlap*> overlaps;
 
-  if (overlaps_format == "afg") {
-    vector<Overlap*> overlaps_;
-    readAfgOverlaps(overlaps_, reads, overlaps_filename.c_str());
-    for (auto o : overlaps_) {
-      overlaps.push_back(o);
-    }
-  } else if (overlaps_format == "mhap") {
-    fstream overlaps_file(overlaps_filename);
-    MHAP::read_overlaps(overlaps, reads, overlaps_file);
-    overlaps_file.close();
-  } else {
-    assert(false);
-  }
+  Depot depot(depot_path);
+  depot.load_reads(reads);
+  depot.load_overlaps(overlaps, reads);
 
-  cerr << overlaps.size() << " overlaps read" << endl;
+  fprintf(stderr, "%lu reads read\n", reads.size());
+  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
 
   for (auto o: overlaps) {
     edges[o->a()].push_back(o);
@@ -86,7 +75,6 @@ int main(int argc, char **argv) {
   vector<Overlap*> neighborhood;
   map<Overlap*, bool> used;
   dfs(&neighborhood, &used, root, depth);
-
 
   cerr << neighborhood.size() << " overlaps written" << endl;
   for (auto e: neighborhood) {
