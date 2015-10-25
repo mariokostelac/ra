@@ -26,7 +26,7 @@ namespace MHAP {
 
       // update params to fit Overlap
       a_hi += 1;
-      if (!b_fwd) {
+      if (b_fwd) {
           auto tmp = b_lo;
           b_lo = b_len - (b_hi + 1);
           b_hi = b_len - tmp;
