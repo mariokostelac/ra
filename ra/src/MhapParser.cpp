@@ -35,8 +35,8 @@ namespace MHAP {
       }
 
       auto overlap = new Overlap(
-          reads[a_id], a_lo, a_hi, a_rc,
-          reads[b_id], b_lo, b_hi, b_rc
+          reads[a_id - 1], a_lo, a_hi, a_rc,
+          reads[b_id - 1], b_lo, b_hi, b_rc
       );
 
       if (input.fail()) {
