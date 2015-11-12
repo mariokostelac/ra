@@ -90,7 +90,7 @@ $(TST_BIN): $(TST_EXC)
 clean:
 	@echo [RM] cleaning
 	@rm -rf $(OBJ_DIR) $(EXC)
-	@rm $(LIB)
+	@rm -f $(LIB)
 
 remove:
 	@echo [RM] removing
