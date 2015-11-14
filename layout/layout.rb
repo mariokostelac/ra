@@ -181,9 +181,11 @@ def run_unitigger
 end
 
 def run_graphviz(reads_filename, overlaps_filename)
-  working_directory = working_dir
-  graph_filename = "#{working_directory}/genome.svg"
-  cmd = "#{draw_graph_bin} #{reads_filename} #{overlaps_filename} | neato -T svg -o #{graph_filename}"
+  reads_format = determine_format(reads_filename)
+  reads_format_option = "-s #{reads_format}" unless reads_format.nil?
+  graph_filename = "#{working_dir}/genome.svg"
+
+  cmd = "#{draw_graph_bin} #{reads_format_option} -r #{reads_filename} -x #{overlaps_filename} | neato -T svg -o #{graph_filename}"
   puts(cmd)
   system(cmd)
 end
