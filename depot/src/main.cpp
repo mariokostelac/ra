@@ -81,7 +81,15 @@ void import_overlaps_cmd() {
   vector<Read*> reads;
   vector<Overlap*> overlaps;
 
-  load_reads(&reads);
+  Depot depot(depot_path);
+
+  fprintf(stderr, "Reading reads from depot...\n");
+  depot.load_reads(reads);
+
+  if (reads.size() == 0) {
+    fprintf(stderr, "Read 0 reads. Reads have to be imported to depot!\n");
+    exit(1);
+  }
 
   fstream overlaps_file(overlaps_filename);
   MHAP::read_overlaps(overlaps, reads, overlaps_file);
@@ -89,7 +97,6 @@ void import_overlaps_cmd() {
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   fprintf(stderr, "Filling depot with overlaps...\n");
-  Depot depot(depot_path);
 
   depot.store_overlaps(overlaps);
 
