@@ -99,6 +99,32 @@ void import_overlaps_cmd() {
   for (auto o: overlaps)  delete o;
 }
 
+void dump_overlaps_cmd() {
+  vector<Read*> reads;
+  vector<Overlap*> overlaps;
+
+  Depot depot(depot_path);
+
+  fprintf(stderr, "Reading reads...\n");
+  depot.load_reads(reads);
+  fprintf(stderr, "Read %lu reads\n", reads.size());
+
+  fprintf(stderr, "Reading overlaps...\n");
+  depot.load_overlaps(overlaps, reads);
+  fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
+
+  fprintf(stdout, "a_id\tb_id\ttype\ta_lo\ta_hi\ta_len\tb_lo\tb_hi\tb_len\torig_error\twiden_error\n");
+
+  for (auto o : overlaps) {
+    fprintf(stdout, "%d\t%d\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t\n",
+        o->a(), o->b(), o->is_innie() ? 'I' : 'N',
+        o->a_lo(), o->a_hi(), o->read_a()->length(),
+        o->b_lo(), o->b_hi(), o->read_b()->length(),
+        o->orig_err_rate(), o->err_rate()
+    );
+  }
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -116,6 +142,8 @@ int main(int argc, char **argv) {
     import_reads_cmd();
   } else if (cmd == "import_overlaps") {
     import_overlaps_cmd();
+  } else if (cmd == "dump_overlaps") {
+    dump_overlaps_cmd();
   } else {
     fprintf(stderr, "Command '%s' not defined\n", cmd.c_str());
     args.usage();
