@@ -199,13 +199,15 @@ def run_filter_bad_overlaps(overlaps_filename)
 end
 
 def run_import_reads(reads_filename)
-  cmd = "#{depot_bin} -r #{reads_filename} -d #{depot_path} import_reads"
+  reads_format = determine_format(reads_filename)
+  reads_format_option = "-s #{reads_format}" unless reads_format.nil?
+  cmd = "#{depot_bin} #{reads_format_option} -r #{reads_filename} -d #{depot_path} import_reads"
   puts(cmd)
   system(cmd)
 end
 
 def run_import_overlaps(reads_filename, overlaps_filename)
-  cmd = "#{depot_bin} -r #{reads_filename} -x #{overlaps_filename} -d #{depot_path} import_overlaps"
+  cmd = "#{depot_bin} -x #{overlaps_filename} -d #{depot_path} import_overlaps"
   puts(cmd)
   system(cmd)
 end
@@ -214,6 +216,23 @@ def run_fill_read_coverage
   cmd = "#{fill_read_coverage_bin} -d #{depot_path}"
   puts(cmd)
   system(cmd)
+end
+
+def determine_format(filename)
+  case File.extname(filename)
+  when '.fasta'
+    return 'fasta'
+  when '.fa'
+    return 'fasta'
+  when '.fastq'
+    return 'fastq'
+  when '.fq'
+    return 'fastq'
+  when '.afg'
+    return 'afg'
+  else
+    return nil
+  end
 end
 
 def ensure_dir(dirpath)
