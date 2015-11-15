@@ -53,8 +53,6 @@ int main(int argc, char **argv) {
 
   std::vector<Read*> transcripts;
 
-  createReverseComplements(reads, threadLen);
-
   int id = 0;
   for (const auto& contig : contigs) {
     for (const auto& part: contig->getParts()) {

@@ -39,14 +39,6 @@ std::vector<char> kCoder = {
     -1,  -1,  -1,  -1,  -1
 };
 
-static void threadCreateReverseComplements(std::vector<Read*>& reads,
-    uint32_t start, uint32_t end) {
-
-    for (uint32_t i = start; i < end; ++i) {
-        reads[i]->create_reverse_complement();
-    }
-}
-
 DepotObjectType Read::type_ = DepotObjectType::kRead;
 
 Read::Read(uint32_t id, const std::string& name, const std::string& sequence,
@@ -63,6 +55,8 @@ Read::Read(uint32_t id, const std::string& name, const std::string& sequence,
             sequence_.push_back(c);
         }
     }
+
+    create_reverse_complement();
 
     ASSERT(sequence_.size() > 0, "Read", "invalid data");
 }
@@ -180,24 +174,4 @@ Read* Read::deserialize(const char* bytes) {
     read->create_reverse_complement();
 
     return read;
-}
-
-void createReverseComplements(std::vector<Read*>& reads, int threadLen) {
-
-    int taskLen = std::ceil((double) reads.size() / threadLen);
-    int start = 0;
-    int end = taskLen;
-
-    std::vector<std::thread> threads;
-
-    for (int i = 0; i < threadLen; ++i) {
-        threads.emplace_back(threadCreateReverseComplements, std::ref(reads), start, end);
-
-        start = end;
-        end = std::min(end + taskLen, (int) reads.size());
-    }
-
-    for (auto& it : threads) {
-        it.join();
-    }
 }

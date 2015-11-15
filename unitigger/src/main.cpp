@@ -273,8 +273,6 @@ int main(int argc, char **argv) {
 
   must_one_overlap_per_pair(overlaps);
 
-  createReverseComplements(reads, thread_num);
-
   StringGraph* graph = new StringGraph(reads, overlaps);
   graph->simplify();
 

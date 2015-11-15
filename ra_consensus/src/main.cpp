@@ -56,8 +56,6 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> reads;
     readAfgReads(reads, readsPath);
 
-    createReverseComplements(reads, threadLen);
-
     std::vector<Contig*> contigs;
     readAfgContigs(contigs, contigsPath);
 

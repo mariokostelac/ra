@@ -65,8 +65,6 @@ int main(int argc, char* argv[]) {
     std::vector<Read*> filtered;
     filterReads(filtered, reads);
 
-    createReverseComplements(filtered, threadLen);
-
     std::vector<Overlap*> overlaps;
     overlapReads(overlaps, filtered, minOverlapLen, threadLen, readsPath);
 

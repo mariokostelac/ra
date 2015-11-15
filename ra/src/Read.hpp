@@ -78,13 +78,6 @@ public:
     }
 
     /*!
-     * @brief Construction of the reverse complement
-     * @details Method constructs a reverse complement from the sequence.
-     * and stores it in the object
-     */
-    void create_reverse_complement();
-
-    /*!
      * @brief Getter for coverage
      * @return coverage
      */
@@ -138,6 +131,8 @@ public:
     static Read* deserialize(const char* bytes);
 
 private:
+
+    void create_reverse_complement();
 
     Read() {};
 
