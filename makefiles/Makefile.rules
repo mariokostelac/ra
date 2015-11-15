@@ -70,7 +70,7 @@ $(BIN): $(EXC)
 	@cp $< $@
 
 clean:
-	@echo [RM] cleaning
+	@echo [RM] cleaning $(NAME).$(MODULE)
 	@rm $(OBJ_DIR) $(EXC) -rf
 
 remove:
