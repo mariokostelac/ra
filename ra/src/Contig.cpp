@@ -19,39 +19,42 @@ Contig::Contig(const StringGraphWalk* walk) {
 
     if (edges.size() == 0) {
       parts_.emplace_back(start->getId(), 0, start->getLength(), 0);
-    } else {
-      int firstReversed = isReversed(edges.front(), start->getId());
-      int offset = 0;
+      return;
+    }
 
-      // 0 -> reversed complement
-      // 1 -> normal direction
-      int prefixGoesFirst = edges.front()->getOverlap()->is_using_suffix(start->getId()) ^ firstReversed;
+    int firstReversed = isReversed(edges.front(), start->getId());
+    uint32_t offset = 0, length = 0;
 
-      int lo = prefixGoesFirst ? 0 : start->getLength();
-      int hi = prefixGoesFirst ? start->getLength() : 0;
+    // 0 -> reversed complement
+    // 1 -> normal direction
+    int prefixGoesFirst = edges.front()->getOverlap()->is_using_suffix(start->getId()) ^ firstReversed;
 
-      parts_.emplace_back(start->getId(), lo, hi, offset);
+    uint32_t lo = prefixGoesFirst ? 0 : start->getLength();
+    uint32_t hi = prefixGoesFirst ? start->getLength() : 0;
 
-      int prevReversed = firstReversed;
+    parts_.emplace_back(start->getId(), lo, hi, offset);
+    length += start->getLength();
 
-      for (const auto& edge : edges) {
+    int prevReversed = firstReversed;
 
-        const Vertex* a = edge->getSrc();
-        const Vertex* b = edge->getDst();
+    for (const auto& edge : edges) {
 
-        int aReversed = isReversed(edge, a->getId());
-        bool invert = aReversed == prevReversed ? false : true;
+      const Vertex* a = edge->getSrc();
+      const Vertex* b = edge->getDst();
 
-        int bReversed = isReversed(edge, b->getId()) ^ invert;
+      int aReversed = isReversed(edge, a->getId());
+      bool invert = aReversed == prevReversed ? false : true;
 
-        offset += a->getLength() - edge->getOverlap()->length(a->getId());
+      int bReversed = isReversed(edge, b->getId()) ^ invert;
 
-        lo = bReversed ? b->getLength() : 0;
-        hi = bReversed ? 0 : b->getLength();
+      offset = length - edge->getOverlap()->length(b->getId());
 
-        parts_.emplace_back(b->getId(), lo, hi, offset);
+      lo = bReversed ? b->getLength() : 0;
+      hi = bReversed ? 0 : b->getLength();
 
-        prevReversed = bReversed;
-      }
+      parts_.emplace_back(b->getId(), lo, hi, offset);
+      length += edge->getOverlap()->hanging_length(b->getId());
+
+      prevReversed = bReversed;
     }
 }
