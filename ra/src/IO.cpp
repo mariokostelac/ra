@@ -425,3 +425,38 @@ void writeRadumpOverlaps(FILE* dst, OverlapSet& overlaps) {
         );
   }
 }
+
+void readRadumpOverlaps(OverlapSet* overlaps, ReadSet& reads, FILE* src) {
+  while (true) {
+    // direct values
+    int a_id, b_id;
+    uint32_t a_lo, a_hi, a_len, b_lo, b_hi, b_len;
+    double err_rate, orig_err_rate;
+    char type;
+
+    int read = fscanf(src, " %d %d %c %d %d %d %d %d %d %lf %lf ",
+        &a_id, &b_id, &type,
+        &a_lo, &a_hi, &a_len,
+        &b_lo, &b_hi, &b_len,
+        &orig_err_rate, &err_rate
+        );
+    if (read != 11) {
+      break;
+    }
+
+    assert("a_id in range" && (a_id >= 0 && a_id < reads.size()));
+    assert("b_id in range" && (b_id >= 0 && b_id < reads.size()));
+    assert("type N or I" && (type == 'N' || type == 'I'));
+
+    // calculated values
+    bool a_rc = false;
+    bool b_rc = type == 'I';
+    Read* read_a = reads[a_id];
+    Read* read_b = reads[b_id];
+
+    Overlap* o = new Overlap(read_a, a_lo, a_hi, a_rc,
+        read_b, b_lo, b_hi, b_rc,
+        err_rate, orig_err_rate);
+    overlaps->push_back(o);
+  }
+}

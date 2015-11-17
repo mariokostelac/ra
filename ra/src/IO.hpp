@@ -81,9 +81,20 @@ void writeAfgReads(const ReadSet& reads, const char* path);
  * https://github.com/mariokostelac/ra-integrate/issues/7
  *
  * @param [in] output file descriptor
- * @param [in] reads vector of Read objects pointers
+ * @param [in] overlaps vector of Overlap objects pointers
  */
 void writeRadumpOverlaps(FILE* dst, OverlapSet& overlaps);
+
+/*!
+ * @brief Method for reading radump Overlaps
+ * @details Method reads Overlap objects from fd
+ * https://github.com/mariokostelac/ra-integrate/issues/7
+ *
+ * @param [out] overlaps vector of Overlap objects pointers
+ * @param [in] reads vector of Read objects pointers
+ * @param [in] output file descriptor
+ */
+void readRadumpOverlaps(OverlapSet* overlaps, ReadSet& reads, FILE* src);
 
 /*!
  * @brief Method for Overlap input

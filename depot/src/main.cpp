@@ -17,6 +17,7 @@ int thread_num;
 string reads_format;
 string reads_filename;
 string overlaps_filename;
+string overlaps_format;
 string depot_path;
 
 void init_args(int argc, char** argv) {
@@ -24,6 +25,7 @@ void init_args(int argc, char** argv) {
   args.add<string>("depot", 'd', "depot path", true);
   args.add<string>("reads", 'r', "reads file", false);
   args.add<string>("overlaps", 'x', "overlaps file", false);
+  args.add<string>("overlaps_format", 'X', "overlaps format; supported: mhap, radump", false, "mhap");
   args.add<string>("reads_format", 's', "reads format; supported: fasta, fastq, afg", false, "fasta");
 
   args.parse_check(argc, argv);
@@ -35,6 +37,7 @@ void read_args() {
   reads_filename = args.get<string>("reads");
   reads_format = args.get<string>("reads_format");
   overlaps_filename = args.get<string>("overlaps");
+  overlaps_format = args.get<string>("overlaps_format");
 }
 
 void load_reads(vector<Read*>* reads) {
@@ -72,6 +75,21 @@ void import_reads_cmd() {
   for (auto r: reads)    delete r;
 }
 
+void load_overlaps(OverlapSet* overlaps, const string overlaps_path, const string overlaps_format, ReadSet& reads) {
+
+  if (overlaps_format == "mhap") {
+    fstream overlaps_file(overlaps_filename);
+    MHAP::read_overlaps(*overlaps, reads, overlaps_file);
+    overlaps_file.close();
+  } else if (overlaps_format == "radump") {
+    FILE* fd = must_fopen(overlaps_path, "r");
+    readRadumpOverlaps(overlaps, reads, fd);
+    fclose(fd);
+  } else {
+    assert("format not implemented");
+  }
+}
+
 void import_overlaps_cmd() {
   if (overlaps_filename.size() == 0) {
     fprintf(stderr, "Overlaps filename is not provided\n");
@@ -91,9 +109,9 @@ void import_overlaps_cmd() {
     exit(1);
   }
 
-  fstream overlaps_file(overlaps_filename);
-  MHAP::read_overlaps(overlaps, reads, overlaps_file);
-  overlaps_file.close();
+  fprintf(stderr, "Reading overlaps from %s...\n", overlaps_filename.c_str());
+  load_overlaps(&overlaps, overlaps_filename, overlaps_format, reads);
+
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   fprintf(stderr, "Filling depot with overlaps...\n");
