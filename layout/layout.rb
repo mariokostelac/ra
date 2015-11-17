@@ -209,7 +209,9 @@ def run_import_reads(reads_filename)
 end
 
 def run_import_overlaps(reads_filename, overlaps_filename)
-  cmd = "#{depot_bin} -x #{overlaps_filename} -d #{depot_path} import_overlaps"
+  overlaps_format = determine_format(overlaps_filename)
+  overlaps_format_option = "-X #{overlaps_format}" unless overlaps_format.nil?
+  cmd = "#{depot_bin} #{overlaps_format_option} -x #{overlaps_filename} -d #{depot_path} import_overlaps"
   puts(cmd)
   system(cmd)
 end
@@ -232,6 +234,10 @@ def determine_format(filename)
     return 'fastq'
   when '.afg'
     return 'afg'
+  when '.mhap'
+    return 'mhap'
+  when '.radump'
+    return 'radump'
   else
     return nil
   end
