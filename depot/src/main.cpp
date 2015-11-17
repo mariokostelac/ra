@@ -120,7 +120,7 @@ void dump_overlaps_cmd() {
   depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
-  fprintf(stdout, "a_id\tb_id\ttype\ta_lo\ta_hi\ta_len\tb_lo\tb_hi\tb_len\torig_error\twiden_error\n");
+  fprintf(stderr, "a_id\tb_id\ttype\ta_lo\ta_hi\ta_len\tb_lo\tb_hi\tb_len\torig_error\twiden_error\n");
 
   for (auto o : overlaps) {
     fprintf(stdout, "%d\t%d\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t\n",
