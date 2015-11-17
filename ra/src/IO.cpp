@@ -414,3 +414,14 @@ FILE* must_fopen(const char* path, const char* mode) {
 
   return res;
 }
+
+void writeRadumpOverlaps(FILE* dst, OverlapSet& overlaps) {
+  for (auto o : overlaps) {
+    fprintf(stdout, "%d\t%d\t%c\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t\n",
+        o->a(), o->b(), o->is_innie() ? 'I' : 'N',
+        o->a_lo(), o->a_hi(), o->read_a()->length(),
+        o->b_lo(), o->b_hi(), o->read_b()->length(),
+        o->orig_err_rate(), o->err_rate()
+        );
+  }
+}

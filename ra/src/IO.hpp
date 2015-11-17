@@ -76,6 +76,16 @@ void writeFastaReads(const ReadSet& reads, const char* path);
 void writeAfgReads(const ReadSet& reads, const char* path);
 
 /*!
+ * @brief Method for Overlap output
+ * @details Method writes Overlap objects to fd in radump format
+ * https://github.com/mariokostelac/ra-integrate/issues/7
+ *
+ * @param [in] output file descriptor
+ * @param [in] reads vector of Read objects pointers
+ */
+void writeRadumpOverlaps(FILE* dst, OverlapSet& overlaps);
+
+/*!
  * @brief Method for Overlap input
  * @details Method reads from file in AFG format and creates
  * Overlap objects
