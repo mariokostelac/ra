@@ -26,11 +26,10 @@ Currently supported modules are:
 
 1. [ra](ra/README.md) - Module is the main static library and is used by other modules (doesn't provide any executable).
 2. [ra_overlap](ra_overlap/README.md) - Module is used for finding all overlaps between input single end reads. It also removes contained and transitive overlaps.
-3. ~~[ra_layout](ra_layout/README.md) - Module is used to create a string graph from input overlaps. It then simplifies it with trimming and bubble popping. At the end it extracts longest contigs from every graph component. As the current overlapper is exact, it also extracts whole transcripts (transcripts.layout.fasta) so that the consensus phase can be avoided for now.~~
+3. [ra_layout](ra_layout/README.md) - Module is used to create a string graph from input overlaps. It then simplifies it with trimming and bubble popping. At the end it extracts longest contigs from every graph component. As the current overlapper is exact, it also extracts whole transcripts (transcripts.layout.fasta) so that the consensus phase can be avoided for now.
 4. [ra_consensus](ra_consensus/README.md) - Module is used to build consensus sequences, it uses [CPPPOA](https://github.com/mculinovic/cpppoa) and outputs transcripts.
 5. [ra_correct](ra_correct/README.md) - Module is optional and is used to correct reads. If used, it should be called before ra_overlap.
 6. [to_afg](to_afg/README.md) - Module is used for converting read sets from [FASTA][1]/[FASTQ][2] to [afg][3] format. It is neccessary to convert reads because all other modules are using the afg format.
-7. [layout](layout/README.md) - Module is used to create unitigs from input overlaps.
 8. [overlap2dot](overlap2dot/README.md) - Module used for converting overlap files to dot graphs. Cool stuff!
 9. [zoom](zoom/README.md) - Module used for "zooming" a part of overlaps graph. Actually just a simple DFS with depth limit. 
 
