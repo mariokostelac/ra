@@ -1,7 +1,7 @@
 
 CORE = ra
 MODULES = ra_consensus to_afg consensus unitigger overlap2dot zoom \
-					filter_contained filter_transitive widen_overlaps layout \
+					filter_contained filter_transitive widen_overlaps \
 					filter_erroneous_overlaps depot fill_read_coverage
 
 INC_DIR = include/$(CORE)
