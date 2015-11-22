@@ -47,7 +47,7 @@ Contig::Contig(const StringGraphWalk* walk) {
 
       int bReversed = isReversed(edge, b->getId()) ^ invert;
 
-      offset = length - edge->getOverlap()->length(b->getId());
+      offset = length - edge->getOverlap()->length(a->getId());
 
       lo = bReversed ? b->getLength() : 0;
       hi = bReversed ? 0 : b->getLength();
