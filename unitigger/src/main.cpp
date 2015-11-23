@@ -123,34 +123,58 @@ void read_args() {
 }
 
 void read_settings(FILE *fd) {
-  char buff[4096];
 
-  while (fgets(buff, 4096, fd) != nullptr) {
+  Settings settings;
+  settings.load_settings(fd);
 
-    // comment
-    if (buff[0] == '#') continue;
+  if (settings.setting_exists("READ_LEN_THRESHOLD")) {
+    READ_LEN_THRESHOLD = settings.get_int("READ_LEN_THRESHOLD");
+    debug("READ READ_LEN_THRESHOLD: %lu from file\n", READ_LEN_THRESHOLD);
+  }
 
-    if (sscanf(buff, "READ_LEN_THRESHOLD: %d", &READ_LEN_THRESHOLD)) {
-      debug("READ READ_LEN_THRESHOLD: %lu from file\n", READ_LEN_THRESHOLD);
-    } else if (sscanf(buff, "MAX_READS_IN_TIP: %d", &MAX_READS_IN_TIP)) {
-      debug("READ MAX_READS_IN_TIP: %lu from file\n", MAX_READS_IN_TIP);
-    } else if (sscanf(buff, "MAX_DEPTH_WITHOUT_EXTRA_FORK: %d", &MAX_DEPTH_WITHOUT_EXTRA_FORK)) {
-      debug("READ MAX_DEPTH_WITHOUT_EXTRA_FORK: %lu from file\n", MAX_DEPTH_WITHOUT_EXTRA_FORK);
-    } else if (sscanf(buff, "MAX_NODES: %lu", &MAX_NODES)) {
-      debug("READ MAX_NODES: %lu from file\n", MAX_NODES);
-    } else if (sscanf(buff, "MAX_DISTANCE: %d", &MAX_DISTANCE)) {
-      debug("READ MAX_DISTANCE: %lu from file\n", MAX_DISTANCE);
-    } else if (sscanf(buff, "MAX_DIFFERENCE: %lf", &MAX_DIFFERENCE)) {
-      debug("READ MAX_DIFFERENCE: %lf from file\n", MAX_DIFFERENCE);
-    } else if (sscanf(buff, "MAX_BRANCHES: %lu", &MAX_BRANCHES)) {
-      debug("READ MAX_BRANCHES: %lu from file\n", MAX_BRANCHES);
-    } else if (sscanf(buff, "MAX_START_NODES: %lu", &MAX_START_NODES)) {
-      debug("READ MAX_START_NODES: %lu from file\n", MAX_START_NODES);
-    } else if (sscanf(buff, "LENGTH_THRESHOLD: %lf", &LENGTH_THRESHOLD)) {
-      debug("READ LENGTH_THRESHOLD: %lf from file\n", LENGTH_THRESHOLD);
-    } else if (sscanf(buff, "QUALITY_THRESHOLD: %lf", &QUALITY_THRESHOLD)) {
-      debug("READ QUALITY_THRESHOLD: %lf from file\n", QUALITY_THRESHOLD);
-    }
+  if (settings.setting_exists("MAX_READS_IN_TIP")) {
+    MAX_READS_IN_TIP = settings.get_int("MAX_READS_IN_TIP");
+    debug("READ MAX_READS_IN_TIP: %lu from file\n", MAX_READS_IN_TIP);
+  }
+
+  if (settings.setting_exists("MAX_DEPTH_WITHOUT_EXTRA_FORK")) {
+    MAX_DEPTH_WITHOUT_EXTRA_FORK = settings.get_int("MAX_DEPTH_WITHOUT_EXTRA_FORK");
+    debug("READ MAX_DEPTH_WITHOUT_EXTRA_FORK: %lu from file\n", MAX_DEPTH_WITHOUT_EXTRA_FORK);
+  }
+
+  if (settings.setting_exists("MAX_NODES")) {
+    MAX_NODES = settings.get_int("MAX_NODES");
+    debug("READ MAX_NODES: %lu from file\n", MAX_NODES);
+  }
+
+  if (settings.setting_exists("MAX_DISTANCE")) {
+    MAX_DISTANCE = settings.get_int("MAX_DISTANCE");
+    debug("READ MAX_DISTANCE: %lu from file\n", MAX_DISTANCE);
+  }
+
+  if (settings.setting_exists("MAX_DIFFERENCE")) {
+    MAX_DIFFERENCE = settings.get_double("MAX_DIFFERENCE");
+    debug("READ MAX_DIFFERENCE: %lf from file\n", MAX_DIFFERENCE);
+  }
+
+  if (settings.setting_exists("MAX_BRANCHES")) {
+    MAX_BRANCHES = settings.get_int("MAX_BRANCHES");
+    debug("READ MAX_BRANCHES: %lu from file\n", MAX_BRANCHES);
+  }
+
+  if (settings.setting_exists("MAX_START_NODES")) {
+    MAX_START_NODES = settings.get_int("MAX_START_NODES");
+    debug("READ MAX_START_NODES: %lu from file\n", MAX_START_NODES);
+  }
+
+  if (settings.setting_exists("LENGTH_THRESHOLD")) {
+    LENGTH_THRESHOLD = settings.get_double("LENGTH_THRESHOLD");
+    debug("READ LENGTH_THRESHOLD: %lf from file\n", LENGTH_THRESHOLD);
+  }
+
+  if (settings.setting_exists("QUALITY_THRESHOLD")) {
+    QUALITY_THRESHOLD = settings.get_double("QUALITY_THRESHOLD");
+    debug("READ QUALITY_THRESHOLD: %lf from file\n", QUALITY_THRESHOLD);
   }
 }
 

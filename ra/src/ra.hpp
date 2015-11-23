@@ -23,6 +23,7 @@
 #include "Preprocess.hpp"
 #include "Read.hpp"
 #include "ReadIndex.hpp"
+#include "Settings.hpp"
 #include "StringGraph.hpp"
 #include "StringGraphUtils.hpp"
 #include "Utils.hpp"
