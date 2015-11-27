@@ -124,9 +124,13 @@ void read_args() {
   working_directory = args.get<string>("working_directory");
 }
 
-void init_specs(FILE *fd) {
+void init_specs() {
 
-  settings.load_settings(fd);
+  if (spec_file.size() > 0) {
+    FILE* specs_fd = must_fopen(spec_file, "r");
+    settings.load_settings(specs_fd);
+    fclose(specs_fd);
+  }
 
   READ_LEN_THRESHOLD = settings.get_or_store_int("READ_LEN_THRESHOLD", READ_LEN_THRESHOLD);
   MAX_READS_IN_TIP = settings.get_or_store_int("MAX_READS_IN_TIP", MAX_READS_IN_TIP);
@@ -204,12 +208,7 @@ int main(int argc, char **argv) {
 
   init_args(argc, argv);
   read_args();
-
-  if (spec_file.size() > 0) {
-    FILE* specs_fd = must_fopen(spec_file, "r");
-    init_specs(specs_fd);
-    fclose(specs_fd);
-  }
+  init_specs();
 
   auto run_args_file = must_fopen(working_directory + "/run_args.txt", "w");
   write_version(run_args_file);

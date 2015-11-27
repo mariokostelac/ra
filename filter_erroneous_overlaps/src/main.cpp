@@ -34,9 +34,13 @@ void read_args() {
   working_directory = args.get<string>("working_directory");
 }
 
-void init_specs(FILE *fd) {
+void init_specs() {
 
-  specs.load_settings(fd);
+  if (spec_file_path.size() > 0) {
+    FILE* spec_file_fd = must_fopen(spec_file_path, "r");
+    specs.load_settings(spec_file_fd);
+    fclose(spec_file_fd);
+  }
 
   MAX_ABSOLUTE_ERRATE = specs.get_or_store_double("overlap.max_abs_errate", 0.4);
 }
@@ -66,12 +70,7 @@ int main(int argc, char **argv) {
 
   init_args(argc, argv);
   read_args();
-
-  if (spec_file_path.size() > 0) {
-    FILE* spec_file_fd = must_fopen(spec_file_path, "r");
-    init_specs(spec_file_fd);
-    fclose(spec_file_fd);
-  }
+  init_specs();
 
   vector<Read*> reads;
   vector<Overlap*> overlaps;
