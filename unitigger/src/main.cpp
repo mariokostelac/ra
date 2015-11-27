@@ -27,7 +27,7 @@ using std::vector;
 // global vars
 cmdline::parser args;
 int thread_num;
-string settings_file;
+string spec_file;
 string depot_path;
 string working_directory;
 
@@ -117,7 +117,7 @@ void init_args(int argc, char** argv) {
 
 void read_args() {
   thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  settings_file = args.get<string>("settings");
+  spec_file = args.get<string>("spec_file");
   depot_path = args.get<string>("depot");
   working_directory = args.get<string>("working_directory");
 }
@@ -262,8 +262,8 @@ int main(int argc, char **argv) {
   init_args(argc, argv);
   read_args();
 
-  if (settings_file.size() > 0) {
-    FILE* settings_fd = must_fopen(settings_file, "r");
+  if (spec_file.size() > 0) {
+    FILE* settings_fd = must_fopen(spec_file, "r");
     read_settings(settings_fd);
     fclose(settings_fd);
   }
