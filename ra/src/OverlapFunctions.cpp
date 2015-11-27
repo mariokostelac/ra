@@ -375,7 +375,7 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
     a_part = tmp.extract_overlapped_part(tmp.a());
     b_part = tmp.extract_overlapped_part(tmp.b());
 
-    double err_rate = editDistance(a_part, b_part) / (double) o->length();
+    double err_rate = editDistance(a_part, b_part) / (double) tmp.length();
 
     auto res = new Overlap(tmp.read_a(), tmp.a_hang(), tmp.read_b(), tmp.b_hang(),
         tmp.is_innie(), err_rate, orig_err_rate);
