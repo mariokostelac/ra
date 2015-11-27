@@ -108,7 +108,7 @@ void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("settings", 'b', "settings file", false);
+  args.add<string>("spec_file", 's', "spec file", false);
   args.add<string>("depot", 'd', "depot path", true);
   args.add<string>("working_directory", 'w', "working directory", false, ".");
 
