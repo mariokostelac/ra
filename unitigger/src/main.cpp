@@ -242,10 +242,6 @@ int main(int argc, char **argv) {
   StringGraph* graph = new StringGraph(reads, overlaps);
   graph->simplify();
 
-  vector<Overlap*> simplified_overlaps;
-  graph->extractOverlaps(simplified_overlaps);
-  write_overlaps(simplified_overlaps, working_directory + "/simplified.afg");
-
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
 
   std::vector<StringGraphWalk*> unitig_walks;
