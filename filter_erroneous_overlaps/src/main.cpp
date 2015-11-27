@@ -4,102 +4,62 @@
 
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
-#include <algorithm>
-#include <cassert>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sys/stat.h>
 #include <vector>
 
-using std::cerr;
-using std::cin;
-using std::cout;
-using std::endl;
 using std::fstream;
-using std::make_pair;
-using std::map;
-using std::max;
-using std::min;
-using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 
 // global vars
 cmdline::parser args;
-int thread_num;
-string overlaps_filename;
-string assembly_directory;
+string depot_path;
+string spec_file_path;
+string working_directory;
+Settings specs;
+
+double MAX_ABSOLUTE_ERRATE;
 
 void init_args(int argc, char** argv) {
   // input params
-  args.add<string>("overlaps", 'x', "overlaps file", true);
-  args.add<string>("directory", 'd', "assembly_directory", false, ".");
+  args.add<string>("depot", 'd', "depot path", true);
+  args.add<string>("spec_file", 's', "spec file path", false);
+  args.add<string>("working_directory", 'w', "working directory", false, ".");
 
   args.parse_check(argc, argv);
 }
 
 void read_args() {
-  assembly_directory = args.get<string>("directory");
-  thread_num = std::max(std::thread::hardware_concurrency(), 1U);
-  overlaps_filename = args.get<string>("overlaps");
+  depot_path = args.get<string>("depot");
+  spec_file_path = args.get<string>("spec_file");
+  working_directory = args.get<string>("working_directory");
 }
 
-void filter_bad_overlaps(vector<Overlap*>* dst, vector<Overlap*>& src) {
-  *dst = src;
+void init_specs(FILE *fd) {
 
-  // compress errates into buckets
-  int buckets_size = 50;
-  int divisor = 100 / buckets_size;
+  specs.load_settings(fd);
 
-  int most_count = 0;
-  int most_count_idx = -1;
+  MAX_ABSOLUTE_ERRATE = specs.get_or_store_double("overlap.max_abs_errate", 0.4);
+}
 
-  vector<int> bucket_count(buckets_size, 0);
-  for (int i = 0, n = src.size(); i < n; ++i) {
-    int bucket_idx = 100 * src[i]->err_rate() / 2;
-    bucket_count[bucket_idx]++;
-    most_count = max(most_count, bucket_count[bucket_idx]);
+void write_specs_to(const string path) {
+  FILE* spec_file_fd = must_fopen(path, "w");
+  specs.dump_settings(spec_file_fd);
+  fclose(spec_file_fd);
+}
 
-    if (most_count == bucket_count[bucket_idx]) {
-      most_count_idx = bucket_idx;
-    }
+void filter_overlaps_by_absolute_errate(OverlapSet* overlaps, double upper_limit) {
+  fprintf(stderr, "Filtering overlaps with errate > %lf\n", upper_limit);
+
+  int next_position = 0;
+  for (int i = 0; i < (int) overlaps->size(); ++i) {
+    auto o = (*overlaps)[i];
+    if (o->err_rate() >= upper_limit) continue;
+
+    (*overlaps)[next_position] = o;
+    next_position++;
   }
 
-  // find first bucket that contains elements
-  int best_errate_idx = -1;
-  for (int i = 0; i < buckets_size; ++i) {
-    if (bucket_count[i] > 0) {
-      best_errate_idx = i;
-      break;
-    }
-  }
-  assert(best_errate_idx >= 0);
-
-  // scale errates back
-  int best_errate = best_errate_idx * divisor;
-  int most_counts_errate = most_count_idx * divisor;
-  int worst_errate = most_counts_errate + (most_counts_errate - best_errate) + 1;
-
-  fprintf(stderr, "Most overlaps have errate ~%d%%\n", most_counts_errate);
-  fprintf(stderr, "Trimming all overlaps with errate higher than %d%%\n", worst_errate);
-
-  std::sort(dst->begin(), dst->end(), [](const Overlap* a, const Overlap* b) {
-      return a->err_rate() < b->err_rate();
-  });
-
-  int size = 0;
-  for (uint32_t i = 0; i < dst->size(); ++i) {
-    if (100 * (*dst)[i]->err_rate() > worst_errate) {
-      break;
-    }
-    size = i;
-  }
-
-  dst->resize(size);
+  overlaps->resize(next_position);
 }
 
 int main(int argc, char **argv) {
@@ -107,22 +67,32 @@ int main(int argc, char **argv) {
   init_args(argc, argv);
   read_args();
 
+  if (spec_file_path.size() > 0) {
+    FILE* spec_file_fd = must_fopen(spec_file_path, "r");
+    init_specs(spec_file_fd);
+    fclose(spec_file_fd);
+  }
+
   vector<Read*> reads;
-  // FIL READS!!!!!
-
   vector<Overlap*> overlaps;
-  FILE *overlaps_fd = must_fopen(overlaps_filename, "r");
-  read_dovetail_overlaps(overlaps, reads, overlaps_fd);
-  fclose(overlaps_fd);
 
-  fprintf(stderr, "%lu overlaps read\n", overlaps.size());
+  Depot depot(depot_path);
 
-  vector<Overlap*> filtered;
-  filter_bad_overlaps(&filtered, overlaps);
+  depot.load_reads(reads);
+  fprintf(stderr, "Read %lu reads\n", reads.size());
 
-  write_overlaps(filtered, nullptr);
+  depot.load_overlaps(overlaps, reads);
+  fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
-  for (auto o: overlaps)    delete o;
+  filter_overlaps_by_absolute_errate(&overlaps, MAX_ABSOLUTE_ERRATE);
+
+  fprintf(stderr, "Updating depot...\n");
+  depot.store_overlaps(overlaps);
+
+  for (auto r: reads)               delete r;
+  for (auto o: overlaps)            delete o;
+
+  write_specs_to(working_directory + "/filter_erroneous_overlaps.spec");
 
   return 0;
 }
