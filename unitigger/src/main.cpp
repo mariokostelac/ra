@@ -31,6 +31,8 @@ string spec_file;
 string depot_path;
 string working_directory;
 
+Settings settings;
+
 void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
   set<pair<uint32_t, uint32_t>> seen;
 
@@ -122,83 +124,24 @@ void read_args() {
   working_directory = args.get<string>("working_directory");
 }
 
-void read_settings(FILE *fd) {
+void init_specs(FILE *fd) {
 
-  Settings settings;
   settings.load_settings(fd);
 
-  if (settings.setting_exists("READ_LEN_THRESHOLD")) {
-    READ_LEN_THRESHOLD = settings.get_int("READ_LEN_THRESHOLD");
-    debug("READ READ_LEN_THRESHOLD: %lu from file\n", READ_LEN_THRESHOLD);
-  }
-
-  if (settings.setting_exists("MAX_READS_IN_TIP")) {
-    MAX_READS_IN_TIP = settings.get_int("MAX_READS_IN_TIP");
-    debug("READ MAX_READS_IN_TIP: %lu from file\n", MAX_READS_IN_TIP);
-  }
-
-  if (settings.setting_exists("MAX_DEPTH_WITHOUT_EXTRA_FORK")) {
-    MAX_DEPTH_WITHOUT_EXTRA_FORK = settings.get_int("MAX_DEPTH_WITHOUT_EXTRA_FORK");
-    debug("READ MAX_DEPTH_WITHOUT_EXTRA_FORK: %lu from file\n", MAX_DEPTH_WITHOUT_EXTRA_FORK);
-  }
-
-  if (settings.setting_exists("MAX_NODES")) {
-    MAX_NODES = settings.get_int("MAX_NODES");
-    debug("READ MAX_NODES: %lu from file\n", MAX_NODES);
-  }
-
-  if (settings.setting_exists("MAX_DISTANCE")) {
-    MAX_DISTANCE = settings.get_int("MAX_DISTANCE");
-    debug("READ MAX_DISTANCE: %lu from file\n", MAX_DISTANCE);
-  }
-
-  if (settings.setting_exists("MAX_DIFFERENCE")) {
-    MAX_DIFFERENCE = settings.get_double("MAX_DIFFERENCE");
-    debug("READ MAX_DIFFERENCE: %lf from file\n", MAX_DIFFERENCE);
-  }
-
-  if (settings.setting_exists("MAX_BRANCHES")) {
-    MAX_BRANCHES = settings.get_int("MAX_BRANCHES");
-    debug("READ MAX_BRANCHES: %lu from file\n", MAX_BRANCHES);
-  }
-
-  if (settings.setting_exists("MAX_START_NODES")) {
-    MAX_START_NODES = settings.get_int("MAX_START_NODES");
-    debug("READ MAX_START_NODES: %lu from file\n", MAX_START_NODES);
-  }
-
-  if (settings.setting_exists("LENGTH_THRESHOLD")) {
-    LENGTH_THRESHOLD = settings.get_double("LENGTH_THRESHOLD");
-    debug("READ LENGTH_THRESHOLD: %lf from file\n", LENGTH_THRESHOLD);
-  }
-
-  if (settings.setting_exists("QUALITY_THRESHOLD")) {
-    QUALITY_THRESHOLD = settings.get_double("QUALITY_THRESHOLD");
-    debug("READ QUALITY_THRESHOLD: %lf from file\n", QUALITY_THRESHOLD);
-  }
+  READ_LEN_THRESHOLD = settings.get_or_store_int("READ_LEN_THRESHOLD", READ_LEN_THRESHOLD);
+  MAX_READS_IN_TIP = settings.get_or_store_int("MAX_READS_IN_TIP", MAX_READS_IN_TIP);
+  MAX_DEPTH_WITHOUT_EXTRA_FORK = settings.get_or_store_int("MAX_DEPTH_WITHOUT_EXTRA_FORK", MAX_DEPTH_WITHOUT_EXTRA_FORK);
+  MAX_NODES = settings.get_or_store_int("MAX_NODES", MAX_NODES);
+  MAX_DISTANCE = settings.get_or_store_int("MAX_DISTANCE", MAX_DISTANCE);
+  MAX_DIFFERENCE = settings.get_or_store_double("MAX_DIFFERENCE", MAX_DIFFERENCE);
+  MAX_BRANCHES = settings.get_or_store_int("MAX_BRANCHES", MAX_BRANCHES);
+  MAX_START_NODES = settings.get_or_store_int("MAX_START_NODES", MAX_START_NODES);
+  LENGTH_THRESHOLD = settings.get_or_store_double("LENGTH_THRESHOLD", LENGTH_THRESHOLD);
+  QUALITY_THRESHOLD = settings.get_or_store_double("QUALITY_THRESHOLD", QUALITY_THRESHOLD);
 }
 
 void write_settings(FILE *fd) {
-  fprintf(fd, "# filter reads parameters\n");
-
-  fprintf(fd, "# trimming parameters\n");
-  fprintf(fd, "READ_LEN_THRESHOLD: %d\n", READ_LEN_THRESHOLD);
-  fprintf(fd, "MAX_READS_IN_TIP: %d\n", MAX_READS_IN_TIP);
-  fprintf(fd, "MAX_DEPTH_WITHOUT_EXTRA_FORK: %d\n", MAX_DEPTH_WITHOUT_EXTRA_FORK);
-  fprintf(fd, "\n");
-
-  fprintf(fd, "# bubble popping parameters\n");
-  fprintf(fd, "MAX_NODES: %lu\n", MAX_NODES);
-  fprintf(fd, "MAX_DISTANCE: %d\n", MAX_DISTANCE);
-  fprintf(fd, "MAX_DIFFERENCE: %f\n", MAX_DIFFERENCE);
-  fprintf(fd, "\n");
-
-  fprintf(fd, "# contig extraction parameters\n");
-  fprintf(fd, "MAX_BRANCHES: %lu\n", MAX_BRANCHES);
-  fprintf(fd, "MAX_START_NODES: %lu\n", MAX_START_NODES);
-  fprintf(fd, "LENGTH_THRESHOLD: %f\n", LENGTH_THRESHOLD);
-  fprintf(fd, "QUALITY_THRESHOLD: %f\n", QUALITY_THRESHOLD);
-  fprintf(fd, "\n");
+  settings.dump_settings(fd);
 }
 
 void write_version(FILE* fd) {
@@ -263,9 +206,9 @@ int main(int argc, char **argv) {
   read_args();
 
   if (spec_file.size() > 0) {
-    FILE* settings_fd = must_fopen(spec_file, "r");
-    read_settings(settings_fd);
-    fclose(settings_fd);
+    FILE* specs_fd = must_fopen(spec_file, "r");
+    init_specs(specs_fd);
+    fclose(specs_fd);
   }
 
   auto run_args_file = must_fopen(working_directory + "/run_args.txt", "w");
