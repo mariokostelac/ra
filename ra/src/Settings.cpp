@@ -6,6 +6,31 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+
+string to_string(const int num) {
+  return std::to_string(num);
+}
+
+string to_string(const long long int num) {
+  return std::to_string(num);
+}
+
+string to_string(const double num) {
+  return std::to_string(num);
+}
+
+int to_int(const string s) {
+  return atoi(s.c_str());
+}
+
+long long int to_llint(const string s) {
+  return atol(s.c_str());
+}
+
+double to_double(const string s) {
+  return atof(s.c_str());
+}
 
 void Settings::load_settings(FILE *src) {
   char* buffer = new char[256];
@@ -44,7 +69,7 @@ void Settings::load_settings(FILE *src) {
     string value(key_end + 1, value_length);
 
     debug("settings.store %s -> %s\n", key.c_str(), value.c_str());
-    store_[store_key(key)] = value;
+    put(key, value);
   }
 
   delete[] buffer;
@@ -58,37 +83,79 @@ void Settings::dump_settings(FILE *dst) {
 
 const bool Settings::setting_exists(const string key) {
   debug("settings.setting_exists %s\n", key.c_str());
-  return store_.count(store_key(key)) > 0;
+  return store_.count(storage_key(key)) > 0;
 }
 
 const string Settings::get_string(const string key) {
   debug("settings.get_string %s\n", key.c_str());
-  return store_[store_key(key)];
+  return get(key);
+}
+
+const string Settings::get_or_store_string(const string key, const string value) {
+  debug("settings.get_or_store_string %s %s\n", key.c_str(), value.c_str());
+  if (setting_exists(key)) {
+    return get(key);
+  }
+
+  put(key, value);
+  return get(key);
 }
 
 const int Settings::get_int(const string key) {
   debug("settings.get_int %s\n", key.c_str());
-  int result;
-  sscanf(store_[store_key(key)].c_str(), " %d ", &result);
-  return result;
+  return to_int(get(key));
+}
+
+const int Settings::get_or_store_int(const string key, const int value) {
+  debug("settings.get_or_store_int %s %d\n", key.c_str(), value);
+  if (setting_exists(key)) {
+    return to_int(get(key));
+  }
+
+  put(key, to_string(value));
+  return value;
 }
 
 const long long int Settings::get_long_int(const string key) {
   debug("settings.get_long_int %s\n", key.c_str());
-  long long int result;
-  sscanf(store_[store_key(key)].c_str(), " %lld ", &result);
-  return result;
+  return to_llint(get(key));
+}
+
+const long long int Settings::get_or_store_long_int(const string key, const long long int value) {
+  debug("settings.get_or_store_long_int %s %lld\n", key.c_str(), value);
+  if (setting_exists(key)) {
+    return to_llint(get(key));
+  }
+
+  put(key, to_string(value));
+  return value;
 }
 
 const double Settings::get_double(const string key) {
   debug("settings.get_double %s\n", key.c_str());
-  double result;
-  sscanf(store_[store_key(key)].c_str(), " %lf ", &result);
-  return result;
+  return to_double(get(key));
 }
 
-const string Settings::store_key(const string user_key) {
-  string result_key(user_key);
-  std::transform(result_key.begin(), result_key.end(), result_key.begin(), ::tolower);
-  return result_key;
+const double Settings::get_or_store_double(const string key, const double value) {
+  debug("settings.get_or_store_double %s\n", key.c_str(), value);
+  if (setting_exists(key)) {
+    return to_double(get(key));
+  }
+
+  put(key, to_string(value));
+  return value;
+}
+
+void Settings::put(const string key, const string value) {
+  store_[storage_key(key)] = value;
+}
+
+const string Settings::get(const string key) {
+  return store_[storage_key(key)];
+}
+
+const string Settings::storage_key(const string key) {
+  string storage_key(key);
+  std::transform(storage_key.begin(), storage_key.end(), storage_key.begin(), ::tolower);
+  return storage_key;
 }
