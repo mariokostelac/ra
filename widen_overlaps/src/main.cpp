@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     dovetail_overlaps.push_back(forcedDovetailOverlap(o, true));
   }
 
-  fprintf(stderr, "Updating depot...");
+  fprintf(stderr, "Updating depot...\n");
   depot.store_overlaps(dovetail_overlaps);
 
   for (auto r: reads)               delete r;
