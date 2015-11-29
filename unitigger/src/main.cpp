@@ -33,64 +33,6 @@ string working_directory;
 
 Settings settings;
 
-void must_one_overlap_per_pair(const vector<Overlap*>& overlaps) {
-  set<pair<uint32_t, uint32_t>> seen;
-
-  for (const auto& overlap: overlaps) {
-    uint32_t a = min(overlap->a(), overlap->b());
-    uint32_t b = max(overlap->a(), overlap->b());
-
-    if (seen.count(make_pair(a, b)) > 0) {
-      fprintf(stderr, "Read pair (%d, %d) has more than one overlap\n", a, b);
-      exit(1);
-    }
-
-    seen.insert(make_pair(a, b));
-  }
-}
-
-uint32_t filter_best_overlap_per_pair(vector<Overlap*>* overlaps) {
-  map<pair<uint32_t, uint32_t>, Overlap*> best;
-
-  for (const auto& overlap: *overlaps) {
-    uint32_t a = min(overlap->a(), overlap->b());
-    uint32_t b = max(overlap->a(), overlap->b());
-
-    auto key = make_pair(a, b);
-    if (best.count(key)) {
-      if (overlap->err_rate() < best[key]->err_rate()) {
-        best[key] = overlap;
-      }
-
-    } else {
-      best[key] = overlap;
-    }
-  }
-
-  int removed = 0;
-  for (uint32_t i = 0; i < overlaps->size(); ++i) {
-    const auto& overlap = (*overlaps)[i];
-    uint32_t a = min(overlap->a(), overlap->b());
-    uint32_t b = max(overlap->a(), overlap->b());
-
-    auto key = make_pair(a, b);
-    if (best[key] != overlap) {
-      removed++;
-      delete (*overlaps)[i];
-    }
-  }
-
-  uint32_t idx = 0;
-  for (auto kv: best) {
-    (*overlaps)[idx] = kv.second;
-    idx++;
-  }
-
-  overlaps->resize(best.size());
-
-  return removed;
-}
-
 void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
 
   for (uint32_t i = 0; i < walks.size(); ++i) {
@@ -231,15 +173,10 @@ int main(int argc, char **argv) {
   depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
-  int had_overlaps = overlaps.size();
-
-  auto filtered_duplicates = filter_best_overlap_per_pair(&overlaps);
-  fprintf(stderr, "%d (%.2lf%%) overlaps filtered because had more than one overlap per read pair\n",
-      filtered_duplicates, 100. * filtered_duplicates / had_overlaps);
-
-  must_one_overlap_per_pair(overlaps);
-
+  fprintf(stderr, "Building string graph...\n");
   StringGraph* graph = new StringGraph(reads, overlaps);
+
+  fprintf(stderr, "Simplifying string graph...\n");
   graph->simplify();
 
   fprintf(stderr, "Simplified string graph: %lu vertices, %lu edges\n", graph->getNumVertices(), graph->getNumEdges());
