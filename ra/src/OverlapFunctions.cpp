@@ -514,7 +514,7 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
     }
 
     double orig_err_rate = orig_edit_distance / (double) o->length();
-    double err_rate = (orig_edit_distance + added_edit_distance) / (double) (new_a_hi - new_a_lo + new_b_hi - new_b_lo)/2;
+    double err_rate = (orig_edit_distance + added_edit_distance) / (0.5 * (new_a_hi - new_a_lo + new_b_hi - new_b_lo));
 
     return new Overlap(o->read_a(), new_a_lo, new_a_hi, false,
         o->read_b(), new_b_lo, new_b_hi, false,

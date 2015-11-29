@@ -449,6 +449,7 @@ void StringGraph::simplify() {
     size_t numEdges = 0;
 
     while (numVertices != vertices_.size() || numEdges != edges_.size()) {
+        fprintf(stderr, "new simplification round...\n");
 
         numVertices = vertices_.size();
         numEdges = edges_.size();
@@ -460,6 +461,7 @@ void StringGraph::simplify() {
             num_vertices_before = vertices_.size();
 
             ++numTrimmingRounds;
+            fprintf(stderr, "trimming...\n");
             trim();
         }
 
