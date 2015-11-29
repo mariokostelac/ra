@@ -379,21 +379,3 @@ TEST(DovetailOverlap, extractOverlappedPartInnie1) {
   delete read_a;
   delete overlap;
 }
-
-TEST(DovetailOverlap, extractOverlappedPartInnie2) {
-  //    |||
-  //    CGTTTT
-  // AAACGT
-  //    |||
-  auto read_a = new Read(1, "read1", "CGTTTT", "", 1);
-  auto read_b = new Read(2, "read2", reverseComplement("AAACGT").c_str(), "", 1);
-
-  auto overlap = new Overlap(read_a, -3, read_b, -3, true);
-
-  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(read_a->id()).c_str());
-  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(read_b->id()).c_str());
-
-  delete read_b;
-  delete read_a;
-  delete overlap;
-}

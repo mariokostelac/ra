@@ -21,3 +21,5 @@
  * @return edit distance
  */
 extern int32_t editDistance(const std::string& query, const std::string& target);
+
+extern int32_t editDistanceSHW(const std::string& query, int query_lo, const std::string& target, int target_lo, int* query_best_end);

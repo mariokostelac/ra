@@ -35,9 +35,6 @@ TEST(FilterTransitives, SimpleTest1) {
   delete read1;
 }
 
-//std::pair<int, int> calculateForcedHangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
-    //uint32_t b_lo, uint32_t b_hi, uint32_t b_len);
-
 TEST(CalcForcedHangs, SimpleTest1) {
   // -|-|>
   //  |-|->
@@ -96,4 +93,126 @@ TEST(CalcForcedHangs, SimpleTest5) {
 
   ASSERT_EQ(-1, hangs.first);
   ASSERT_EQ(1, hangs.second);
+}
+
+TEST(DovetailOverlap, extractOverlappedPartInnie2) {
+  //    |||
+  //    CGTTTT
+  // AAACGT
+  //    |||
+  auto read_a = new Read(1, "read1", "CGTTTT", "", 1);
+  auto read_b = new Read(2, "read2", reverseComplement("AAACGT").c_str(), "", 1);
+
+  auto overlap = new Overlap(read_a, -3, read_b, -3, true);
+
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(read_a->id()).c_str());
+  ASSERT_STREQ("CGT", overlap->extract_overlapped_part(read_b->id()).c_str());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
+}
+
+TEST(ForcedDovetailOverlap, SuffixPrefixDovetailingAllowsGapsInQuery) {
+
+  // CGTTTCCCC
+  //   |||
+  //  GTTTCCCCAA
+  auto read_a = new Read(1, "read1", "CGTTTCCCC", "", 1);
+  auto read_b = new Read(2, "read2", "GTTTCCCCAA", "", 1);
+
+  Overlap* overlap = new Overlap(read_a, 2, 5, false, read_b, 1, 4, false);
+  Overlap* dovetail_overlap = forcedDovetailOverlap(overlap, true);
+
+  ASSERT_EQ(1, dovetail_overlap->a_lo());
+  ASSERT_EQ(read_a->length(), dovetail_overlap->a_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->b_lo());
+  ASSERT_EQ(8, dovetail_overlap->b_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->err_rate());
+  ASSERT_EQ(0, dovetail_overlap->orig_err_rate());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
+  delete dovetail_overlap;
+}
+
+TEST(ForcedDovetailOverlap, PrefixSuffixDovetailingAllowsGapsInQuery) {
+
+  //   AAAACCC
+  //    |||
+  // GGAAAACC
+  auto read_a = new Read(1, "read1", "AAAACCC", "", 1);
+  auto read_b = new Read(2, "read2", "GGAAAACC", "", 1);
+
+  Overlap* overlap = new Overlap(read_a, 1, 4, false, read_b, 3, 6, false);
+  Overlap* dovetail_overlap = forcedDovetailOverlap(overlap, true);
+
+  ASSERT_EQ(0, dovetail_overlap->a_lo());
+  ASSERT_EQ(6, dovetail_overlap->a_hi());
+
+  ASSERT_EQ(2, dovetail_overlap->b_lo());
+  ASSERT_EQ(read_b->length(), dovetail_overlap->b_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->err_rate());
+  ASSERT_EQ(0, dovetail_overlap->orig_err_rate());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
+  delete dovetail_overlap;
+}
+
+TEST(ForcedDovetailOverlap, PrefixPrefixDovetailingAllowsGapsInQuery) {
+
+  //   AAAACCC
+  //    |||
+  // GGAAAACC
+  auto read_a = new Read(1, "read1", "AAAACCC", "", 1);
+  auto read_b = new Read(2, "read2", reverseComplement("GGAAAACC"), "", 1);
+
+  Overlap* overlap = new Overlap(read_a, 1, 4, false, read_b, 3, 6, true);
+  Overlap* dovetail_overlap = forcedDovetailOverlap(overlap, true);
+
+  ASSERT_EQ(0, dovetail_overlap->a_lo());
+  ASSERT_EQ(read_a->length() - 1, dovetail_overlap->a_hi());
+
+  ASSERT_EQ(2, dovetail_overlap->b_lo());
+  ASSERT_EQ(read_b->length(), dovetail_overlap->b_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->err_rate());
+  ASSERT_EQ(0, dovetail_overlap->orig_err_rate());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
+  delete dovetail_overlap;
+}
+
+TEST(ForcedDovetailOverlap, SuffixSuffixDovetailingAllowsGapsInQuery) {
+
+  // AAACCCC
+  //    |||
+  //   ACCCCGGG
+  auto read_a = new Read(1, "read1", "AAACCCC", "", 1);
+  auto read_b = new Read(2, "read2", reverseComplement("ACCCCGGG"), "", 1);
+
+  Overlap* overlap = new Overlap(read_a, 3, 6, false, read_b, 1, 4, true);
+  Overlap* dovetail_overlap = forcedDovetailOverlap(overlap, true);
+
+  ASSERT_EQ(2, dovetail_overlap->a_lo());
+  ASSERT_EQ(read_a->length(), dovetail_overlap->a_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->b_lo());
+  ASSERT_EQ(5, dovetail_overlap->b_hi());
+
+  ASSERT_EQ(0, dovetail_overlap->err_rate());
+  ASSERT_EQ(0, dovetail_overlap->orig_err_rate());
+
+  delete read_b;
+  delete read_a;
+  delete overlap;
+  delete dovetail_overlap;
 }

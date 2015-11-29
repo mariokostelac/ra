@@ -9,7 +9,7 @@
 
 #include "EditDistance.hpp"
 
- #include "../vendor/edlib/edlib.h"
+#include "../vendor/edlib/edlib.h"
 
 static unsigned char toUnsignedChar(char c) {
 
@@ -70,6 +70,54 @@ extern int editDistance(const std::string& queryStr, const std::string& targetSt
     edlibCalcEditDistance(query, queryLength, target, targetLength, alphabetLength,
         k, mode, findStartLocations, findAlignment, &score, &endLocations,
         &startLocations, &numLocations, &alignemnt, &alignmentLength);
+
+    free(alignemnt);
+    free(startLocations);
+    free(endLocations);
+
+    delete[] target;
+    delete[] query;
+
+    return score;
+}
+
+extern int32_t editDistanceSHW(const std::string& queryStr, int query_lo, const std::string& targetStr, int target_lo, int* query_best_end) {
+    int queryLength = queryStr.size() - query_lo;
+    int targetLength = targetStr.size() - target_lo;
+
+    if (queryLength == 0) return 0;
+    if (targetLength == 0) return queryLength;
+
+    unsigned char* query = new unsigned char[queryLength];
+
+    for (int i = 0; i < queryLength; ++i) {
+        query[i] = toUnsignedChar(queryStr[i + query_lo]);
+    }
+
+    unsigned char* target = new unsigned char[targetLength];
+
+    for (int i = 0; i < targetLength; ++i) {
+        target[i] = toUnsignedChar(targetStr[i + target_lo]);
+    }
+
+    int alphabetLength = 5;
+    int k = -1;
+    int mode = EDLIB_MODE_SHW;
+    bool findStartLocations = false;
+    bool findAlignment = false;
+    int score = 0;
+    int* endLocations = nullptr; // dummy
+    int* startLocations = nullptr; // dummy
+    int numLocations = 0; // dummy;
+    unsigned char* alignemnt = nullptr; // dummy
+    int alignmentLength = 0; // dummy;
+
+    edlibCalcEditDistance(query, queryLength, target, targetLength, alphabetLength,
+        k, mode, findStartLocations, findAlignment, &score, &endLocations,
+        &startLocations, &numLocations, &alignemnt, &alignmentLength);
+
+    assert(numLocations > 0);
+    *query_best_end = endLocations[0] + 1; // we like [lo, hi>
 
     free(alignemnt);
     free(startLocations);

@@ -1,6 +1,9 @@
 #include "ReadIndex.hpp"
 #include "EditDistance.hpp"
 #include "OverlapFunctions.hpp"
+#include <string>
+
+using std::string;
 
 static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*>& reads,
     int rk, int minOverlapLen, int threadLen, const char* path, const char* ext);
@@ -354,16 +357,123 @@ std::pair<int, int> calculateForcedHangs(uint32_t a_lo, uint32_t a_hi, uint32_t 
     return hangs;
 }
 
+void stretchSuffixPrefixOverlap(const Overlap* o, int* new_a_lo, int* new_a_hi, int* new_b_lo, int* new_b_hi, int* edit_distance) {
+  int query_used_bases = -1;
+  // -----x>   a
+  //   ---xxx> b
+  // target = b, query = a
+
+  // process 'x' part
+  *new_a_hi = o->read_a()->length();
+
+  int x_edit_distance = editDistanceSHW(o->read_a()->sequence(), o->a_hi(), o->read_b()->sequence(), o->b_hi(), &query_used_bases);
+  *new_b_hi = o->b_hi() + query_used_bases;
+
+  // ooo--->   a
+  //   o-----> b
+  // target = a, query = b
+  *new_b_lo = 0;
+  string target = o->read_a()->sequence().substr(0, o->a_lo());
+  string query = o->read_b()->sequence().substr(0, o->b_lo());
+  std::reverse(target.begin(), target.end());
+  std::reverse(query.begin(), query.end());
+
+  int o_edit_distance = editDistanceSHW(query, 0, target, 0, &query_used_bases);
+  *new_a_lo = target.length() - query_used_bases;
+
+  *edit_distance = x_edit_distance + o_edit_distance;
+}
+
+void stretchPrefixSuffixOverlap(const Overlap* o, int* new_a_lo, int* new_a_hi, int* new_b_lo, int* new_b_hi, int* edit_distance) {
+  int query_used_bases = -1;
+  //   ---xxx> a
+  // -----x>   b
+  // target = a, query = b
+
+  // process 'x' part
+  *new_b_hi = o->read_b()->length();
+
+  int x_edit_distance = editDistanceSHW(o->read_b()->sequence(), o->b_hi(), o->read_a()->sequence(), o->a_hi(), &query_used_bases);
+  *new_a_hi = o->a_hi() + query_used_bases;
+
+  //   o-----> a
+  // ooo--->   b
+  // target = b, query = a
+  *new_a_lo = 0;
+  string target = o->read_b()->sequence().substr(0, o->b_lo());
+  string query = o->read_a()->sequence().substr(0, o->a_lo());
+  std::reverse(target.begin(), target.end());
+  std::reverse(query.begin(), query.end());
+
+  int o_edit_distance = editDistanceSHW(query, 0, target, 0, &query_used_bases);
+  *new_b_lo = target.length() - query_used_bases;
+
+  *edit_distance = x_edit_distance + o_edit_distance;
+}
+
+void stretchPrefixPrefixOverlap(const Overlap* o, int* new_a_lo, int* new_a_hi, int* new_b_lo, int* new_b_hi, int* edit_distance) {
+  int query_used_bases = -1, x_edit_distance = -1, o_edit_distance = -1;
+  //   ----xxx> a
+  // <-----x   b
+  // target = a, query = b
+  {
+    *new_b_hi = o->read_b()->length();
+    string query = o->read_b()->reverse_complement().substr(o->b_hi());
+    x_edit_distance = editDistanceSHW(query, 0, o->read_a()->sequence(), o->a_hi(), &query_used_bases);
+    *new_a_hi = o->a_hi() + query_used_bases;
+  }
+
+  //   o-----> a
+  // <oo----   b
+  // target = b, query = a
+  {
+    *new_a_lo = 0;
+    string target = o->read_b()->reverse_complement().substr(0, o->b_lo());
+    string query = o->read_a()->sequence().substr(0, o->a_lo());
+    std::reverse(target.begin(), target.end());
+    std::reverse(query.begin(), query.end());
+
+    o_edit_distance = editDistanceSHW(query, 0, target, 0, &query_used_bases);
+    *new_b_lo = o->b_lo() - query_used_bases;
+  }
+
+  *edit_distance = x_edit_distance + o_edit_distance;
+}
+
+void stretchSuffixSuffixOverlap(const Overlap* o, int* new_a_lo, int* new_a_hi, int* new_b_lo, int* new_b_hi, int* edit_distance) {
+  int query_used_bases = -1, x_edit_distance = -1, o_edit_distance = -1;
+  // -----x>   a
+  //   <--xxxx b
+  // target = b, query = a
+  {
+    *new_a_hi = o->read_a()->length();
+    string target = o->read_b()->reverse_complement().substr(o->b_hi());
+    x_edit_distance = editDistanceSHW(o->read_a()->sequence(), o->a_hi(), target, 0, &query_used_bases);
+    *new_b_hi = o->b_hi() + query_used_bases;
+  }
+
+  // oooo-->   a
+  //   <o----- b
+  // target = a, query = b
+  {
+    *new_b_lo = 0;
+    string target = o->read_a()->sequence().substr(0, o->a_lo());
+    string query = o->read_b()->reverse_complement().substr(0, o->b_lo());
+    std::reverse(target.begin(), target.end());
+    std::reverse(query.begin(), query.end());
+
+    o_edit_distance = editDistanceSHW(query, 0, target, 0, &query_used_bases);
+    *new_a_lo = o->a_lo() - query_used_bases;
+  }
+
+  *edit_distance = x_edit_distance + o_edit_distance;
+}
+
 Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
 
     if (o->is_dovetail()) {
         return o->clone();
     }
-
-    auto a_part = o->extract_overlapped_part(o->a());
-    auto b_part = o->extract_overlapped_part(o->b());
-
-    double orig_err_rate = editDistance(a_part, b_part) / (double) o->length();
 
     const auto hangs = calculateForcedHangs(
         o->a_lo(), o->a_hi(), o->read_a()->length(),
@@ -372,13 +482,41 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
 
     Overlap tmp(o->read_a(), hangs.first, o->read_b(), hangs.second, o->is_innie());
 
-    a_part = tmp.extract_overlapped_part(tmp.a());
-    b_part = tmp.extract_overlapped_part(tmp.b());
+    if (tmp.is_using_prefix(tmp.a()) && tmp.is_using_suffix(tmp.a())) {
+      return nullptr;
+    }
 
-    double err_rate = editDistance(a_part, b_part) / (double) tmp.length();
+    if (tmp.is_using_prefix(tmp.b()) && tmp.is_using_suffix(tmp.b())) {
+      return nullptr;
+    }
 
-    auto res = new Overlap(tmp.read_a(), tmp.a_hang(), tmp.read_b(), tmp.b_hang(),
-        tmp.is_innie(), err_rate, orig_err_rate);
+    // extend overlaps with SHW mode so we make less errors and have better edit distance calculation
+    // SHW mode - gaps at query end are not penalised
+    int a = tmp.a(), b = tmp.b();
+    int added_edit_distance = 0,
+        orig_edit_distance = editDistance(o->extract_overlapped_part(a), o->extract_overlapped_part(b));
 
-    return res;
+    int new_a_lo = -1, new_a_hi = -1,
+        new_b_lo = -1, new_b_hi = -1;
+
+    if (tmp.is_using_suffix(a) && tmp.is_using_prefix(b)) {
+      assert(tmp.is_innie() == false);
+      stretchSuffixPrefixOverlap(o, &new_a_lo, &new_a_hi, &new_b_lo, &new_b_hi, &added_edit_distance);
+    } else if (tmp.is_using_prefix(a) && tmp.is_using_suffix(b)) {
+      assert(tmp.is_innie() == false);
+      stretchPrefixSuffixOverlap(o, &new_a_lo, &new_a_hi, &new_b_lo, &new_b_hi, &added_edit_distance);
+    } else if (tmp.is_using_prefix(a) && tmp.is_using_prefix(b)) {
+      assert(tmp.is_innie() == true);
+      stretchPrefixPrefixOverlap(o, &new_a_lo, &new_a_hi, &new_b_lo, &new_b_hi, &added_edit_distance);
+    } else if (tmp.is_using_suffix(a) && tmp.is_using_suffix(b)) {
+      assert(tmp.is_innie() == true);
+      stretchSuffixSuffixOverlap(o, &new_a_lo, &new_a_hi, &new_b_lo, &new_b_hi, &added_edit_distance);
+    }
+
+    double orig_err_rate = orig_edit_distance / (double) o->length();
+    double err_rate = (orig_edit_distance + added_edit_distance) / (double) (new_a_hi - new_a_lo + new_b_hi - new_b_lo)/2;
+
+    return new Overlap(o->read_a(), new_a_lo, new_a_hi, false,
+        o->read_b(), new_b_lo, new_b_hi, false,
+        err_rate, orig_err_rate);
 }
