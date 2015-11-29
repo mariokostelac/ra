@@ -44,10 +44,20 @@ int main(int argc, char **argv) {
   depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
-  vector<Overlap*> dovetail_overlaps;
-  for (auto o : overlaps) {
-    dovetail_overlaps.push_back(forcedDovetailOverlap(o, true));
+  vector<Overlap*> dovetail_overlaps(overlaps.size());
+  for (int i = 0; i < (int) overlaps.size(); ++i) {
+    dovetail_overlaps[i] = forcedDovetailOverlap(overlaps[i], true);
+    assert(dovetail_overlaps[i] != nullptr);
   }
+
+  int idx = 0;
+  for (int i = 0; i < (int) dovetail_overlaps.size(); ++i) {
+    if (dovetail_overlaps[i] == nullptr) continue;
+    dovetail_overlaps[idx] = dovetail_overlaps[i];
+    idx++;
+  }
+
+  dovetail_overlaps.resize(idx);
 
   fprintf(stderr, "Updating depot...\n");
   depot.store_overlaps(dovetail_overlaps);
