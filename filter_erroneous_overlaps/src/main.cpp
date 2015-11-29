@@ -66,7 +66,7 @@ void filter_overlaps_by_absolute_errate(OverlapSet* overlaps, double upper_limit
   overlaps->resize(next_position);
 
   int diff = size_before - overlaps->size();
-  fprintf(stderr, "Filtered %d overlaps (%lf %%)\n", diff, 1.0 * diff / size_before);
+  fprintf(stderr, "Filtered %d overlaps (%lf%%)\n", diff, 100.0 * diff / size_before);
 }
 
 void print_stats(OverlapSet& overlaps) {
