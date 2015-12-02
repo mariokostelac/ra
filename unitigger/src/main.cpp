@@ -33,14 +33,14 @@ string working_directory;
 
 Settings settings;
 
-void print_contigs_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
+void print_walks_info(const vector<StringGraphWalk*>& walks, const vector<Read*>& reads) {
 
   for (uint32_t i = 0; i < walks.size(); ++i) {
     Contig contig(walks[i]);
     const auto& parts = contig.getParts();
     const auto& last_part = contig.getParts().back();
 
-    fprintf(stdout, "contig %u; length: ≈%u, reads: %lu\n",
+    fprintf(stdout, "sequence %u; length: ≈%u, reads: %lu\n",
         i, last_part.offset + reads[last_part.src]->length(), parts.size()
     );
     for (const auto& p: parts) {
@@ -132,18 +132,41 @@ int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, const Stri
 
 void write_contigs_to_file(const vector<StringGraphWalk*> walks, const char* filename) {
 
-  int idx = 0;
+  FILE *contigs_fast = must_fopen(filename, "w");
 
-  auto contigs_fast = must_fopen(filename, "w");
-  for (const auto& walk : walks) {
+  for (int i = 0; i < (int) walks.size(); ++i) {
+    string seq;
+    walks[i]->extractSequence(seq);
+
+    fprintf(contigs_fast, ">seq%d|len:%lu\n", i, seq.size());
+    fprintf(contigs_fast, "%s\n", seq.c_str());
+  }
+
+  fclose(contigs_fast);
+}
+
+void sort_walks_by_length_desc(vector<StringGraphWalk*>* walks) {
+
+  using elem = pair<StringGraphWalk*, string>;
+
+  vector<elem> walks_with_seqs;
+  for (int i = 0; i < (int) walks->size(); ++i) {
+    auto walk = walks->at(i);
     string seq;
     walk->extractSequence(seq);
 
-    fprintf(contigs_fast, ">seq%d|len:%lu\n", idx, seq.size());
-    fprintf(contigs_fast, "%s\n", seq.c_str());
-    idx++;
+    walks_with_seqs.push_back(make_pair(walk, seq));
   }
-  fclose(contigs_fast);
+
+  auto cmp = [&walks_with_seqs](elem& a, elem& b) {
+    return a.second.size() > b.second.size();
+  };
+
+  sort(walks_with_seqs.begin(), walks_with_seqs.end(), cmp);
+
+  for (int i = 0; i < (int) walks_with_seqs.size(); ++i) {
+    (*walks)[i] = walks_with_seqs[i].first;
+  }
 }
 
 int main(int argc, char **argv) {
@@ -183,9 +206,11 @@ int main(int argc, char **argv) {
 
   std::vector<StringGraphWalk*> unitig_walks;
   graph->extract_unitigs(&unitig_walks);
-  write_contigs_to_file(unitig_walks, (working_directory + "/unitigs_fast.fasta").c_str());
+  sort_walks_by_length_desc(&unitig_walks);
 
+  write_contigs_to_file(unitig_walks, (working_directory + "/unitigs_fast.fasta").c_str());
   std::cerr << "number of unitigs " << unitig_walks.size() << std::endl;
+  print_walks_info(unitig_walks, reads);
 
   vector<Contig*> unitigs;
   for (const auto& unitig_walk : unitig_walks) {
@@ -196,11 +221,12 @@ int main(int argc, char **argv) {
 
   std::vector<StringGraphWalk*> contig_walks;
   extract_contig_walks(&contig_walks, graph);
+  sort_walks_by_length_desc(&contig_walks);
 
   write_contigs_to_file(contig_walks, (working_directory + "/contigs_fast.fasta").c_str());
 
   std::cerr << "number of contigs " << contig_walks.size() << std::endl;
-  print_contigs_info(contig_walks, reads);
+  print_walks_info(contig_walks, reads);
 
   vector<Contig*> contigs;
   for (const auto& contig_walk : contig_walks) {
