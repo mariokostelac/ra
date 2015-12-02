@@ -475,12 +475,12 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
         return o->clone();
     }
 
-    const auto hangs = calculateForcedHangs(
+    const auto forced_hangs = calculateForcedHangs(
         o->a_lo(), o->a_hi(), o->read_a()->length(),
         o->b_lo(), o->b_hi(), o->read_b()->length()
     );
 
-    Overlap tmp(o->read_a(), hangs.first, o->read_b(), hangs.second, o->is_innie());
+    Overlap tmp(o->read_a(), forced_hangs.first, o->read_b(), forced_hangs.second, o->is_innie());
 
     if (tmp.is_using_prefix(tmp.a()) && tmp.is_using_suffix(tmp.a())) {
       return nullptr;
@@ -516,7 +516,10 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
     double orig_err_rate = orig_edit_distance / (double) o->length();
     double err_rate = (orig_edit_distance + added_edit_distance) / (0.5 * (new_a_hi - new_a_lo + new_b_hi - new_b_lo));
 
-    return new Overlap(o->read_a(), new_a_lo, new_a_hi, false,
-        o->read_b(), new_b_lo, new_b_hi, false,
-        err_rate, orig_err_rate);
+    const auto hangs = calculateForcedHangs(
+        new_a_lo, new_a_hi, o->read_a()->length(),
+        new_b_lo, new_b_hi, o->read_b()->length()
+    );
+
+    return new Overlap(o->read_a(), hangs.first, o->read_b(), hangs.second, o->is_innie(), err_rate, orig_err_rate);
 }
