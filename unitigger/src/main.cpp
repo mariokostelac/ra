@@ -235,6 +235,10 @@ int main(int argc, char **argv) {
   }
   writeAfgContigs(contigs, (working_directory + "/contigs.afg").c_str());
 
+  vector<Overlap*> simplified_overlaps;
+  graph->extractOverlaps(simplified_overlaps);
+  write_overlaps(simplified_overlaps, working_directory + "/final.mhap");
+
   for (auto r: reads)           delete r;
   for (auto o: overlaps)        delete o;
   for (auto c: contig_walks)    delete c;
