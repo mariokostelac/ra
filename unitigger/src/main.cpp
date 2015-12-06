@@ -158,7 +158,8 @@ void sort_walks_by_length_desc(vector<StringGraphWalk*>* walks) {
     walks_with_seqs.push_back(make_pair(walk, seq));
   }
 
-  auto cmp = [&walks_with_seqs](elem& a, elem& b) {
+  // it seems sort will copy elements every time, but hey, premature optimization...
+  auto cmp = [](elem a, elem b) {
     return a.second.size() > b.second.size();
   };
 
