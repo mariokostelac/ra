@@ -6,10 +6,12 @@
 #include "cmdline/cmdline.h"
 #include "ra/ra.hpp"
 #include <vector>
+#include <set>
 
 using std::fstream;
 using std::string;
 using std::vector;
+using std::set;
 
 // global vars
 cmdline::parser args;
@@ -45,15 +47,33 @@ int main(int argc, char **argv) {
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
 
   vector<Overlap*> dovetail_overlaps(overlaps.size());
+  set<const Read*> contained_reads;
   for (int i = 0; i < (int) overlaps.size(); ++i) {
-    dovetail_overlaps[i] = forcedDovetailOverlap(overlaps[i], true);
-    assert(dovetail_overlaps[i] != nullptr);
+    auto o = forcedDovetailOverlap(overlaps[i], true);
+    dovetail_overlaps[i] = o;
+
+    if (o->is_using_prefix(o->a()) && o->is_using_suffix(o->a())) {
+      contained_reads.insert(o->read_a());
+    }
+
+    if (o->is_using_prefix(o->b()) && o->is_using_suffix(o->b())) {
+      contained_reads.insert(o->read_b());
+    }
   }
 
   int idx = 0;
   for (int i = 0; i < (int) dovetail_overlaps.size(); ++i) {
-    if (dovetail_overlaps[i] == nullptr) continue;
-    dovetail_overlaps[idx] = dovetail_overlaps[i];
+    auto o = dovetail_overlaps[i];
+    if (contained_reads.count(o->read_a())) {
+      fprintf(stderr, "Skipping %d %d because read %d is contained\n", o->a(), o->b(), o->a());
+      continue;
+    }
+    if (contained_reads.count(o->read_b())) {
+      fprintf(stderr, "Skipping %d %d because read %d is contained\n", o->a(), o->b(), o->b());
+      continue;
+    }
+
+    dovetail_overlaps[idx] = o;
     idx++;
   }
 

@@ -482,14 +482,6 @@ Overlap* forcedDovetailOverlap(const Overlap* o, bool calc_error_rates) {
 
     Overlap tmp(o->read_a(), forced_hangs.first, o->read_b(), forced_hangs.second, o->is_innie());
 
-    if (tmp.is_using_prefix(tmp.a()) && tmp.is_using_suffix(tmp.a())) {
-      return nullptr;
-    }
-
-    if (tmp.is_using_prefix(tmp.b()) && tmp.is_using_suffix(tmp.b())) {
-      return nullptr;
-    }
-
     // extend overlaps with SHW mode so we make less errors and have better edit distance calculation
     // SHW mode - gaps at query end are not penalised
     int a = tmp.a(), b = tmp.b();
