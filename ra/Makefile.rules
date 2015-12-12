@@ -19,7 +19,7 @@ LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp
 AR_FLAGS = rcs
 
 API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp Contig.hpp Depot.hpp DepotObject.hpp \
-    EnhancedSuffixArray.hpp Globals.hpp IO.hpp EdgesSet.hpp MhapParser.hpp Overlap.hpp \
+    EnhancedSuffixArray.hpp Globals.hpp IO.hpp EdgesSet.hpp MhapParser.hpp Overlap.hpp Graph.hpp \
     OverlapFunctions.hpp PartialOrderAlignment.hpp Preprocess.hpp ra.hpp Read.hpp Settings.hpp\
     ReadIndex.hpp StringGraph.hpp StringGraphUtils.hpp Utils.hpp)
 

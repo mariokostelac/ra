@@ -15,6 +15,7 @@
 #include "DepotObject.hpp"
 #include "EnhancedSuffixArray.hpp"
 #include "Globals.hpp"
+#include "Graph.hpp"
 #include "IO.hpp"
 #include "MhapParser.hpp"
 #include "Overlap.hpp"
