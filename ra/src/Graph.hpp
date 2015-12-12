@@ -61,6 +61,7 @@ namespace Graph {
 
     public:
       Edge(Node* src, Node* dst) {
+        id_ = -1;
         src_ = src;
         dst_ = dst;
       }
