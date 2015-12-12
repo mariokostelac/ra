@@ -97,9 +97,9 @@ namespace Graph {
 
   uint64_t Graph::node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) {
     uint64_t hash = 0;
-    hash = hash | (uint32_t) type;
+    hash = hash | (uint16_t) type;
     hash = hash << 16;
-    hash = hash | (uint32_t) used_end;
+    hash = hash | (uint16_t) used_end;
     hash = hash << 16;
     hash = hash | object_id;
     return hash;
