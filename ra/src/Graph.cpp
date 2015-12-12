@@ -111,6 +111,8 @@ namespace Graph {
     edge->id_ = edges_.size();
     edges_.push_back(edge);
     edge_by_hash_[edge_hash(edge->src(), edge->dst())] = edge;
+
+    edge->src()->out_edges_.push_back(edge);
   }
 
   uint64_t Graph::edge_hash(Node* src, Node* dst) {

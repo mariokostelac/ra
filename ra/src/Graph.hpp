@@ -1,14 +1,20 @@
 #pragma once
 
 #include <cstdint>
+#include <list>
 #include <unordered_map>
 #include <vector>
 #include "Overlap.hpp"
 
+using std::list;
 using std::unordered_map;
 using std::vector;
 
 namespace Graph {
+
+  class Node;
+  class Edge;
+  class Graph;
 
   class Node {
 
@@ -46,6 +52,7 @@ namespace Graph {
       uint32_t object_id_;
       Type type_;
       Side used_end_;
+      list<Edge*> out_edges_;
   };
 
   class Edge {
