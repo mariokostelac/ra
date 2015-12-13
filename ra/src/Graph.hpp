@@ -43,6 +43,10 @@ namespace Graph {
         return used_end_;
       }
 
+      const list<Edge*> edges() const {
+        return out_edges_;
+      }
+
     private:
       int32_t node_id_;
       Type type_;
@@ -85,12 +89,20 @@ namespace Graph {
 
     void add_edge(Edge* edge);
 
-    uint32_t nodes_count() {
+    uint32_t nodes_count() const {
       return nodes_.size();
     }
 
-    uint32_t edges_count() {
+    uint32_t edges_count() const {
       return edges_.size();
+    }
+
+    const vector<Node*> nodes() const {
+      return nodes_;
+    }
+
+    const vector<Edge*> edges() const {
+      return edges_;
     }
 
     private:

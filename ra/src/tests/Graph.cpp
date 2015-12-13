@@ -1,10 +1,32 @@
-#include <string>
 #include "gtest/gtest.h"
 #include "ra.hpp"
 
 using namespace std;
 
 const int THREAD_LEN = 1;
+
+int32_t chain_len(Graph::Node* curr_node) {
+  int32_t len = 0;
+  while (true) {
+    len++;
+    if (curr_node->edges().size() != 1) {
+      break;
+    }
+    curr_node = curr_node->edges().front()->dst();
+  }
+
+  return len;
+}
+
+vector<Read*> reads_from_seqs(vector<string>& seqs) {
+  vector<Read*> reads;
+
+  for (uint32_t i = 0; i < seqs.size(); ++i) {
+    reads.push_back(new Read(i, std::to_string(i), seqs[i], "", 1));
+  }
+
+  return reads;
+}
 
 TEST(Graph, get_or_create_node_by_assigns_correct_values) {
   int object_id = 0x12345678;
@@ -83,3 +105,42 @@ TEST(Graph, add_edge_adds_edge_to_graph) {
 }
 
 
+TEST(Graph, from_overlaps_assembles_chain_to_two_chains) {
+  string genome = "AACCGGTATC";
+
+  vector<string> seqs;
+  seqs.push_back(genome.substr(0, 4));
+  seqs.push_back(genome.substr(2, 4));
+  seqs.push_back(genome.substr(4, 4));
+  seqs.push_back(genome.substr(6, 4));
+
+  auto reads = reads_from_seqs(seqs);
+  vector<Overlap*> overlaps;
+
+  overlapReads(overlaps, reads, 2);
+
+  ASSERT_EQ(3, overlaps.size());
+
+  Graph::Graph *g = Graph::Graph::from_overlaps(overlaps);
+
+  ASSERT_EQ(4 * 2, g->nodes_count()); // every seq x 2 ends
+  ASSERT_EQ(3 * 2, g->edges_count()); // every overlap x 2 directions
+
+  unordered_map<int, int> chain_lengths;
+  int max_chain_len = 0;
+  for (auto node : g->nodes()) {
+    ASSERT_TRUE(node->edges().size() <= 1);
+
+    auto curr_chain_len = chain_len(node);
+    if (!chain_lengths.count(curr_chain_len)) {
+      chain_lengths[curr_chain_len] = 1;
+    } else {
+      chain_lengths[curr_chain_len]++;
+    }
+    max_chain_len = max(max_chain_len, curr_chain_len);
+  }
+
+  ASSERT_EQ(2, chain_lengths[1]); // two end nodes
+  ASSERT_EQ(2, chain_lengths[4]); // two start nodes
+  ASSERT_EQ(4, max_chain_len);
+}
