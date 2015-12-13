@@ -144,3 +144,44 @@ TEST(Graph, from_overlaps_assembles_chain_to_two_chains) {
   ASSERT_EQ(2, chain_lengths[4]); // two start nodes
   ASSERT_EQ(4, max_chain_len);
 }
+
+TEST(Graph, from_overlaps_assembles_chain_to_two_chains2) {
+  string genome = "AACTGCCCAT";
+
+  vector<string> seqs;
+  seqs.push_back(reverseComplement(genome.substr(4, 4)));
+  seqs.push_back(genome.substr(2, 4));
+  seqs.push_back(genome.substr(8, 4));
+  seqs.push_back(genome.substr(6, 4));
+  seqs.push_back(genome.substr(0, 4));
+
+  auto reads = reads_from_seqs(seqs);
+  vector<Overlap*> overlaps;
+
+  overlapReads(overlaps, reads, 2);
+
+  ASSERT_EQ(4, overlaps.size());
+
+  Graph::Graph *g = Graph::Graph::from_overlaps(overlaps);
+
+  ASSERT_EQ(5 * 2, g->nodes_count()); // every seq x 2 ends
+  ASSERT_EQ(4 * 2, g->edges_count()); // every overlap x 2 directions
+
+  unordered_map<int, int> chain_lengths;
+  int max_chain_len = 0;
+  for (auto node : g->nodes()) {
+    ASSERT_TRUE(node->edges().size() <= 1);
+
+    auto curr_chain_len = chain_len(node);
+    if (!chain_lengths.count(curr_chain_len)) {
+      chain_lengths[curr_chain_len] = 1;
+    } else {
+      chain_lengths[curr_chain_len]++;
+    }
+    max_chain_len = max(max_chain_len, curr_chain_len);
+  }
+
+  ASSERT_EQ(2, chain_lengths[1]); // two end nodes
+  ASSERT_EQ(2, chain_lengths[5]); // two start nodes
+  ASSERT_EQ(5, max_chain_len);
+}
