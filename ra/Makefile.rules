@@ -14,8 +14,8 @@ I_CMD = $(addprefix -I, $(SRC_DIR))
 I_CMD_V = $(addprefix -I, $(VND_DIR))
 L_CMD = $(addprefix -L, )
 
-CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp
-LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp
+CXX_FLAGS = $(I_CMD) $(I_CMD_V) -std=c++0x -Wall -fopenmp -m64
+LD_FLAGS = $(I_CMD) $(I_CMD_V) $(L_CMD) -pthread -lstdc++ -fopenmp -m64
 AR_FLAGS = rcs
 
 API = $(addprefix $(SRC_DIR)/, CommonHeaders.hpp Contig.hpp Depot.hpp DepotObject.hpp \
