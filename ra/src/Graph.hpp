@@ -21,15 +21,11 @@ namespace Graph {
     friend class Graph;
 
     public:
-      enum Type { Read, Unitig };
-      enum Side { Begin, End };
+      enum Type { Read = 0, Unitig = 1 };
+      enum Side { Begin = 0, End = 1 };
 
-      Node(Type type, uint32_t object_id, Side used_end) {
-        node_id_ = -1;
-        type_ = type;
-        object_id_ = object_id;
-        used_end_ = used_end_;
-      }
+      Node(Type type, uint32_t object_id, Side used_end)
+        : node_id_(-1), type_(type), object_id_(object_id), used_end_(used_end) {}
 
       int32_t id() const {
         return node_id_;
@@ -49,8 +45,8 @@ namespace Graph {
 
     private:
       int32_t node_id_;
-      uint32_t object_id_;
       Type type_;
+      uint32_t object_id_;
       Side used_end_;
       list<Edge*> out_edges_;
   };
@@ -60,11 +56,7 @@ namespace Graph {
     friend class Graph;
 
     public:
-      Edge(Node* src, Node* dst) {
-        id_ = -1;
-        src_ = src;
-        dst_ = dst;
-      }
+      Edge(Node* src, Node* dst) : id_(-1), src_(src), dst_(dst) {}
 
       int32_t id() const {
         return id_;
@@ -92,6 +84,14 @@ namespace Graph {
     Node* get_or_create_node_by(Node::Type type, uint32_t object_id, Node::Side used_end);
 
     void add_edge(Edge* edge);
+
+    uint32_t nodes_count() {
+      return nodes_.size();
+    }
+
+    uint32_t edges_count() {
+      return edges_.size();
+    }
 
     private:
       uint64_t node_hash(Node::Type type, uint32_t object_id, Node::Side used_end);
