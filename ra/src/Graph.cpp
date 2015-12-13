@@ -106,6 +106,12 @@ namespace Graph {
     debug("Graph destroyed\n");
   }
 
+  const Node* Graph::opposite_end_node(const Node* n) const {
+    Node::Side opposite_end = n->used_end() == Node::Side::Begin ? Node::Side::End : Node::Side::Begin;
+    uint64_t hash = node_hash(n->type(), n->object_id(), opposite_end);
+    return node_by_hash_.at(hash);
+  }
+
   Node* Graph::get_or_create_node_by(Node::Type type, uint32_t object_id, Node::Side used_end) {
     debug("Graph::get_or_create_node_by %d %d %d\n", type, object_id, used_end);
     uint64_t hash = node_hash(type, object_id, used_end);
@@ -129,7 +135,7 @@ namespace Graph {
     debug("Graph::add_node hash %#018llX\n", hash);
   }
 
-  uint64_t Graph::node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) {
+  uint64_t Graph::node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) const {
     uint64_t hash = 0LL;
     hash = hash ^ (uint16_t) type;
     hash = hash << 16;
@@ -153,7 +159,7 @@ namespace Graph {
     edge_by_hash_[hash] = edge;
   }
 
-  uint64_t Graph::edge_hash(Node* src, Node* dst) {
+  uint64_t Graph::edge_hash(Node* src, Node* dst) const {
     debug("Graph::edge_hash %#018llX %#018llX\n", src, dst);
     uint64_t hash = 0LL;
     hash = hash ^ (uint32_t) src->id();

@@ -87,9 +87,12 @@ namespace Graph {
     ~Graph();
 
     void add_node(Node* node);
+
     Node* get_or_create_node_by(Node::Type type, uint32_t object_id, Node::Side used_end);
 
     void add_edge(Edge* edge);
+
+    const Node* opposite_end_node(const Node* n) const;
 
     uint32_t nodes_count() const {
       return nodes_.size();
@@ -108,8 +111,8 @@ namespace Graph {
     }
 
     private:
-      uint64_t node_hash(Node::Type type, uint32_t object_id, Node::Side used_end);
-      uint64_t edge_hash(Node* src, Node *dst);
+      uint64_t node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) const;
+      uint64_t edge_hash(Node* src, Node *dst) const;
 
       vector<Node*> nodes_;
       vector<Edge*> edges_;

@@ -189,3 +189,33 @@ TEST(Graph, from_overlaps_assembles_chain_to_two_chains2) {
 
   delete g;
 }
+
+TEST(Graph, every_node_has_its_pair) {
+  string genome = "AACTGCCCAT";
+
+  vector<string> seqs;
+  seqs.push_back(reverseComplement(genome.substr(4, 4)));
+  seqs.push_back(genome.substr(2, 4));
+  seqs.push_back(genome.substr(8, 4));
+  seqs.push_back(genome.substr(6, 4));
+  seqs.push_back(genome.substr(0, 4));
+
+  auto reads = reads_from_seqs(seqs);
+  vector<Overlap*> overlaps;
+
+  overlapReads(overlaps, reads, 2);
+
+  ASSERT_EQ(4, overlaps.size());
+
+  Graph::Graph *g = Graph::Graph::from_overlaps(overlaps);
+
+  for (auto n : g->nodes()) {
+    const Graph::Node* pair = g->opposite_end_node(n);
+    ASSERT_TRUE(nullptr != pair);
+    ASSERT_EQ(n->object_id(), pair->object_id());
+    ASSERT_EQ(n->type(), pair->type());
+    ASSERT_TRUE(n->used_end() != pair->used_end());
+  }
+
+  delete g;
+}
