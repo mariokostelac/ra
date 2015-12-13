@@ -143,6 +143,8 @@ TEST(Graph, from_overlaps_assembles_chain_to_two_chains) {
   ASSERT_EQ(2, chain_lengths[1]); // two end nodes
   ASSERT_EQ(2, chain_lengths[4]); // two start nodes
   ASSERT_EQ(4, max_chain_len);
+
+  delete g;
 }
 
 TEST(Graph, from_overlaps_assembles_chain_to_two_chains2) {
@@ -184,4 +186,6 @@ TEST(Graph, from_overlaps_assembles_chain_to_two_chains2) {
   ASSERT_EQ(2, chain_lengths[1]); // two end nodes
   ASSERT_EQ(2, chain_lengths[5]); // two start nodes
   ASSERT_EQ(5, max_chain_len);
+
+  delete g;
 }

@@ -84,6 +84,8 @@ namespace Graph {
     public:
     static Graph* from_overlaps(OverlapSet& overlaps);
 
+    ~Graph();
+
     void add_node(Node* node);
     Node* get_or_create_node_by(Node::Type type, uint32_t object_id, Node::Side used_end);
 

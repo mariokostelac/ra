@@ -96,6 +96,16 @@ namespace Graph {
     return g;
   }
 
+  Graph::~Graph() {
+    for (auto node : nodes_) {
+      delete node;
+    }
+    for (auto edge : edges_) {
+      delete edge;
+    }
+    debug("Graph destroyed\n");
+  }
+
   Node* Graph::get_or_create_node_by(Node::Type type, uint32_t object_id, Node::Side used_end) {
     debug("Graph::get_or_create_node_by %d %d %d\n", type, object_id, used_end);
     uint64_t hash = node_hash(type, object_id, used_end);
