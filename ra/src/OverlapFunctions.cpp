@@ -221,11 +221,20 @@ static void overlapReadsPart(std::vector<Overlap*>& dst, const std::vector<Read*
     std::string cache = path;
     cache += ext;
 
-    ReadIndex* rindex = ReadIndex::load(cache.c_str());
+    ReadIndex* rindex = nullptr;
+
+    // load if path provided
+    if (strlen(path) > 0) {
+      rindex = ReadIndex::load(cache.c_str());
+    }
 
     if (rindex == nullptr) {
         rindex = new ReadIndex(reads, rk);
-        rindex->store(cache.c_str());
+
+        // store if path provided
+        if (strlen(path) > 0) {
+          rindex->store(cache.c_str());
+        }
     }
 
     int taskLen = std::ceil((double) reads.size() / threadLen);

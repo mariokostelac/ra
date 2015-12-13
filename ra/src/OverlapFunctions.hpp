@@ -44,7 +44,7 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const std::vector<Over
  * future runs on the same data
  */
 void overlapReads(std::vector<Overlap*>& dst, std::vector<Read*>& reads, int minOverlapLen,
-    int threadLen, const char* path);
+    int threadLen = 1, const char* cache_path = "");
 
 std::pair<int, int> calculateForcedHangs(uint32_t a_lo, uint32_t a_hi, uint32_t a_len,
     uint32_t b_lo, uint32_t b_hi, uint32_t b_len);
