@@ -54,6 +54,14 @@ namespace Graph {
         return out_edges_;
       }
 
+      bool is_read() const {
+        return type() == Type::Read;
+      }
+
+      bool is_unitig() const {
+        return type() == Type::Unitig;
+      }
+
     private:
       int32_t node_id_;
       Type type_;
@@ -125,6 +133,10 @@ namespace Graph {
 
     const vector<Edge*> edges() const {
       return edges_;
+    }
+
+    const vector<Unitig*> unitigs() const {
+      return unitigs_;
     }
 
     private:
