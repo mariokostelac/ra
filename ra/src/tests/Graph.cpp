@@ -97,7 +97,7 @@ TEST(Graph, add_edge_adds_edge_to_graph) {
   auto node_a = g.get_or_create_node_by(object_type, object_id1, used_end);
   auto node_b = g.get_or_create_node_by(object_type, object_id2, used_end);
 
-  auto edge = new Graph::Edge(node_a, node_b);
+  auto edge = new Graph::Edge(node_a, node_b, nullptr);
 
   ASSERT_EQ(0, g.edges_count());
   g.add_edge(edge);
@@ -218,4 +218,35 @@ TEST(Graph, every_node_has_its_pair) {
   }
 
   delete g;
+}
+
+TEST(Graph, convert_to_unitig_graph_creates_4_unitig_nodes) {
+  string genome = "AACCGGTATC";
+
+  vector<string> seqs;
+  seqs.push_back(genome.substr(0, 4));
+  seqs.push_back(genome.substr(2, 4));
+  seqs.push_back(genome.substr(4, 4));
+  seqs.push_back(genome.substr(6, 4));
+
+  auto reads = reads_from_seqs(seqs);
+  vector<Overlap*> overlaps;
+
+  overlapReads(overlaps, reads, 2);
+
+  ASSERT_EQ(3, overlaps.size());
+
+  Graph::Graph *g = Graph::Graph::from_overlaps(overlaps);
+  Graph::BestBuddyCalculator* calculator = new Graph::BestBuddyCalculator(g);
+  g->convert_to_unitig_graph(calculator);
+
+  uint32_t unitig_nodes = 0;
+  for (auto n : g->nodes()) {
+    unitig_nodes += n->type() == Graph::Node::Unitig;
+  }
+
+  ASSERT_EQ(4, unitig_nodes);
+
+  delete g;
+  delete calculator;
 }
