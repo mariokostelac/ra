@@ -142,6 +142,21 @@ void dump_overlaps_cmd() {
   writeRadumpOverlaps(stdout, overlaps);
 }
 
+void dump_reads_cmd() {
+  vector<Read*> reads;
+
+  Depot depot(depot_path);
+
+  fprintf(stderr, "Reading reads...\n");
+  depot.load_reads(reads);
+  fprintf(stderr, "Read %lu reads\n", reads.size());
+
+  fprintf(stderr, "id\tlen\tcov\n");
+  for (auto r : reads) {
+    fprintf(stdout, "%d\t%u\t%lf\n", r->id(), r->length(), r->coverage());
+  }
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -161,6 +176,8 @@ int main(int argc, char **argv) {
     import_overlaps_cmd();
   } else if (cmd == "dump_overlaps") {
     dump_overlaps_cmd();
+  } else if (cmd == "dump_reads") {
+    dump_reads_cmd();
   } else {
     fprintf(stderr, "Command '%s' not defined\n", cmd.c_str());
     args.usage();
