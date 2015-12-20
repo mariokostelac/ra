@@ -18,6 +18,7 @@ string working_directory;
 Settings specs;
 
 double MAX_ABSOLUTE_ERRATE;
+double MIN_COVERED_LENGTH;
 
 void init_args(int argc, char** argv) {
   // input params
@@ -43,6 +44,7 @@ void init_specs() {
   }
 
   MAX_ABSOLUTE_ERRATE = specs.get_or_store_double("overlap.max_abs_errate", 0.4);
+  MIN_COVERED_LENGTH = specs.get_or_store_double("overlap.min_covered_length", 0.15);
 }
 
 void write_specs_to(const string path) {
@@ -98,6 +100,29 @@ bool compare_by_errate(Overlap* a, Overlap* b) {
   return a->err_rate() < b->err_rate();
 }
 
+void filter_overlaps_by_covered_length(OverlapSet* overlaps, double min_length) {
+  fprintf(stderr, "Filtering overlaps with covered length < %lf\n", min_length);
+
+  int next_position = 0, size_before = overlaps->size();
+  for (int i = 0; i < (int) overlaps->size(); ++i) {
+    auto o = (*overlaps)[i];
+    if (o->covered_percentage(o->a()) < min_length) {
+      continue;
+    }
+    if (o->covered_percentage(o->b()) < min_length) {
+      continue;
+    }
+
+    (*overlaps)[next_position] = o;
+    next_position++;
+  }
+
+  overlaps->resize(next_position);
+
+  int diff = size_before - overlaps->size();
+  fprintf(stderr, "Filtered %d overlaps (%lf%%)\n", diff, 100.0 * diff / size_before);
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -120,6 +145,8 @@ int main(int argc, char **argv) {
   print_stats(overlaps);
   filter_overlaps_by_absolute_errate(&overlaps, MAX_ABSOLUTE_ERRATE);
   print_stats(overlaps);
+
+  filter_overlaps_by_covered_length(&overlaps, MIN_COVERED_LENGTH);
 
   fprintf(stderr, "Updating depot...\n");
   depot.store_overlaps(overlaps);
