@@ -50,6 +50,10 @@ int main(int argc, char **argv) {
   set<const Read*> contained_reads;
   for (int i = 0; i < (int) overlaps.size(); ++i) {
     auto o = forcedDovetailOverlap(overlaps[i], true);
+    if (o == nullptr) {
+      continue;
+    }
+
     dovetail_overlaps[i] = o;
 
     if (o->is_using_prefix(o->a()) && o->is_using_suffix(o->a())) {
@@ -64,6 +68,10 @@ int main(int argc, char **argv) {
   int idx = 0;
   for (int i = 0; i < (int) dovetail_overlaps.size(); ++i) {
     auto o = dovetail_overlaps[i];
+    if (o == nullptr) {
+      continue;
+    }
+
     if (contained_reads.count(o->read_a())) {
       fprintf(stderr, "Skipping %d %d because read %d is contained\n", o->a(), o->b(), o->a());
       continue;
@@ -79,7 +87,7 @@ int main(int argc, char **argv) {
 
   dovetail_overlaps.resize(idx);
 
-  fprintf(stderr, "Updating depot...\n");
+  fprintf(stderr, "Writing %u overlaps to depot...\n", dovetail_overlaps.size());
   depot.store_overlaps(dovetail_overlaps);
 
   for (auto r: reads)               delete r;

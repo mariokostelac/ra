@@ -236,9 +236,18 @@ int main(int argc, char **argv) {
   }
   writeAfgContigs(contigs, (working_directory + "/contigs.afg").c_str());
 
-  vector<Overlap*> simplified_overlaps;
-  graph->extractOverlaps(simplified_overlaps);
-  write_overlaps(simplified_overlaps, working_directory + "/final.mhap");
+  vector<Overlap*> remaining_overlaps;
+  graph->extractOverlaps(remaining_overlaps);
+  write_overlaps(remaining_overlaps, working_directory + "/final.mhap");
+
+  Graph::Graph* g = Graph::Graph::from_overlaps(remaining_overlaps);
+  auto calculator = new Graph::BestBuddyCalculator(g);
+  g->convert_to_unitig_graph(calculator);
+
+  fprintf(stderr, "Found %lu unitigs\n", g->unitigs().size());
+
+  delete g;
+  delete calculator;
 
   for (auto r: reads)           delete r;
   for (auto o: overlaps)        delete o;

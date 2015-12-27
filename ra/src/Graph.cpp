@@ -137,8 +137,9 @@ namespace Graph {
       // we have to dance between graph and "mirror" graph to check if best_next(a) = b
       // and best_next(b) = a, when going in other direction
       Node* next_mirror = opposite_end_node(next);
+      Edge* mirror_best_next = calculator->best_next(next_mirror);
 
-      if (opposite_end_node(calculator->best_next(next_mirror)->dst()) == src) {
+      if (mirror_best_next != nullptr && opposite_end_node(mirror_best_next->dst()) == src) {
         debug("Graph::unitig_graph join %u %u\n", src->id(), next->id());
         unitig_id.join(src->id(), next->id());
         next_in_unitig[src->id()] = next_edge;
@@ -211,6 +212,7 @@ namespace Graph {
       if (e->src()->parent_object_id() != -1) {
         auto unitig = unitigs_[e->src()->parent_object_id()];
         if (unitig->tail() != e->src()) {
+          assert(e->src()->parent_object_id() == e->dst()->parent_object_id());
           continue;
         }
 
@@ -220,7 +222,8 @@ namespace Graph {
 
       if (e->dst()->parent_object_id() != -1) {
         auto unitig = unitigs_[e->dst()->parent_object_id()];
-        if (unitig->head() !=  e->dst()) {
+        if (unitig->head() != e->dst()) {
+          assert(e->src()->parent_object_id() == e->dst()->parent_object_id());
           continue;
         }
 
@@ -310,21 +313,10 @@ namespace Graph {
   Edge* BestBuddyCalculator::best_next(const Node* src) {
     auto& edges = src->edges();
 
-    if (edges.size() == 0) {
+    if (edges.size() != 1) {
       return nullptr;
     }
 
-    Edge* best_edge = edges.front();
-    uint32_t best_length = best_edge->overlap()->length(src->object_id());
-
-    for (auto& edge : edges) {
-      uint32_t curr_length = edge->overlap()->length(src->object_id());
-      if (curr_length >= best_length) {
-        best_edge = edge;
-        best_length = curr_length;
-      }
-    }
-
-    return best_edge;
+    return edges.front();
   }
 };
