@@ -4,12 +4,15 @@
 #include "Utils.hpp"
 #include <map>
 #include <set>
+#include <sstream>
 #include <utility>
 
 using std::make_pair;
 using std::map;
 using std::pair;
 using std::set;
+using std::stringstream;
+using std::to_string;
 
 namespace Graph {
 
@@ -308,6 +311,25 @@ namespace Graph {
     for (auto e : unitig->edges()) {
       e->dst()->parent_object_id_ = unitig->id();
     }
+  }
+
+  const string Graph::dot() const {
+    stringstream graph_repr;
+
+    graph_repr << "digraph {\n";
+    for (auto e : edges_) {
+      graph_repr << e->src()->label() << " -> " << e->dst()->label() << ";\n";
+    }
+    graph_repr << "}\n";
+
+    return graph_repr.str();
+  }
+
+  string Node::label() const {
+    string type = type_ == Type::Read ? "r" : "u";
+    string used_end = used_end_ == Side::Begin ? "b" : "e";
+
+    return type + to_string(object_id()) + used_end;
   }
 
   Edge* BestBuddyCalculator::best_next(const Node* src) {

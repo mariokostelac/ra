@@ -2,11 +2,13 @@
 
 #include <cstdint>
 #include <list>
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include "Overlap.hpp"
 
 using std::list;
+using std::string;
 using std::unordered_map;
 using std::vector;
 
@@ -61,6 +63,8 @@ namespace Graph {
       bool is_unitig() const {
         return type() == Type::Unitig;
       }
+
+      string label() const;
 
     private:
       int32_t node_id_;
@@ -138,6 +142,8 @@ namespace Graph {
     const vector<Unitig*> unitigs() const {
       return unitigs_;
     }
+
+    const string dot() const;
 
     private:
       uint64_t node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) const;

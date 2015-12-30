@@ -242,9 +242,20 @@ int main(int argc, char **argv) {
 
   Graph::Graph* g = Graph::Graph::from_overlaps(remaining_overlaps);
   auto calculator = new Graph::BestBuddyCalculator(g);
+
+  fprintf(stderr, "Writing dot graph...\n");
+  auto sg_dot_fd = must_fopen(working_directory + "/sg.dot", "w+");
+  fprintf(sg_dot_fd, "%s\n", g->dot().c_str());
+  fclose(sg_dot_fd);
+
   g->convert_to_unitig_graph(calculator);
 
   fprintf(stderr, "Found %lu unitigs\n", g->unitigs().size());
+
+  fprintf(stderr, "Writing dot graph...\n");
+  auto utg_dot_fd = must_fopen(working_directory + "/utg.dot", "w+");
+  fprintf(utg_dot_fd, "%s\n", g->dot().c_str());
+  fclose(utg_dot_fd);
 
   delete g;
   delete calculator;
