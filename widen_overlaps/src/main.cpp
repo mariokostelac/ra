@@ -12,6 +12,9 @@ using std::fstream;
 using std::string;
 using std::vector;
 using std::set;
+using std::min;
+
+const double MAX_OVERHANG_PERCENTAGE = 0.1;
 
 // global vars
 cmdline::parser args;
@@ -30,6 +33,29 @@ void read_args() {
   depot_path = args.get<string>("depot");
 }
 
+void filterNonDovetailOverlaps(vector<Overlap*>* overlaps) {
+  uint32_t idx = 0;
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    auto o = overlaps->at(i);
+    double start_offset_a = o->a_lo() / (double) o->read_a()->length();
+    double end_offset_a = (o->read_a()->length() - o->a_hi()) / (double) o->read_a()->length();
+    double start_offset_b = o->b_lo() / (double) o->read_b()->length();
+    double end_offset_b = (o->read_b()->length() - o->b_hi()) / (double) o->read_b()->length();
+
+    double offset_a = min(start_offset_a, end_offset_a);
+    double offset_b = min(start_offset_b, end_offset_b);
+
+    if (offset_a > MAX_OVERHANG_PERCENTAGE || offset_b > MAX_OVERHANG_PERCENTAGE) {
+      continue;
+    }
+
+    (*overlaps)[idx] = o;
+    idx++;
+  }
+
+  overlaps->resize(idx);
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -45,6 +71,13 @@ int main(int argc, char **argv) {
 
   depot.load_overlaps(overlaps, reads);
   fprintf(stderr, "Read %lu overlaps\n", overlaps.size());
+
+  int size_before = overlaps.size();
+  filterNonDovetailOverlaps(&overlaps);
+  int size_after = overlaps.size();
+  int non_dovetail = size_before - size_after;
+
+  fprintf(stderr, "Filtered %d (%lf%%) overlaps\n", non_dovetail, 100. * non_dovetail/(double) size_before);
 
   vector<Overlap*> dovetail_overlaps(overlaps.size());
   set<const Read*> contained_reads;
