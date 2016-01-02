@@ -23,6 +23,8 @@ namespace Graph {
       auto overlap = overlaps[i];
       debug("Graph::from_overlaps - processing overlap %d %d\n", overlap->a(), overlap->b());
       auto a = overlap->a(), b = overlap->b();
+      g->reads_[overlap->a()] = overlap->read_a();
+      g->reads_[overlap->b()] = overlap->read_b();
 
       if (overlap->is_using_suffix(a) && overlap->is_using_prefix(b)) {
         {
@@ -376,6 +378,29 @@ namespace Graph {
     };
 
     return node_label(e->src()) + "-" + node_label(e->dst());
+  }
+
+  const string Graph::extract_sequence(Unitig* u) const {
+    bool rc = u->head()->used_end() == Node::Side::Begin;
+    auto edges = u->edges();
+
+    string sequence = rc ? reads_.at(u->head()->object_id())->reverse_complement() : reads_.at(u->head()->object_id())->sequence();
+    uint32_t offset = sequence.length();
+
+    Node* curr_node;
+    for (auto e : edges) {
+      curr_node = e->dst();
+      auto overlap = e->overlap();
+      auto read = reads_.at(curr_node->object_id());
+      rc ^= overlap->is_innie();
+
+      offset -= overlap->length(e->src()->object_id());
+      sequence.resize(offset);
+      sequence.append(rc ? read->reverse_complement() : read->sequence());
+      offset += reads_.at(curr_node->object_id())->length();
+    }
+
+    return sequence;
   }
 
   Edge* BestBuddyCalculator::best_next(const Node* src) {

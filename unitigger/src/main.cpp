@@ -22,6 +22,7 @@ using std::min;
 using std::pair;
 using std::set;
 using std::string;
+using std::to_string;
 using std::vector;
 
 // global vars
@@ -170,6 +171,15 @@ void sort_walks_by_length_desc(vector<StringGraphWalk*>* walks) {
   }
 }
 
+void write_unitigs(const Graph::Graph* g) {
+  auto unitigs = g->unitigs();
+  for (uint32_t i = 0; i < unitigs.size(); ++i) {
+    auto unitig_fd = must_fopen(working_directory + "/unitig_" + to_string(i) + ".fasta", "w+");
+    fprintf(unitig_fd, ">unitig%d\n%s", i, g->extract_sequence(unitigs[i]).c_str());
+    fclose(unitig_fd);
+  }
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -256,6 +266,8 @@ int main(int argc, char **argv) {
   auto utg_dot_fd = must_fopen(working_directory + "/utg.dot", "w+");
   fprintf(utg_dot_fd, "%s\n", g->unitigs_dot().c_str());
   fclose(utg_dot_fd);
+
+  write_unitigs(g);
 
   delete g;
   delete calculator;

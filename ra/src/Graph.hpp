@@ -2,12 +2,14 @@
 
 #include <cstdint>
 #include <list>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "Overlap.hpp"
 
 using std::list;
+using std::map;
 using std::string;
 using std::unordered_map;
 using std::vector;
@@ -147,6 +149,7 @@ namespace Graph {
 
     const string reads_dot() const;
     const string unitigs_dot() const;
+    const string extract_sequence(Unitig* u) const;
 
     private:
       const string dot(bool include_reads, bool include_unitigs) const;
@@ -158,6 +161,7 @@ namespace Graph {
       vector<Node*> nodes_;
       vector<Edge*> edges_;
       vector<Unitig*> unitigs_;
+      map<uint32_t, const Read*> reads_;
       unordered_map<uint64_t, Node*> node_by_hash_;
       unordered_map<uint64_t, Edge*> edge_by_hash_;
   };
