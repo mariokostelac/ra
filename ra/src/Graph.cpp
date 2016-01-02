@@ -131,7 +131,7 @@ namespace Graph {
 
       Edge* next_edge = calculator->best_next(src);
       if (next_edge == nullptr) {
-        // end of graph
+        // end of unitig
         continue;
       }
 
