@@ -162,11 +162,6 @@ namespace Graph {
         continue;
       }
 
-      if (next_in_unitig[curr->id()] == nullptr) {
-        // last in unitig or unitig consisting of one read.
-        continue;
-      }
-
       unitig_start[unitig_id.find(curr->id())] = curr->id();
 
       // collect
