@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
 
   fprintf(stderr, "Writing dot graph...\n");
   auto sg_dot_fd = must_fopen(working_directory + "/sg.dot", "w+");
-  fprintf(sg_dot_fd, "%s\n", g->dot().c_str());
+  fprintf(sg_dot_fd, "%s\n", g->reads_dot().c_str());
   fclose(sg_dot_fd);
 
   g->convert_to_unitig_graph(calculator);
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 
   fprintf(stderr, "Writing dot graph...\n");
   auto utg_dot_fd = must_fopen(working_directory + "/utg.dot", "w+");
-  fprintf(utg_dot_fd, "%s\n", g->dot().c_str());
+  fprintf(utg_dot_fd, "%s\n", g->unitigs_dot().c_str());
   fclose(utg_dot_fd);
 
   delete g;

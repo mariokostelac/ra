@@ -98,6 +98,8 @@ namespace Graph {
         return overlap_;
       }
 
+      const string label() const;
+
     private:
       int32_t id_;
       Node* src_;
@@ -143,9 +145,12 @@ namespace Graph {
       return unitigs_;
     }
 
-    const string dot() const;
+    const string reads_dot() const;
+    const string unitigs_dot() const;
 
     private:
+      const string dot(bool include_reads, bool include_unitigs) const;
+      const string edge_label(Edge* e) const;
       uint64_t node_hash(Node::Type type, uint32_t object_id, Node::Side used_end) const;
       uint64_t edge_hash(Node* src, Node *dst) const;
       void rewire_graph_with_unitigs();
@@ -170,10 +175,10 @@ namespace Graph {
 
   class GraphWalk {
     public:
-      GraphWalk(Node* start) : start_(start) {}
+      GraphWalk(Node* head) : head_(head), tail_(head) {}
 
       Node* head() const {
-        return start_;
+        return head_;
       }
 
       Node* tail() const {
@@ -190,7 +195,7 @@ namespace Graph {
       }
 
     protected:
-      Node* start_;
+      Node* head_;
       Node* tail_;
       vector<Edge*> edges_;
   };

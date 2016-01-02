@@ -308,12 +308,28 @@ namespace Graph {
     }
   }
 
-  const string Graph::dot() const {
+  const string Graph::reads_dot() const {
+    return dot(true, false);
+  }
+
+  const string Graph::unitigs_dot() const {
+    return dot(false, true);
+  }
+
+  const string Graph::dot(bool include_reads, bool include_unitigs) const {
     stringstream graph_repr;
 
     graph_repr << "digraph {\n";
     for (auto e : edges_) {
-      graph_repr << e->src()->label() << " -> " << e->dst()->label() << ";\n";
+      bool has_read = e->src()->type() == Node::Type::Read || e->dst()->type() == Node::Type::Read;
+      bool has_unitig = e->src()->type() == Node::Type::Unitig || e->dst()->type() == Node::Type::Unitig;
+      if ((has_read && !include_reads) || (has_unitig && !include_unitigs)) {
+        continue;
+      }
+
+      string edge_label = this->edge_label(e);
+      string label_properties = "[label=\"" + edge_label + "\", fontsize=\"9\"]";
+      graph_repr << e->src()->label() << " -> " << e->dst()->label() << label_properties << ";\n";
     }
     graph_repr << "}\n";
 
@@ -325,6 +341,23 @@ namespace Graph {
     string used_end = used_end_ == Side::Begin ? "b" : "e";
 
     return type + to_string(object_id()) + used_end;
+  }
+
+  const string Graph::edge_label(Edge* e) const {
+    auto node_label = [this](Node* n) {
+      if (n->type() == Node::Type::Read) {
+        return to_string(n->object_id());
+      } else {
+        auto unitig = this->unitigs_[n->object_id()];
+        if (n->used_end() == Node::Side::Begin) {
+          return to_string(unitig->head()->object_id());
+        } else {
+          return to_string(unitig->tail()->object_id());
+        }
+      }
+    };
+
+    return node_label(e->src()) + "-" + node_label(e->dst());
   }
 
   Edge* BestBuddyCalculator::best_next(const Node* src) {
