@@ -320,6 +320,24 @@ namespace Graph {
     stringstream graph_repr;
 
     graph_repr << "digraph {\n";
+
+    // read/unitig begin -> read/unitig end edges
+    for (auto n : nodes_) {
+      if (!include_reads && n->type() == Node::Type::Read) {
+        continue;
+      }
+      if (!include_unitigs && n->type() == Node::Type::Unitig) {
+        continue;
+      }
+      if (n->used_end() == Node::Side::End) {
+        continue;
+      }
+
+      auto src = n, dst = opposite_end_node(n);
+
+      graph_repr << src->label() << " -> " << dst->label() << " [color=blue];\n";
+    }
+
     for (auto e : edges_) {
       bool has_read = e->src()->type() == Node::Type::Read || e->dst()->type() == Node::Type::Read;
       bool has_unitig = e->src()->type() == Node::Type::Unitig || e->dst()->type() == Node::Type::Unitig;
