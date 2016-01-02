@@ -150,6 +150,7 @@ namespace Graph {
     const string reads_dot() const;
     const string unitigs_dot() const;
     const string extract_sequence(Unitig* u) const;
+    const string extract_sequence(Node* n) const;
 
     private:
       const string dot(bool include_reads, bool include_unitigs) const;

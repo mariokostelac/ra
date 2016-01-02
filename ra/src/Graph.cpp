@@ -380,23 +380,29 @@ namespace Graph {
     return node_label(e->src()) + "-" + node_label(e->dst());
   }
 
-  const string Graph::extract_sequence(Unitig* u) const {
-    bool rc = u->head()->used_end() == Node::Side::Begin;
-    auto edges = u->edges();
+  const string Graph::extract_sequence(Node* n) const {
+    if (n->type() == Node::Type::Read) {
+      bool rc = n->used_end() == Node::Side::Begin;
+      return rc ? reads_.at(n->object_id())->reverse_complement() : reads_.at(n->object_id())->sequence();
+    } else {
+      return extract_sequence(unitigs_[n->object_id()]);
+    }
+  }
 
-    string sequence = rc ? reads_.at(u->head()->object_id())->reverse_complement() : reads_.at(u->head()->object_id())->sequence();
+  const string Graph::extract_sequence(Unitig* u) const {
+
+    string sequence = extract_sequence(u->head());
     uint32_t offset = sequence.length();
 
+    auto edges = u->edges();
     Node* curr_node;
     for (auto e : edges) {
       curr_node = e->dst();
       auto overlap = e->overlap();
-      auto read = reads_.at(curr_node->object_id());
-      rc ^= overlap->is_innie();
 
       offset -= overlap->length(e->src()->object_id());
       sequence.resize(offset);
-      sequence.append(rc ? read->reverse_complement() : read->sequence());
+      sequence.append(extract_sequence(curr_node));
       offset += reads_.at(curr_node->object_id())->length();
     }
 
