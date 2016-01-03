@@ -319,6 +319,14 @@ public:
      */
     void serialize(char** bytes, uint32_t* bytes_length) const;
 
+    uint32_t confirmations() const {
+      return confirmations_;
+    }
+
+    void add_confirmation() {
+      confirmations_ += 1;
+    }
+
     /*!
      * @brief Method for object deserialization
      * @details Deserializes an object stored in a char array

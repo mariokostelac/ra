@@ -138,6 +138,8 @@ void filterTransitiveOverlaps(std::vector<Overlap*>& dst, const OverlapSet& over
                   for (auto j = jStart; j != jEnd; ++j) {
                     if (overlap->is_transitive(i->second, j->second)) {
                       is_tran = true;
+                      it1->second->add_confirmation();
+                      it2->second->add_confirmation();
                       break;
                     }
                   }
