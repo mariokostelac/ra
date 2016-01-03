@@ -19,11 +19,14 @@ static inline bool doubleEq(double x, double y, double eps) {
 DepotObjectType Overlap::type_ = DepotObjectType::kOverlap;
 
 Overlap::Overlap(const Read* read_a, int32_t a_hang, const Read* read_b,
-    int32_t b_hang, bool is_innie, double err_rate, double orig_err_rate)
+    int32_t b_hang, bool is_innie, double err_rate, double orig_err_rate, uint32_t confirmations)
         : read_a_(read_a), a_hang_(a_hang),
           read_b_(read_b), b_hang_(b_hang),
           is_innie_(is_innie),
-          is_dovetail_(true) {
+          is_dovetail_(true),
+          err_rate_(err_rate),
+          orig_err_rate_(orig_err_rate),
+          confirmations_(confirmations) {
 
     ASSERT(read_a != nullptr, "Overlap", "Read A is nullptr!");
     ASSERT(read_b != nullptr, "Overlap", "Read B is nullptr!");
@@ -32,14 +35,11 @@ Overlap::Overlap(const Read* read_a, int32_t a_hang, const Read* read_b,
     a_hi_ = read_a->length() - (b_hang < 0 ? -b_hang : 0);
     b_lo_ = a_hang < 0 ? -a_hang : 0;
     b_hi_ = read_b->length() - (b_hang > 0 ? b_hang : 0);
-
-    err_rate_ = err_rate;
-    orig_err_rate_ = orig_err_rate;
 }
 
 Overlap::Overlap(const Read* read_a, uint32_t a_lo, uint32_t a_hi, bool a_rc,
     const Read* read_b, uint32_t b_lo, uint32_t b_hi, bool b_rc,
-    double err_rate, double orig_err_rate)
+    double err_rate, double orig_err_rate, uint32_t confirmations)
         : read_a_(read_a), a_hang_(),
           read_b_(read_b), b_hang_(),
           is_innie_(a_rc != b_rc),
@@ -47,7 +47,8 @@ Overlap::Overlap(const Read* read_a, uint32_t a_lo, uint32_t a_hi, bool a_rc,
           a_lo_(a_lo), a_hi_(a_hi),
           b_lo_(b_lo), b_hi_(b_hi),
           err_rate_(err_rate),
-          orig_err_rate_(orig_err_rate) {
+          orig_err_rate_(orig_err_rate),
+          confirmations_(confirmations) {
 
     ASSERT(a_rc == false, "Overlap", "Read A can not be rk!");
     ASSERT(read_a != nullptr, "Overlap", "Read A is nullptr!");
@@ -269,7 +270,8 @@ void Overlap::serialize(char** bytes, uint32_t* bytes_length) const {
         2 * uint32_size + // a_hang_, b_hang_
         2 * sizeof(is_innie_) + // is_innie_, is_dovetail_
         4 * uint32_size + // a_lo_, a_hi_, b_lo_, b_hi_
-        2 * sizeof(err_rate_); // err_rate_, orig_err_rate_
+        2 * sizeof(err_rate_) + // err_rate_, orig_err_rate_
+        1 * uint32_size; // confirmations_
 
     *bytes = new char[*bytes_length]();
 
@@ -328,6 +330,10 @@ void Overlap::serialize(char** bytes, uint32_t* bytes_length) const {
     // orig_err_rate_
     std::memcpy(*bytes + ptr, &orig_err_rate_, sizeof(orig_err_rate_));
     ptr += sizeof(orig_err_rate_);
+
+    // confirmations_
+    std::memcpy(*bytes + ptr, &confirmations_, sizeof(confirmations_));
+    ptr += sizeof(confirmations_);
 }
 
 Overlap* Overlap::deserialize(const char* bytes) {
@@ -397,6 +403,10 @@ Overlap* Overlap::deserialize(const char* bytes) {
     // orig_err_rate_
     std::memcpy(&overlap->orig_err_rate_, bytes + ptr, sizeof(overlap->orig_err_rate_));
     ptr += sizeof(overlap->orig_err_rate_);
+
+    // confirmations_
+    std::memcpy(&overlap->confirmations_, bytes + ptr, sizeof(overlap->confirmations_));
+    ptr += sizeof(overlap->confirmations_);
 
     return overlap;
 }

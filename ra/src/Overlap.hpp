@@ -65,7 +65,7 @@ public:
      */
     Overlap(const Read* read_a, int32_t a_hang, const Read* read_b,
         int32_t b_hang, bool is_innie, double err_rate = -1,
-        double orig_err_rate = -1);
+        double orig_err_rate = -1, uint32_t confirmations = 1);
 
     /*!
      * @brief Overlap constructor
@@ -86,7 +86,7 @@ public:
      */
     Overlap(const Read* read_a, uint32_t a_lo, uint32_t a_hi, bool a_rc,
         const Read* read_b, uint32_t b_lo, uint32_t b_hi, bool b_rc,
-        double err_rate = -1, double orig_err_rate = -1);
+        double err_rate = -1, double orig_err_rate = -1, uint32_t confirmations = 1);
 
     /*!
      * @brief Overlap destructor
@@ -352,4 +352,6 @@ protected:
 
     double err_rate_;
     double orig_err_rate_;
+
+    uint32_t confirmations_;
 };
