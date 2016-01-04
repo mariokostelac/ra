@@ -103,7 +103,7 @@ void write_call_cmd(FILE* fd, int argc, char **argv) {
   fprintf(fd, "\n");
 }
 
-int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, const StringGraph* graph) {
+int extract_contig_walks(std::vector<StringGraphWalk*>* contig_walks, StringGraph* graph) {
 
   int written = 0;
 
@@ -171,7 +171,7 @@ void sort_walks_by_length_desc(vector<StringGraphWalk*>* walks) {
   }
 }
 
-void write_unitigs(const Graph::Graph* g) {
+void write_unitigs(Graph::Graph* g) {
   auto unitigs = g->unitigs();
   for (uint32_t i = 0; i < unitigs.size(); ++i) {
     auto unitig_fd = must_fopen(working_directory + "/unitig_" + to_string(i) + ".fasta", "w+");
@@ -224,7 +224,7 @@ int main(int argc, char **argv) {
   print_walks_info(unitig_walks, reads);
 
   vector<Contig*> unitigs;
-  for (const auto& unitig_walk : unitig_walks) {
+  for (auto unitig_walk : unitig_walks) {
     Contig *unitig = new Contig(unitig_walk);
     unitigs.push_back(unitig);
   }
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
   print_walks_info(contig_walks, reads);
 
   vector<Contig*> contigs;
-  for (const auto& contig_walk : contig_walks) {
+  for (auto contig_walk : contig_walks) {
     Contig *contig = new Contig(contig_walk);
     contigs.push_back(contig);
   }

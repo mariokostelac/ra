@@ -59,7 +59,7 @@ public:
      *
      * @param [in] walk StrinGraphWalk object pointer
      */
-    Contig(const StringGraphWalk* walk);
+    Contig(StringGraphWalk* walk);
 
     /*!
      * @brief Contig destructor
@@ -79,7 +79,7 @@ public:
      *
      * @param [in] part part tuple to be added to parts
      */
-    void addPart(const ContigPart& part) {
+    void addPart(ContigPart part) {
         parts_.emplace_back(part);
     }
 

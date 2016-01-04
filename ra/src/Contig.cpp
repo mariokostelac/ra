@@ -3,19 +3,19 @@
 
 // Contig
 
-Contig::Contig(const StringGraphWalk* walk) {
+Contig::Contig(StringGraphWalk* walk) {
 
     ASSERT(walk, "Contig", "invalid walk");
 
     // isReversed returns if read with given id is reversed in edge
-    auto isReversed = [](const Edge* edge, uint32_t id) -> int {
+    auto isReversed = [](Edge* edge, uint32_t id) -> int {
         if (edge->getOverlap()->a() == id) return 0; // due to possible overlap types
         if (!edge->getOverlap()->is_innie()) return 0;
         return 1;
     };
 
-    const Vertex* start = walk->getStart();
-    const auto& edges = walk->getEdges();
+    Vertex* start = walk->getStart();
+    auto& edges = walk->getEdges();
 
     if (edges.size() == 0) {
       parts_.emplace_back(start->getId(), 0, start->getLength(), 0);
@@ -37,10 +37,10 @@ Contig::Contig(const StringGraphWalk* walk) {
 
     int prevReversed = firstReversed;
 
-    for (const auto& edge : edges) {
+    for (auto& edge : edges) {
 
-      const Vertex* a = edge->getSrc();
-      const Vertex* b = edge->getDst();
+      Vertex* a = edge->getSrc();
+      Vertex* b = edge->getDst();
 
       int aReversed = isReversed(edge, a->getId());
       bool invert = aReversed == prevReversed ? false : true;

@@ -33,7 +33,7 @@ class Edge {
 public:
 
     /*!
-     * @brief Edge constructor
+     * @brief Edgeructor
      * @details Creates an Edge object from a read and an overlap.
      *
      * @param [in] id edge identifier
@@ -41,7 +41,7 @@ public:
      * @param [in] overlap Overlap object pointer
      * @param [in] graph Graph object pointer the edge is in
      */
-    Edge(uint32_t id, uint32_t readId, const Overlap* overlap, const StringGraph* graph);
+    Edge(uint32_t id, uint32_t readId, Overlap* overlap, StringGraph* graph);
 
     /*!
      * @brief Edge destructor
@@ -52,7 +52,7 @@ public:
      * @brief Getter for identifier
      * @return identifier
      */
-    uint32_t getId() const {
+    uint32_t getId() {
         return id_;
     }
 
@@ -60,7 +60,7 @@ public:
      * @brief Getter for start vertex
      * @return start vertex
      */
-    const Vertex* getSrc() const {
+    Vertex* getSrc() {
         return src_;
     }
 
@@ -68,7 +68,7 @@ public:
      * @brief Getter for end vertex
      * @return end vertex
      */
-    const Vertex* getDst() const {
+    Vertex* getDst() {
         return dst_;
     }
 
@@ -76,7 +76,7 @@ public:
      * @brief Getter for overlap
      * @return overlap
      */
-    const Overlap* getOverlap() const {
+    Overlap* getOverlap() {
         return overlap_;
     }
 
@@ -94,7 +94,7 @@ public:
      *
      * @return true if this edge is marked
      */
-    bool isMarked() const {
+    bool isMarked() {
         return marked_;
     }
 
@@ -104,7 +104,7 @@ public:
      *
      * @param [out] dst label string
      */
-    void label(std::string& dst) const;
+    void label(std::string& dst);
 
     int labelLength();
 
@@ -114,7 +114,7 @@ public:
      *
      * @param [out] dst rk label string
      */
-    void rkLabel(std::string& dst) const;
+    void rkLabel(std::string& dst);
 
     /*!
      * @brief Getter for opposite vertex on edge
@@ -123,10 +123,10 @@ public:
      * @param [in] id vertex identifier
      * @return opposite vertex
      */
-    const Vertex* oppositeVertex(uint32_t id) const;
+    Vertex* oppositeVertex(uint32_t id);
 
     // TODO
-    Edge* pair() const;
+    Edge* pair();
 
     friend class Vertex;
     friend class StringGraph;
@@ -134,11 +134,11 @@ public:
 private:
 
     uint32_t id_;
-    const Vertex* src_;
-    const Vertex* dst_;
-    const Overlap* overlap_;
+    Vertex* src_;
+    Vertex* dst_;
+    Overlap* overlap_;
     Edge* pair_;
-    const StringGraph* graph_;
+    StringGraph* graph_;
     bool marked_;
     int labelLength_;
 };
@@ -151,14 +151,14 @@ class Vertex {
 public:
 
     /*!
-     * @brief Vertex constructor
+     * @brief Vertexructor
      * @details Creates an Vertex object from a read.
      *
      * @param [in] id vertex identifier
      * @param [in] read Read object pointer
      * @param [in] graph Graph object pointer the edge is in
      */
-    Vertex(uint32_t id, const Read* read, const StringGraph* graph);
+    Vertex(uint32_t id, Read* read, StringGraph* graph);
 
     /*!
      * @brief Vertex destructor
@@ -169,7 +169,7 @@ public:
      * @brief Getter for identifier
      * @return identifier
      */
-    uint32_t getId() const {
+    uint32_t getId() {
         return id_;
     }
 
@@ -177,7 +177,7 @@ public:
      * @brief Getter for read identifier
      * @return read identifier
      */
-    uint32_t getReadId() const {
+    uint32_t getReadId() {
         return read_->id();
     }
 
@@ -185,7 +185,7 @@ public:
      * @brief Getter for read legnth
      * @return length
      */
-    int getLength() const {
+    int getLength() {
         return read_->length();
     }
 
@@ -193,7 +193,7 @@ public:
      * @brief Getter for read sequence
      * @return sequence
      */
-    const std::string& getSequence() const {
+    const std::string& getSequence() {
         return read_->sequence();
     }
 
@@ -201,7 +201,7 @@ public:
      * @brief Getter for read reverse complement
      * @return reverse complement
      */
-    const std::string& getReverseComplement() const {
+    const std::string& getReverseComplement() {
         return read_->reverse_complement();
     }
 
@@ -209,7 +209,7 @@ public:
      * @brief Getter for read coverage
      * @return coverage
      */
-    double getCoverage() const {
+    double getCoverage() {
         return read_->coverage();
     }
 
@@ -217,7 +217,7 @@ public:
      * @brief Getter for edges where the read Begining is in the overlap
      * @return list of edges
      */
-    const std::list<Edge*>& getEdgesB() const {
+    std::list<Edge*>& getEdgesB() {
         return edgesB_;
     }
 
@@ -225,7 +225,7 @@ public:
      * @brief Getter for edges where the read End is in the overlap
      * @return list of edges
      */
-    const std::list<Edge*>& getEdgesE() const {
+    std::list<Edge*>& getEdgesE() {
         return edgesE_;
     }
 
@@ -243,7 +243,7 @@ public:
      *
      * @return true if this vertex is marked
      */
-    bool isMarked() const {
+    bool isMarked() {
         return marked_;
     }
 
@@ -254,7 +254,7 @@ public:
      *
      * @return true if this vertex is a tip candidate
      */
-    bool isTipCandidate() const;
+    bool isTipCandidate();
 
     /*!
      * @brief Method for bubble root candidate check
@@ -263,7 +263,7 @@ public:
      *
      * @return true if this vertex is a bubble root candidate
      */
-    bool isBubbleRootCandidate(int direction) const;
+    bool isBubbleRootCandidate(int direction);
 
     /*!
      * @brief Method for adding new edges
@@ -285,7 +285,7 @@ public:
      *
      * @param [int] propagate propagate call to all vertices adjacent with removed edges.
      */
-    void removeMarkedEdges(const bool propagate = true);
+    void removeMarkedEdges(bool propagate = true);
 
 
     /*!
@@ -294,16 +294,16 @@ public:
      *
      * @return true if e uses vertex's read prefix
      */
-    const bool isBeginEdge(const Edge* e) const;
+    bool isBeginEdge(Edge* e);
 
     // TODO
-    const Edge* bestEdge(const bool use_end) const;
+    Edge* bestEdge(bool use_end);
 
 private:
 
     uint32_t id_;
-    const Read* read_;
-    const StringGraph* graph_;
+    Read* read_;
+    StringGraph* graph_;
     bool marked_;
 
     std::list<Edge*> edgesB_;
@@ -318,7 +318,7 @@ class StringGraph {
 public:
 
     /*!
-     * @brief StringGraph constructor
+     * @brief StringGraphructor
      * @details Creates a StringGraph object from reads and overlaps between them.
      * Each Read becomes a Vertex and from each Overlap two Edges are created,
      * one from A to B and one from B to A (A and B are reads in Overlap).
@@ -326,10 +326,10 @@ public:
      * @param [in] reads vector of Read object pointers
      * @param [in] overlaps vector of Overlap object pointers
      */
-    StringGraph(const std::vector<Read*>& reads, const std::vector<Overlap*>& overlaps);
+    StringGraph(std::vector<Read*>& reads, std::vector<Overlap*>& overlaps);
 
     /*!
-     * @brief StrigGraph constructor
+     * @brief StrigGraphructor
      */
     ~StringGraph();
 
@@ -340,14 +340,6 @@ public:
      * @param [in] id vertex identifier
      * @return vertex
      */
-    const Vertex* getVertex(int id) const {
-        if (!vertices_.count(id)) {
-          return nullptr;
-        }
-
-        return vertices_.at(id);
-    }
-
     Vertex* getVertex(int id) {
         if (!vertices_.count(id)) {
           return nullptr;
@@ -360,7 +352,7 @@ public:
      * @brief Getter for number of vertices in graph
      * @return number of vertices
      */
-    size_t getNumVertices() const {
+    size_t getNumVertices() {
         return vertices_.size();
     }
 
@@ -368,7 +360,7 @@ public:
      * @brief Getter for number of edges in graph
      * @return number of edges
      */
-    size_t getNumEdges() const {
+    size_t getNumEdges() {
         return edges_.size();
     }
 
@@ -405,7 +397,7 @@ public:
      * @param [out] dst vector of Overlap object pointers
      * @param [in] view if true Overlap objects are not cloned to dst
      */
-    void extractOverlaps(std::vector<Overlap*>& dst, bool view = true) const;
+    void extractOverlaps(std::vector<Overlap*>& dst, bool view = true);
 
     /*!
      * @brief Methd for graph component extraction
@@ -414,9 +406,9 @@ public:
      *
      * @param [out] dst vector of StringGraphComponent object pointers
      */
-    void extractComponents(std::vector<StringGraphComponent*>& dst) const;
+    void extractComponents(std::vector<StringGraphComponent*>& dst);
 
-    int extract_unitigs(std::vector<StringGraphWalk*>* walks) const;
+    int extract_unitigs(std::vector<StringGraphWalk*>* walks);
 
     /*!
      * @brief Method for deletion of vertices and edges
@@ -434,7 +426,7 @@ private:
      * TODO
      */
     int mark_unitig(std::vector<Edge*>* dst_edges, std::vector<int>* unitig_id,
-        const int id, const Vertex* start, const int direction) const;
+        int id, Vertex* start, int direction);
 
     /*!
      * @brief Method for bubble search
@@ -448,22 +440,22 @@ private:
      * @param [in] direction direction the BFS is executed (Begin or End)
      * TODO
      */
-    uint32_t popBubblesStartingAt(const Vertex* root, int direction);
+    uint32_t popBubblesStartingAt(Vertex* root, int direction);
 
     /*!
      * @brief Method for bubble popping
      * @details Method tries to remove all paths from bubble but the one with the highest
-     * coverage. First constraint is that paths must share similar sequences (at least 95%).
-     * The second constraint is that if a path that is a candidate for removal has extrenal
+     * coverage. Firstraint is that paths must share similar sequences (at least 95%).
+     * The secondraint is that if a path that is a candidate for removal has extrenal
      * edges (edges not pointingt into the bubble) it won't be removed.
      *
      * @param [in] walks bubble consisting of 2 or more paths (walks)
      * @param [in] direction direction the paths in bubble are pointing (Begin or End) needed
      * for sequence extraction
      */
-    bool popBubble(const std::vector<StringGraphWalk*>& walks, const uint32_t juncture_id, const int direction);
+    bool popBubble(std::vector<StringGraphWalk*>& walks, uint32_t juncture_id, int direction);
 
-    const std::vector<Overlap*>* overlaps_;
+    std::vector<Overlap*>* overlaps_;
 
     std::vector<Edge*> edges_;
     VerticesSet vertices_;
@@ -477,12 +469,12 @@ class StringGraphWalk {
 public:
 
     /*!
-     * @brief StringGraphWalk constructir
+     * @brief StringGraphWalkructir
      * @details Creates a StringGraphWalk object from the starting vertex
      *
      * @param [in] start start vertex
      */
-    StringGraphWalk(const Vertex* start);
+    StringGraphWalk(Vertex* start);
 
     /*!
      * @brief StringGraphWalk destructor
@@ -493,7 +485,7 @@ public:
      * @brief Getter for start vertex
      * @return start vertex
      */
-    const Vertex* getStart() const {
+    Vertex* getStart() {
         return start_;
     }
 
@@ -501,7 +493,7 @@ public:
      * @brief Getter for edges
      * @return vector of Edge object pointers
      */
-    const std::vector<const Edge*>& getEdges() const {
+    std::vector<Edge*>& getEdges() {
         return edges_;
     }
 
@@ -511,7 +503,7 @@ public:
      *
      * @param [in] edge edge to be added to the path
      */
-    void addEdge(const Edge* edge);
+    void addEdge(Edge* edge);
 
     /*!
      * @brief Method for sequence extraction
@@ -520,7 +512,7 @@ public:
      *
      * @param [out] dst sequence string
      */
-    void extractSequence(std::string& dst) const;
+    void extractSequence(std::string& dst);
 
     /*!
      * @brief Method for vertices extraction
@@ -528,7 +520,7 @@ public:
      *
      * @param [out] dst vertices
      */
-    void extractVertices(std::vector<const Vertex*>& dst) const;
+    void extractVertices(std::vector<Vertex*>& dst);
 
     /*!
      * @brief Method for vertex check
@@ -537,7 +529,7 @@ public:
      * @param [in] id vertex identifier
      * @return true if the vertex is in path
      */
-    bool containsVertex(int id) const;
+    bool containsVertex(int id);
 
     /*!
      * @brief Method for edge check
@@ -546,12 +538,12 @@ public:
      * @param [in] id edge identifier
      * @return true if the edge is in path
      */
-    bool containsEdge(int id) const;
+    bool containsEdge(int id);
 
 private:
 
-    const Vertex* start_;
-    std::vector<const Edge*> edges_;
+    Vertex* start_;
+    std::vector<Edge*> edges_;
     std::set<int> visitedVertices_;
     std::set<int> visitedEdges_;
 };
@@ -564,7 +556,7 @@ class StringGraphNode {
 public:
 
     /*!
-     * @brief StrinGraphNode constructor
+     * @brief StrinGraphNodeructor
      * @details Creates a StrinGraphNode object from vertex, parent vertex,
      * edge from parent vertex, direction for exapnsion and distance traveled
      * so far in path.
@@ -575,8 +567,8 @@ public:
      * @param [in] direction direction for expansion (Begin or End)
      * @param [in] distance distance traveled so far in path
      */
-    StringGraphNode(const Vertex* vertex, const Edge* edgeFromParent,
-        const StringGraphNode* parent, int direction, int distance);
+    StringGraphNode(Vertex* vertex, Edge* edgeFromParent,
+        StringGraphNode* parent, int direction, int distance);
 
     /*!
      * @brief StringGraphNode desctructor
@@ -587,7 +579,7 @@ public:
      * @brief Getter for vertex
      * @return vertex
      */
-    const Vertex* getVertex() const {
+    Vertex* getVertex() {
         return vertex_;
     }
 
@@ -595,7 +587,7 @@ public:
      * @brief Getter for edge from parent
      * @return edge from parent
      */
-    const Edge* getEdgeFromParent() const {
+    Edge* getEdgeFromParent() {
         return edgeFromParent_;
     }
 
@@ -603,7 +595,7 @@ public:
      * @brief Getter for parent vertex
      * @return parent vertex
      */
-    const StringGraphNode* getParent() const {
+    StringGraphNode* getParent() {
         return parent_;
     }
 
@@ -611,7 +603,7 @@ public:
      * @brief Getter for distance
      * @return distance
      */
-    int getDistance() const {
+    int getDistance() {
         return distance_;
     }
 
@@ -622,7 +614,7 @@ public:
      * @param [in] vector of StringGraphNode object pointers
      * @return number of StringGraphNodes added to queue
      */
-    size_t expand(std::vector<StringGraphNode*>& queue) const;
+    size_t expand(std::vector<StringGraphNode*>& queue);
 
     /*!
      * @brief Method for walk check
@@ -632,7 +624,7 @@ public:
      * @param [in] node StingGraphNode object pointer
      * @return true if node is in path to root
      */
-    bool isInWalk(const StringGraphNode* node) const;
+    bool isInWalk(StringGraphNode* node);
 
     /*!
      * @brief Method for walk search
@@ -642,7 +634,7 @@ public:
      * @param [in] node StingGraphNode object pointer
      * @return node in path (if not found nullptr is returned)
      */
-    const StringGraphNode* findInWalk(const StringGraphNode* node) const;
+    StringGraphNode* findInWalk(StringGraphNode* node);
 
     /*!
      * @brief Method returns preceeding StringGraphNode* with given vertexId.
@@ -651,7 +643,7 @@ public:
      * @param [in] vertexId vertexId
      * @return preceeding node with given vertexId, nullptr if does not exist such node.
      */
-    const StringGraphNode* rewindedTo(const uint32_t vertexId) const;
+    StringGraphNode* rewindedTo(uint32_t vertexId);
 
     /*!
      * @brief Method creates StringGraphWalk from this node and it's predecessors.
@@ -659,13 +651,13 @@ public:
      *
      * @return StringGraphWalk from this node and it's predecessors.
      */
-    StringGraphWalk* getWalk() const;
+    StringGraphWalk* getWalk();
 
 private:
 
-    const Vertex* vertex_;
-    const Edge* edgeFromParent_;
-    const StringGraphNode* parent_;
+    Vertex* vertex_;
+    Edge* edgeFromParent_;
+    StringGraphNode* parent_;
     int direction_;
     int distance_;
 };
@@ -678,14 +670,14 @@ class StringGraphComponent {
 public:
 
     /*!
-     * @brief StringGraphComponent constructor
+     * @brief StringGraphComponentructor
      * @details Creates a StringGraphComponent object from graph by picking out
      * vertices with given identifiers.
      *
      * @param [in] vertexIds vertex identifiers
      * @param [in] graph StringGraph object pointer
      */
-    StringGraphComponent(const std::set<int> vertexIds, const StringGraph* graph);
+    StringGraphComponent(std::set<int> vertexIds, StringGraph* graph);
 
     /*!
      * @brief StringGraphComponent destructor
@@ -706,7 +698,7 @@ public:
      */
     StringGraphWalk* longestWalk();
 
-    std::vector<const Vertex*>& vertices() {
+    std::vector<Vertex*>& vertices() {
       return vertices_;
     }
 
@@ -714,7 +706,7 @@ private:
 
     void extractLongestWalk();
 
-    std::vector<const Vertex*> vertices_;
-    const StringGraph* graph_;
+    std::vector<Vertex*> vertices_;
+    StringGraph* graph_;
     StringGraphWalk* walk_;
 };

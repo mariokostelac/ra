@@ -13,7 +13,7 @@ uint32_t mark_external_unitig_edges(StringGraphWalk* walk, StringGraph* graph, s
     return 0;
   }
 
-  auto mark_edges = [&unitig_vertices](const Edge* prev_edge, const Edge *curr_edge, std::list<Edge*>& edges) {
+  auto mark_edges = [&unitig_vertices](Edge* prev_edge, Edge *curr_edge, std::list<Edge*>& edges) {
     uint32_t  marked = 0;
 
     for (auto e : edges) {
@@ -40,7 +40,7 @@ uint32_t mark_external_unitig_edges(StringGraphWalk* walk, StringGraph* graph, s
     return marked;
   };
 
-  const Vertex* curr_vertex = walk->getStart();
+  Vertex* curr_vertex = walk->getStart();
   Edge* prev_edge = nullptr;
   for (auto curr_edge : edges) {
 
@@ -53,7 +53,7 @@ uint32_t mark_external_unitig_edges(StringGraphWalk* walk, StringGraph* graph, s
     }
 
     curr_vertex = curr_edge->oppositeVertex(curr_vertex->getId());
-    prev_edge = const_cast<Edge*>(curr_edge);
+    prev_edge = curr_edge;
   }
 
   //auto last_edges = curr_vertex->isBeginEdge(prev_edge) ? curr_vertex->getEdgesB() : curr_vertex->getEdgesE();
@@ -69,7 +69,7 @@ uint32_t remove_external_unitig_edges(StringGraph* graph) {
   vector<StringGraphWalk*> walks;
   graph->extract_unitigs(&walks);
 
-  std::vector<const Vertex*> unitig_vertices_v;
+  std::vector<Vertex*> unitig_vertices_v;
   for (auto w : walks) {
     w->extractVertices(unitig_vertices_v);
   }
