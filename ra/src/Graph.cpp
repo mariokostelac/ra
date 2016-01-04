@@ -347,7 +347,7 @@ namespace Graph {
         continue;
       }
 
-      string edge_label = this->edge_label(e);
+      string edge_label = this->edge_label(e) + " (" + to_string(e->overlap()->confirmations()) + ")";
       string label_properties = "[label=\"" + edge_label + "\", fontsize=\"9\"]";
       graph_repr << e->src()->label() << " -> " << e->dst()->label() << label_properties << ";\n";
     }
