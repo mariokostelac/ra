@@ -143,10 +143,10 @@ int main(int argc, char **argv) {
   sort(overlaps.begin(), overlaps.end(), compare_by_errate);
 
   print_stats(overlaps);
+  filter_overlaps_by_covered_length(&overlaps, MIN_COVERED_LENGTH);
+  print_stats(overlaps);
   filter_overlaps_by_absolute_errate(&overlaps, MAX_ABSOLUTE_ERRATE);
   print_stats(overlaps);
-
-  filter_overlaps_by_covered_length(&overlaps, MIN_COVERED_LENGTH);
 
   fprintf(stderr, "Updating depot...\n");
   depot.store_overlaps(overlaps);
