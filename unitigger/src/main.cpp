@@ -9,12 +9,14 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <map>
 #include <set>
 #include <sys/stat.h>
 #include <vector>
 
 using std::fstream;
+using std::list;
 using std::make_pair;
 using std::map;
 using std::max;
@@ -180,6 +182,61 @@ void write_unitigs(Graph::Graph* g) {
   }
 }
 
+uint32_t resolve_weak_forks(vector<Overlap*>* overlaps) {
+  uint32_t removed = overlaps->size();
+
+  // map overlaps per read per read end
+  set<Overlap*> for_removal;
+  map<pair<uint32_t, bool>, list<Overlap*>*> overlaps_per_read;
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    auto o = overlaps->at(i);
+    uint32_t a = o->a(), b = o->b();
+    auto key_a = make_pair(a, o->is_using_prefix(a));
+    auto key_b = make_pair(b, o->is_using_prefix(b));
+    if (overlaps_per_read[key_a] == nullptr) {
+      overlaps_per_read[key_a] = new list<Overlap*>;
+    }
+
+    if (overlaps_per_read[key_b] == nullptr) {
+      overlaps_per_read[key_b] = new list<Overlap*>;
+    }
+
+    overlaps_per_read[key_a]->push_back(o);
+    overlaps_per_read[key_b]->push_back(o);
+  }
+
+  for (auto kv : overlaps_per_read) {
+    if (kv.second->size() > 1) {
+      uint32_t max_confirmations = 1;
+      for (auto overlap : *(kv.second)) {
+        max_confirmations = max(max_confirmations, overlap->confirmations());
+      }
+
+      for (auto overlap : *(kv.second)) {
+        if (overlap->confirmations() == 1 && max_confirmations > 1) {
+          for_removal.insert(overlap);
+        }
+      }
+    }
+  }
+
+  // free memory
+  for (auto kv : overlaps_per_read) {
+    delete kv.second;
+  }
+
+  uint32_t idx = 0;
+  for (uint32_t i = 0; i < overlaps->size(); ++i) {
+    if (for_removal.count(overlaps->at(i))) continue;
+
+    (*overlaps)[idx] = overlaps->at(i);
+    idx++;
+  }
+  overlaps->resize(idx);
+
+  return removed - overlaps->size();
+}
+
 int main(int argc, char **argv) {
 
   init_args(argc, argv);
@@ -250,27 +307,27 @@ int main(int argc, char **argv) {
   graph->extractOverlaps(remaining_overlaps);
   write_overlaps(remaining_overlaps, working_directory + "/final.mhap");
 
-  Graph::Graph* g = Graph::Graph::from_overlaps(remaining_overlaps);
-  auto calculator = new Graph::BestBuddyCalculator(g);
+  //Graph::Graph* g = Graph::Graph::from_overlaps(remaining_overlaps);
+  //auto calculator = new Graph::BestBuddyCalculator(g);
 
-  fprintf(stderr, "Writing dot graph...\n");
-  auto sg_dot_fd = must_fopen(working_directory + "/sg.dot", "w+");
-  fprintf(sg_dot_fd, "%s\n", g->reads_dot().c_str());
-  fclose(sg_dot_fd);
+  //fprintf(stderr, "Writing dot graph...\n");
+  //auto sg_dot_fd = must_fopen(working_directory + "/sg.dot", "w+");
+  //fprintf(sg_dot_fd, "%s\n", g->reads_dot().c_str());
+  //fclose(sg_dot_fd);
 
-  g->convert_to_unitig_graph(calculator);
+  //g->convert_to_unitig_graph(calculator);
 
-  fprintf(stderr, "Found %lu unitigs\n", g->unitigs().size());
+  //fprintf(stderr, "Found %lu unitigs\n", g->unitigs().size());
 
-  fprintf(stderr, "Writing dot graph...\n");
-  auto utg_dot_fd = must_fopen(working_directory + "/utg.dot", "w+");
-  fprintf(utg_dot_fd, "%s\n", g->unitigs_dot().c_str());
-  fclose(utg_dot_fd);
+  //fprintf(stderr, "Writing dot graph...\n");
+  //auto utg_dot_fd = must_fopen(working_directory + "/utg.dot", "w+");
+  //fprintf(utg_dot_fd, "%s\n", g->unitigs_dot().c_str());
+  //fclose(utg_dot_fd);
 
-  write_unitigs(g);
+  //write_unitigs(g);
 
-  delete g;
-  delete calculator;
+  //delete g;
+  //delete calculator;
 
   for (auto r: reads)           delete r;
   for (auto o: overlaps)        delete o;
